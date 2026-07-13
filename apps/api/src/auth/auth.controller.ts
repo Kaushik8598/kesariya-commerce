@@ -1,7 +1,14 @@
-import { Body, Controller, Post } from '@nestjs/common';
+import { Body, Controller, Post, UseGuards, Get } from '@nestjs/common';
 import { AuthService } from './auth.service';
+
 import { RegisterDto } from './dto/register.dto';
 import { LoginDto } from './dto/login.dto';
+import { RefreshTokenDto } from './dto/refresh-token.dto';
+
+import { JwtAuthGuard } from './guards/jwt-auth.guard';
+import { CurrentUser } from './decorators/current-user.decorator';
+import { Roles } from './decorators/roles.decorator';
+import { RolesGuard } from './guards/roles.guard';
 
 @Controller('auth')
 export class AuthController {
@@ -15,5 +22,51 @@ export class AuthController {
   @Post('login')
   login(@Body() dto: LoginDto) {
     return this.authService.login(dto);
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Get('me')
+  me(@CurrentUser() user: any) {
+    return user;
+  }
+
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('super-admin')
+  @Get('admin')
+  admin() {
+    return {
+      success: true,
+      message: 'Only Super Admin',
+    };
+  }
+
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('customer')
+  @Get('customer')
+  customer() {
+    return {
+      success: true,
+      message: 'Customer Route',
+    };
+  }
+
+  @Post('refresh')
+  async refresh(@Body() dto: RefreshTokenDto) {
+    return this.authService.refresh(dto);
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Post('logout')
+  async logout(
+    @CurrentUser('id') userId: string,
+    @Body() dto: RefreshTokenDto,
+  ) {
+    return this.authService.logout(userId, dto);
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Post('logout-all')
+  async logoutAll(@CurrentUser('id') userId: string) {
+    return this.authService.logoutAll(userId);
   }
 }

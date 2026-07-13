@@ -4,7 +4,7 @@
 // Get a free hosted Postgres database in seconds: `npx create-db`
 
 generator client {
-  provider = "prisma-client"
+  provider = "prisma-client-js"
   output   = "../generated/prisma"
 }
 
@@ -12,3 +12,293 @@ datasource db {
   provider = "postgresql"
 }
 
+enum AddressType {
+  HOME
+  OFFICE
+  OTHER
+}
+
+enum OtpType {
+  LOGIN
+  REGISTER
+  FORGOT_PASSWORD
+  CHANGE_MOBILE
+  CHANGE_EMAIL
+}
+
+model Role {
+  id          String  @id @default(cuid())
+  name        String  @unique
+  slug        String  @unique
+  description String?
+
+  isActive Boolean @default(true) @map("is_active")
+
+  users       User[]
+  permissions RolePermission[]
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@map("roles")
+}
+
+model Permission {
+  id          String  @id @default(cuid())
+  name        String  @unique
+  slug        String  @unique
+  description String?
+
+  isActive Boolean @default(true) @map("is_active")
+
+  roles RolePermission[]
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@map("permissions")
+}
+
+model RolePermission {
+  id String @id @default(cuid())
+
+  roleId       String @map("role_id")
+  permissionId String @map("permission_id")
+
+  role       Role       @relation(fields: [roleId], references: [id], onDelete: Cascade)
+  permission Permission @relation(fields: [permissionId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now()) @map("created_at")
+
+  @@unique([roleId, permissionId])
+  @@index([roleId])
+  @@index([permissionId])
+  @@map("role_permissions")
+}
+
+model Country {
+  id String @id @default(cuid())
+
+  name         String  @unique
+  officialName String? @map("official_name")
+  nativeName   String? @map("native_name")
+
+  iso2        String  @unique
+  iso3        String  @unique
+  numericCode String? @unique @map("numeric_code")
+
+  phoneCode String @map("phone_code")
+
+  currencyCode   String @map("currency_code")
+  currencyName   String @map("currency_name")
+  currencySymbol String @map("currency_symbol")
+
+  timezone String
+
+  flagEmoji String? @map("flag_emoji")
+  flagImage String? @map("flag_image")
+
+  continent String?
+
+  sortOrder Int @default(0) @map("sort_order")
+
+  isActive Boolean @default(true) @map("is_active")
+
+  states    State[]
+  addresses Address[]
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@index([name])
+  @@index([iso2])
+  @@index([phoneCode])
+  @@map("countries")
+}
+
+model State {
+  id String @id @default(cuid())
+
+  countryId String  @map("country_id")
+  country   Country @relation(fields: [countryId], references: [id], onDelete: Restrict)
+
+  name    String
+  code    String?
+  gstCode String? @map("gst_code")
+
+  timezone String?
+
+  isActive Boolean @default(true) @map("is_active")
+
+  cities    City[]
+  addresses Address[]
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@unique([countryId, name])
+  @@unique([countryId, code])
+  @@index([countryId])
+  @@index([name])
+  @@map("states")
+}
+
+model City {
+  id String @id @default(cuid())
+
+  stateId String @map("state_id")
+  state   State  @relation(fields: [stateId], references: [id], onDelete: Restrict)
+
+  name String
+
+  latitude  Decimal? @db.Decimal(10, 8)
+  longitude Decimal? @db.Decimal(11, 8)
+
+  isActive Boolean @default(true) @map("is_active")
+
+  addresses Address[]
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@unique([stateId, name])
+  @@index([stateId])
+  @@index([name])
+  @@map("cities")
+}
+
+model User {
+  id String @id @default(cuid())
+
+  firstName String  @map("first_name")
+  lastName  String? @map("last_name")
+
+  email       String? @unique
+  countryCode String  @map("country_code")
+  mobile      String
+
+  password String?
+
+  avatar String?
+
+  roleId String @map("role_id")
+  role   Role   @relation(fields: [roleId], references: [id], onDelete: Restrict)
+
+  isActive   Boolean @default(true) @map("is_active")
+  isVerified Boolean @default(false) @map("is_verified")
+
+  lastLoginAt DateTime? @map("last_login_at")
+
+  addresses     Address[]
+  refreshTokens RefreshToken[]
+
+  createdAt DateTime  @default(now()) @map("created_at")
+  updatedAt DateTime  @updatedAt @map("updated_at")
+  deletedAt DateTime? @map("deleted_at")
+
+  @@unique([countryCode, mobile])
+  @@index([roleId])
+  @@map("users")
+}
+
+model Address {
+  id String @id @default(cuid())
+
+  userId String @map("user_id")
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  countryId String  @map("country_id")
+  country   Country @relation(fields: [countryId], references: [id], onDelete: Restrict)
+
+  stateId String @map("state_id")
+  state   State  @relation(fields: [stateId], references: [id], onDelete: Restrict)
+
+  cityId String @map("city_id")
+  city   City   @relation(fields: [cityId], references: [id], onDelete: Restrict)
+
+  type AddressType @default(HOME)
+
+  label String?
+
+  fullName  String  @map("full_name")
+  phoneCode String  @map("phone_code")
+  mobile    String
+  email     String?
+
+  company String?
+
+  addressLine1 String  @map("address_line_1")
+  addressLine2 String? @map("address_line_2")
+
+  landmark String?
+
+  postalCode String @map("postal_code")
+
+  latitude  Decimal? @db.Decimal(10, 8)
+  longitude Decimal? @db.Decimal(11, 8)
+
+  isDefault Boolean @default(false) @map("is_default")
+  isActive  Boolean @default(true) @map("is_active")
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@index([userId])
+  @@index([countryId])
+  @@index([stateId])
+  @@index([cityId])
+  @@map("addresses")
+}
+
+model OtpVerification {
+  id String @id @default(cuid())
+
+  countryCode String @map("country_code")
+  mobile      String
+
+  otpHash String @map("otp_hash")
+
+  type OtpType
+
+  attempts    Int @default(0)
+  resendCount Int @default(0) @map("resend_count")
+
+  expiresAt  DateTime  @map("expires_at")
+  verifiedAt DateTime? @map("verified_at")
+
+  ipAddress String? @map("ip_address")
+  userAgent String? @map("user_agent")
+
+  createdAt DateTime @default(now()) @map("created_at")
+
+  @@index([countryCode, mobile])
+  @@index([expiresAt])
+  @@map("otp_verifications")
+}
+
+model RefreshToken {
+  id String @id @default(cuid())
+
+  userId String @map("user_id")
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  tokenHash String @map("token_hash")
+
+  deviceName String? @map("device_name")
+  deviceType String? @map("device_type")
+
+  browser String?
+  os      String?
+
+  ipAddress String? @map("ip_address")
+
+  expiresAt DateTime  @map("expires_at")
+  revokedAt DateTime? @map("revoked_at")
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@index([userId])
+  @@index([expiresAt])
+  @@map("refresh_tokens")
+}

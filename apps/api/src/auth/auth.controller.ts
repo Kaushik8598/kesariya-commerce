@@ -13,15 +13,24 @@ import { CurrentUser } from './decorators/current-user.decorator';
 import { Roles } from './decorators/roles.decorator';
 import { RolesGuard } from './guards/roles.guard';
 
+import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
+
+@ApiTags('Authentication')
 @Controller('auth')
 export class AuthController {
   constructor(private readonly authService: AuthService) {}
 
+  @ApiOperation({
+    summary: 'Register new user',
+  })
   @Post('register')
   register(@Body() dto: RegisterDto) {
     return this.authService.register(dto);
   }
 
+  @ApiOperation({
+    summary: 'Login user',
+  })
   @Post('login')
   login(@Body() dto: LoginDto) {
     return this.authService.login(dto);
@@ -53,11 +62,18 @@ export class AuthController {
     };
   }
 
+  @ApiOperation({
+    summary: 'Refresh access token',
+  })
   @Post('refresh')
   async refresh(@Body() dto: RefreshTokenDto) {
     return this.authService.refresh(dto);
   }
 
+  @ApiOperation({
+    summary: 'Logout user',
+  })
+  @ApiBearerAuth('JWT')
   @UseGuards(JwtAuthGuard)
   @Post('logout')
   async logout(
@@ -67,6 +83,10 @@ export class AuthController {
     return this.authService.logout(userId, dto);
   }
 
+  @ApiOperation({
+    summary: 'Logout all user',
+  })
+  @ApiBearerAuth('JWT')
   @UseGuards(JwtAuthGuard)
   @Post('logout-all')
   async logoutAll(@CurrentUser('id') userId: string) {

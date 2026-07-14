@@ -2,17 +2,30 @@
 
 import React, { useEffect } from "react";
 import { useRouter } from "next/navigation";
+import { toast } from "sonner";
 import { useAuth } from "@/providers/auth-provider";
 
-export function ProtectedRoute({ children }: { children: React.ReactNode }) {
-  const { isAuthenticated, isLoading } = useAuth();
+interface ProtectedRouteProps {
+  children: React.ReactNode;
+  allowedRoles?: string[];
+}
+
+export function ProtectedRoute({ children, allowedRoles }: ProtectedRouteProps) {
+  const { isAuthenticated, isLoading, user } = useAuth();
   const router = useRouter();
 
+  const isAuthorized = !allowedRoles || (user && allowedRoles.includes(user.role.slug));
+
   useEffect(() => {
-    if (!isLoading && !isAuthenticated) {
-      router.replace("/login");
+    if (!isLoading) {
+      if (!isAuthenticated) {
+        router.replace("/login");
+      } else if (!isAuthorized) {
+        toast.error("You do not have permission to access this page");
+        router.replace("/");
+      }
     }
-  }, [isLoading, isAuthenticated, router]);
+  }, [isLoading, isAuthenticated, isAuthorized, router]);
 
   if (isLoading) {
     return (
@@ -25,7 +38,7 @@ export function ProtectedRoute({ children }: { children: React.ReactNode }) {
     );
   }
 
-  if (!isAuthenticated) {
+  if (!isAuthenticated || !isAuthorized) {
     return null;
   }
 

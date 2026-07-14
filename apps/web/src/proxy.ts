@@ -13,12 +13,35 @@ const PROTECTED_ROUTES = [
   "/profile",
   "/checkout",
   "/orders",
+  "/admin",
 ];
+
+const ROLE_ROUTE_GUARDS: { prefix: string; allowedRoles: string[] }[] = [
+  { prefix: "/admin", allowedRoles: ["super-admin"] },
+];
+
+function decodeJwt(token: string) {
+  try {
+    const base64Url = token.split(".")[1];
+    if (!base64Url) return null;
+    const base64 = base64Url.replace(/-/g, "+").replace(/_/g, "/");
+    const jsonPayload = decodeURIComponent(
+      atob(base64)
+        .split("")
+        .map((c) => "%" + ("00" + c.charCodeAt(0).toString(16)).slice(-2))
+        .join("")
+    );
+    return JSON.parse(jsonPayload);
+  } catch {
+    return null;
+  }
+}
 
 export function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
-  const hasAccessToken = request.cookies.has("access_token");
+  const accessTokenCookie = request.cookies.get("access_token");
+  const hasAccessToken = !!accessTokenCookie;
   const hasRefreshToken = request.cookies.has("refresh_token");
   const isAuthenticated = hasAccessToken || hasRefreshToken;
 
@@ -35,6 +58,17 @@ export function proxy(request: NextRequest) {
     // Remember redirect url
     loginUrl.searchParams.set("redirectTo", pathname);
     return NextResponse.redirect(loginUrl);
+  }
+
+  // 3. If user is authenticated and route is role-restricted, check access token role
+  const activeGuard = ROLE_ROUTE_GUARDS.find((guard) => pathname.startsWith(guard.prefix));
+  if (activeGuard && accessTokenCookie) {
+    const payload = decodeJwt(accessTokenCookie.value);
+    const userRole = payload?.role;
+    if (!userRole || !activeGuard.allowedRoles.includes(userRole)) {
+      // Redirect authenticated but unauthorized user to home page
+      return NextResponse.redirect(new URL("/", request.url));
+    }
   }
 
   return NextResponse.next();

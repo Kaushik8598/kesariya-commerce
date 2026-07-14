@@ -7,11 +7,15 @@ import { JwtService } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
 
 import * as bcrypt from 'bcrypt';
+import { randomInt } from 'crypto';
 
 import { PrismaService } from '../prisma/prisma.service';
 import { RegisterDto } from './dto/register.dto';
 import { LoginDto } from './dto/login.dto';
 import { RefreshTokenDto } from './dto/refresh-token.dto';
+import { ForgotPasswordDto } from './dto/forgot-password.dto';
+import { VerifyForgotPasswordOtpDto } from './dto/verify-forgot-password-otp.dto';
+import { ResetPasswordDto } from './dto/reset-password.dto';
 
 @Injectable()
 export class AuthService {
@@ -55,6 +59,10 @@ export class AuthService {
         expiresAt,
       },
     });
+  }
+
+  private generateOtp() {
+    return randomInt(100000, 999999).toString();
   }
 
   async register(dto: RegisterDto) {
@@ -219,6 +227,7 @@ export class AuthService {
       refreshToken,
     };
   }
+
   async logout(userId: string, dto: RefreshTokenDto) {
     const tokens = await this.prisma.refreshToken.findMany({
       where: {
@@ -271,6 +280,123 @@ export class AuthService {
     return {
       success: true,
       message: 'Logged out from all devices',
+    };
+  }
+
+  async forgotPassword(dto: ForgotPasswordDto) {
+    const user = await this.prisma.user.findUnique({
+      where: {
+        countryCode_mobile: {
+          countryCode: dto.countryCode,
+          mobile: dto.mobile,
+        },
+      },
+    });
+
+    if (!user) {
+      throw new UnauthorizedException('User not found');
+    }
+
+    if (
+      user.forgotPasswordOtpSentAt &&
+      Date.now() - user.forgotPasswordOtpSentAt.getTime() < 30_000
+    ) {
+      throw new UnauthorizedException(
+        'Please wait 30 seconds before requesting another OTP',
+      );
+    }
+
+    const otp = this.generateOtp();
+
+    const expiry = new Date(Date.now() + 10 * 60 * 1000);
+
+    await this.prisma.user.update({
+      where: {
+        id: user.id,
+      },
+      data: {
+        forgotPasswordOtp: otp,
+        forgotPasswordOtpExpiry: expiry,
+        forgotPasswordOtpSentAt: new Date(),
+      },
+    });
+
+    // TODO: SMS Provider
+    console.log('Forgot Password OTP:', otp);
+
+    return {
+      success: true,
+      message: 'OTP sent successfully',
+    };
+  }
+
+  async verifyForgotPasswordOtp(dto: VerifyForgotPasswordOtpDto) {
+    const user = await this.prisma.user.findUnique({
+      where: {
+        countryCode_mobile: {
+          countryCode: dto.countryCode,
+          mobile: dto.mobile,
+        },
+      },
+    });
+
+    if (!user) {
+      throw new UnauthorizedException('User not found');
+    }
+
+    if (
+      user.forgotPasswordOtp !== dto.otp ||
+      !user.forgotPasswordOtpExpiry ||
+      user.forgotPasswordOtpExpiry < new Date()
+    ) {
+      throw new UnauthorizedException('Invalid or expired OTP');
+    }
+
+    return {
+      success: true,
+      message: 'OTP verified successfully',
+    };
+  }
+
+  async resetPassword(dto: ResetPasswordDto) {
+    const user = await this.prisma.user.findUnique({
+      where: {
+        countryCode_mobile: {
+          countryCode: dto.countryCode,
+          mobile: dto.mobile,
+        },
+      },
+    });
+
+    if (!user) {
+      throw new UnauthorizedException('User not found');
+    }
+
+    if (
+      user.forgotPasswordOtp !== dto.otp ||
+      !user.forgotPasswordOtpExpiry ||
+      user.forgotPasswordOtpExpiry < new Date()
+    ) {
+      throw new UnauthorizedException('Invalid or expired OTP');
+    }
+
+    const hashedPassword = await bcrypt.hash(dto.password, 10);
+
+    await this.prisma.user.update({
+      where: {
+        id: user.id,
+      },
+      data: {
+        password: hashedPassword,
+        forgotPasswordOtp: null,
+        forgotPasswordOtpExpiry: null,
+        forgotPasswordOtpSentAt: null,
+      },
+    });
+
+    return {
+      success: true,
+      message: 'Password reset successfully',
     };
   }
 }

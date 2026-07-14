@@ -4,6 +4,9 @@ import { AuthService } from './auth.service';
 import { RegisterDto } from './dto/register.dto';
 import { LoginDto } from './dto/login.dto';
 import { RefreshTokenDto } from './dto/refresh-token.dto';
+import { ForgotPasswordDto } from './dto/forgot-password.dto';
+import { VerifyForgotPasswordOtpDto } from './dto/verify-forgot-password-otp.dto';
+import { ResetPasswordDto } from './dto/reset-password.dto';
 
 import { JwtAuthGuard } from './guards/jwt-auth.guard';
 import { CurrentUser } from './decorators/current-user.decorator';
@@ -68,5 +71,20 @@ export class AuthController {
   @Post('logout-all')
   async logoutAll(@CurrentUser('id') userId: string) {
     return this.authService.logoutAll(userId);
+  }
+
+  @Post('forgot-password')
+  async forgotPassword(@Body() dto: ForgotPasswordDto) {
+    return this.authService.forgotPassword(dto);
+  }
+
+  @Post('verify-forgot-password-otp')
+  async verifyForgotPasswordOtp(@Body() dto: VerifyForgotPasswordOtpDto) {
+    return this.authService.verifyForgotPasswordOtp(dto);
+  }
+
+  @Post('reset-password')
+  async resetPassword(@Body() dto: ResetPasswordDto) {
+    return this.authService.resetPassword(dto);
   }
 }

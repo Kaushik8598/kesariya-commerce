@@ -178,6 +178,9 @@ model User {
   mobile      String
 
   password String?
+  forgotPasswordOtp       String?
+  forgotPasswordOtpExpiry DateTime?
+  forgotPasswordOtpSentAt DateTime?
 
   avatar String?
 

@@ -1,25 +1,31 @@
 "use client";
 
 import { toast } from "sonner";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useMutation } from "@tanstack/react-query";
 
 import { authService } from "@/services/auth.service";
-import { authStorage } from "@/lib/auth";
+import { useAuth } from "@/providers/auth-provider";
 
 export function useLogin() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const { login } = useAuth();
 
   return useMutation({
     mutationFn: authService.login,
 
     onSuccess: (response) => {
-      authStorage.setAccessToken(response.data.accessToken);
-      authStorage.setRefreshToken(response.data.refreshToken);
+      login(
+        response.data.accessToken,
+        response.data.refreshToken,
+        response.data.user,
+      );
 
       toast.success(response.data.message);
 
-      router.push("/");
+      const redirectTo = searchParams.get("redirectTo") || "/";
+      router.push(redirectTo);
     },
   });
 }

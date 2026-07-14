@@ -9,7 +9,7 @@ import type {
 } from "@/validations/auth.validation";
 
 export const authService = {
-  register: (data: RegisterSchema) => api.post("/auth/register", data),
+  register: (data: Omit<RegisterSchema, "confirmPassword">) => api.post("/auth/register", data),
 
   login: (data: LoginSchema) => api.post("/auth/login", data),
 
@@ -19,8 +19,10 @@ export const authService = {
   verifyForgotPasswordOtp: (data: VerifyForgotPasswordOtpSchema) =>
     api.post("/auth/verify-forgot-password-otp", data),
 
-  resetPassword: (data: ResetPasswordSchema) =>
+  resetPassword: (data: Omit<ResetPasswordSchema, "confirmPassword">) =>
     api.post("/auth/reset-password", data),
+
+  me: () => api.get("/auth/me"),
 
   refresh: (refreshToken: string) =>
     api.post("/auth/refresh", {

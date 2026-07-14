@@ -1,41 +1,74 @@
+import Cookies from "js-cookie";
+
 const ACCESS_TOKEN_KEY = "access_token";
 const REFRESH_TOKEN_KEY = "refresh_token";
 
+const isClient = typeof window !== "undefined";
+
 export const authStorage = {
   getAccessToken() {
-    if (typeof window === "undefined") {
+    if (!isClient) {
       return null;
     }
 
-    return localStorage.getItem(ACCESS_TOKEN_KEY);
+    return Cookies.get(ACCESS_TOKEN_KEY) || null;
   },
 
   getRefreshToken() {
-    if (typeof window === "undefined") {
+    if (!isClient) {
       return null;
     }
 
-    return localStorage.getItem(REFRESH_TOKEN_KEY);
+    return Cookies.get(REFRESH_TOKEN_KEY) || null;
   },
 
   setAccessToken(token: string) {
-    localStorage.setItem(ACCESS_TOKEN_KEY, token);
+    if (!isClient) {
+      return;
+    }
+
+    Cookies.set(ACCESS_TOKEN_KEY, token, {
+      expires: 30,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "lax",
+    });
   },
 
   setRefreshToken(token: string) {
-    localStorage.setItem(REFRESH_TOKEN_KEY, token);
+    if (!isClient) {
+      return;
+    }
+
+    Cookies.set(REFRESH_TOKEN_KEY, token, {
+      expires: 30,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "lax",
+    });
   },
 
   removeAccessToken() {
-    localStorage.removeItem(ACCESS_TOKEN_KEY);
+    if (!isClient) {
+      return;
+    }
+
+    Cookies.remove(ACCESS_TOKEN_KEY);
   },
 
   removeRefreshToken() {
-    localStorage.removeItem(REFRESH_TOKEN_KEY);
+    if (!isClient) {
+      return;
+    }
+
+    Cookies.remove(REFRESH_TOKEN_KEY);
   },
 
   clear() {
-    localStorage.removeItem(ACCESS_TOKEN_KEY);
-    localStorage.removeItem(REFRESH_TOKEN_KEY);
+    if (!isClient) {
+      return;
+    }
+
+    Cookies.remove(ACCESS_TOKEN_KEY);
+    Cookies.remove(REFRESH_TOKEN_KEY);
   },
 };
+

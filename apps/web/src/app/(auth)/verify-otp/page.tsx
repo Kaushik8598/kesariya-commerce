@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 
 import { useForm } from "react-hook-form";
@@ -20,7 +20,7 @@ import {
 import { useVerifyForgotPasswordOtp } from "@/hooks/auth/use-verify-forgot-password-otp";
 import { useForgotPassword } from "@/hooks/auth/use-forgot-password";
 
-export default function VerifyOtpPage() {
+function VerifyOtpContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
 
@@ -37,9 +37,9 @@ export default function VerifyOtpPage() {
     handleSubmit,
     formState: { errors },
   } = useForm<VerifyForgotPasswordOtpSchema>({
-    resolver: zodResolver(verifyForgotPasswordOtpSchema),
+    resolver: zodResolver(verifyForgotPasswordOtpSchema as any),
     defaultValues: {
-      countryCode: encodeURIComponent(countryCode),
+      countryCode,
       mobile,
       otp: "",
     },
@@ -121,5 +121,19 @@ export default function VerifyOtpPage() {
         </div>
       </CardContent>
     </Card>
+  );
+}
+
+export default function VerifyOtpPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="flex h-screen w-screen items-center justify-center bg-zinc-50 dark:bg-black">
+          <div className="h-10 w-10 animate-spin rounded-full border-4 border-zinc-300 border-t-zinc-950 dark:border-zinc-800 dark:border-t-zinc-50" />
+        </div>
+      }
+    >
+      <VerifyOtpContent />
+    </Suspense>
   );
 }

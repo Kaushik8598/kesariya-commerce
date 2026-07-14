@@ -49,7 +49,19 @@ api.interceptors.response.use(
       return Promise.reject(error);
     }
 
-    if (error.response?.status === 401 && !originalRequest._retry) {
+    const bypassRefreshUrls = [
+      "/auth/login",
+      "/auth/verify-forgot-password-otp",
+      "/auth/reset-password",
+      "/auth/forgot-password",
+      "/auth/refresh",
+    ];
+
+    const shouldBypassRefresh =
+      originalRequest.url &&
+      bypassRefreshUrls.some((url) => originalRequest.url?.includes(url));
+
+    if (error.response?.status === 401 && !originalRequest._retry && !shouldBypassRefresh) {
       originalRequest._retry = true;
 
       if (isRefreshing) {

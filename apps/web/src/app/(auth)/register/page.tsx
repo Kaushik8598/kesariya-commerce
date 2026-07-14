@@ -23,7 +23,7 @@ export default function RegisterPage() {
     handleSubmit,
     formState: { errors },
   } = useForm<RegisterSchema>({
-    resolver: zodResolver(registerSchema),
+    resolver: zodResolver(registerSchema as any),
     defaultValues: {
       firstName: "",
       lastName: "",
@@ -38,8 +38,9 @@ export default function RegisterPage() {
   const mutation = useRegister();
 
   const onSubmit = (data: RegisterSchema) => {
+    const { confirmPassword, ...payload } = data;
     setLoading(true);
-    mutation.mutate(data);
+    mutation.mutate(payload);
   };
 
   return (

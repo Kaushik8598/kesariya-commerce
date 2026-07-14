@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { Suspense } from "react";
 
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -14,13 +15,13 @@ import { loginSchema, LoginSchema } from "@/validations/auth.validation";
 
 import { useLogin } from "@/hooks/auth/use-login";
 
-export default function LoginPage() {
+function LoginContent() {
   const {
     register,
     handleSubmit,
     formState: { errors },
   } = useForm<LoginSchema>({
-    resolver: zodResolver(loginSchema),
+    resolver: zodResolver(loginSchema as any),
     defaultValues: {
       countryCode: "+91",
       mobile: "",
@@ -86,5 +87,19 @@ export default function LoginPage() {
         </form>
       </CardContent>
     </Card>
+  );
+}
+
+export default function LoginPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="flex h-screen w-screen items-center justify-center bg-zinc-50 dark:bg-black">
+          <div className="h-10 w-10 animate-spin rounded-full border-4 border-zinc-300 border-t-zinc-950 dark:border-zinc-800 dark:border-t-zinc-50" />
+        </div>
+      }
+    >
+      <LoginContent />
+    </Suspense>
   );
 }

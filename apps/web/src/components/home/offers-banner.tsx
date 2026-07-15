@@ -114,7 +114,7 @@ export function OffersBanner() {
                 </div>
                 <Link
                   href="/products"
-                  className="rounded-full bg-white px-6 py-3 text-[10px] font-extrabold uppercase tracking-[0.2em] text-foreground transition-all hover:bg-white/90 hover:shadow-lg"
+                  className="rounded-full bg-white px-6 py-3 text-[10px] font-extrabold uppercase tracking-[0.2em] text-black transition-all hover:bg-white/90 hover:shadow-lg"
                 >
                   Shop Now
                 </Link>

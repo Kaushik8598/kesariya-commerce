@@ -6,12 +6,14 @@ import { useState, useEffect } from "react";
 import { Search, ShoppingBag, User, LogOut, Menu, X, ChevronDown, Heart, Package } from "lucide-react";
 import { useAuth } from "@/providers/auth-provider";
 import { ThemeToggle } from "@/components/ui/theme-toggle";
+import { SearchOverlay } from "@/components/search/search-overlay";
 
 export function Header() {
   const pathname = usePathname();
   const { isAuthenticated, user, logout } = useAuth();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [userDropdownOpen, setUserDropdownOpen] = useState(false);
+  const [searchOpen, setSearchOpen] = useState(false);
 
   // Prevent scroll when mobile menu is open
   useEffect(() => {
@@ -75,14 +77,14 @@ export function Header() {
             {/* Actions (Desktop + Search for Mobile) */}
             <div className="flex items-center gap-2 sm:gap-4 absolute md:static right-4">
               
-              {/* Search Bar Link (Visible on both) */}
-              <Link
-                href="/search"
-                className="p-1.5 text-foreground/70 hover:text-primary transition-colors rounded-full hover:bg-secondary"
+              {/* Search Bar Button */}
+              <button
+                onClick={() => setSearchOpen(true)}
+                className="p-1.5 text-foreground/70 hover:text-primary transition-colors rounded-full hover:bg-secondary cursor-pointer"
                 aria-label="Search products"
               >
                 <Search className="h-5 w-5" />
-              </Link>
+              </button>
 
               {/* Theme Toggle (Hidden on mobile) */}
               <div className="hidden md:block">
@@ -297,6 +299,8 @@ export function Header() {
           </div>
         </div>
       )}
+      {/* Search Overlay */}
+      <SearchOverlay isOpen={searchOpen} onClose={() => setSearchOpen(false)} />
     </>
   );
 }

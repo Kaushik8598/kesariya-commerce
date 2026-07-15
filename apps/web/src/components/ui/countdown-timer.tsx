@@ -31,15 +31,23 @@ function calculateTimeLeft(endDate: string): TimeLeft {
 }
 
 export function CountdownTimer({ endsAt, className }: CountdownTimerProps) {
-  const [timeLeft, setTimeLeft] = useState<TimeLeft>(calculateTimeLeft(endsAt));
+  const [mounted, setMounted] = useState(false);
+  const [timeLeft, setTimeLeft] = useState<TimeLeft>({ days: 0, hours: 0, minutes: 0, seconds: 0 });
 
   useEffect(() => {
+    setMounted(true);
+    setTimeLeft(calculateTimeLeft(endsAt));
+    
     const timer = setInterval(() => {
       setTimeLeft(calculateTimeLeft(endsAt));
     }, 1000);
 
     return () => clearInterval(timer);
   }, [endsAt]);
+
+  if (!mounted) {
+    return <div className={cn("h-16 flex items-center justify-center opacity-0", className)} aria-hidden="true" />;
+  }
 
   const blocks = [
     { value: timeLeft.days, label: "Days" },

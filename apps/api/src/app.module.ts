@@ -11,6 +11,7 @@ import { RolesModule } from './roles/roles.module';
 import { CategoriesModule } from './categories/categories.module';
 import { ProductsModule } from './products/products.module';
 import { ReviewsModule } from './reviews/reviews.module';
+import { WishlistsModule } from './wishlists/wishlists.module';
 
 import { envSchema } from './config/env.validation';
 
@@ -29,6 +30,7 @@ import { envSchema } from './config/env.validation';
     CategoriesModule,
     ProductsModule,
     ReviewsModule,
+    WishlistsModule,
   ],
   controllers: [AppController],
   providers: [AppService],

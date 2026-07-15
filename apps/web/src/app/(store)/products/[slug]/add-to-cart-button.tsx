@@ -1,12 +1,12 @@
 "use client";
 
 import { useState, useMemo } from "react";
-import { ShoppingBag } from "lucide-react";
+import { ShoppingBag, Loader2 } from "lucide-react";
 import { VariantSelector } from "@/components/products/variant-selector";
 import { Button } from "@/components/ui/button";
 import { WishlistButton } from "@/components/wishlist/wishlist-button";
-import { toast } from "sonner";
 import type { Product } from "@/types/product";
+import { useAddToCart } from "@/hooks/cart/use-cart";
 
 interface AddToCartButtonProps {
   product: Product;
@@ -15,7 +15,8 @@ interface AddToCartButtonProps {
 export function AddToCartButton({ product }: AddToCartButtonProps) {
   const [selectedSize, setSelectedSize] = useState<string | null>(null);
   const [selectedColor, setSelectedColor] = useState<string | null>(null);
-  const [isAdding, setIsAdding] = useState(false);
+  
+  const { mutate: addToCart, isPending: isAdding } = useAddToCart();
 
   // Check if product has variants
   const hasVariants = product.variants && product.variants.length > 0;
@@ -41,13 +42,11 @@ export function AddToCartButton({ product }: AddToCartButtonProps) {
     return selectedVariant ? selectedVariant.stock > 0 : false;
   }, [hasVariants, product.stock, product.variants, selectedSize, selectedColor, selectedVariant]);
 
-  const handleAddToCart = async () => {
-    setIsAdding(true);
-    // Simulate API call for now (Will be replaced with real Cart module later)
-    await new Promise((resolve) => setTimeout(resolve, 600));
-    setIsAdding(false);
-    toast.success("Added to Bag", {
-      description: `${product.name} ${selectedSize ? ` - ${selectedSize}` : ""} has been added to your bag.`,
+  const handleAddToCart = () => {
+    addToCart({
+      productId: product.id,
+      variantId: selectedVariant?.id,
+      quantity: 1,
     });
   };
 

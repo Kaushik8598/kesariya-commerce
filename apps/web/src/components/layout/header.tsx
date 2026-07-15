@@ -8,12 +8,17 @@ import { useAuth } from "@/providers/auth-provider";
 import { ThemeToggle } from "@/components/ui/theme-toggle";
 import { SearchOverlay } from "@/components/search/search-overlay";
 
+import { useCart } from "@/hooks/cart/use-cart";
+
 export function Header() {
   const pathname = usePathname();
   const { isAuthenticated, user, logout } = useAuth();
+  const { data: cart } = useCart();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [userDropdownOpen, setUserDropdownOpen] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
+
+  const cartItemCount = cart?.items?.reduce((acc: number, item: any) => acc + item.quantity, 0) || 0;
 
   // Prevent scroll when mobile menu is open
   useEffect(() => {
@@ -107,9 +112,11 @@ export function Header() {
                 aria-label="Cart"
               >
                 <ShoppingBag className="h-5 w-5" />
-                <span className="absolute -top-0.5 -right-0.5 flex h-4 w-4 items-center justify-center rounded-full bg-primary text-[9px] font-bold text-primary-foreground">
-                  0
-                </span>
+                {cartItemCount > 0 && (
+                  <span className="absolute -top-0.5 -right-0.5 flex h-4 w-4 items-center justify-center rounded-full bg-primary text-[9px] font-bold text-primary-foreground">
+                    {cartItemCount > 99 ? '99+' : cartItemCount}
+                  </span>
+                )}
               </Link>
 
               {/* User Dropdown / Authentication (Hidden on mobile) */}
@@ -200,9 +207,11 @@ export function Header() {
         <Link href="/cart" className="relative flex flex-col items-center justify-center gap-1 text-foreground/70 hover:text-primary transition-colors">
           <ShoppingBag className="h-5 w-5" />
           <span className="text-[9px] font-bold uppercase tracking-widest">Bag</span>
-          <span className="absolute -top-1 right-2 flex h-3.5 w-3.5 items-center justify-center rounded-full bg-primary text-[8px] font-bold text-primary-foreground">
-            0
-          </span>
+          {cartItemCount > 0 && (
+            <span className="absolute -top-1 right-2 flex h-3.5 w-3.5 items-center justify-center rounded-full bg-primary text-[8px] font-bold text-primary-foreground">
+              {cartItemCount > 99 ? '99+' : cartItemCount}
+            </span>
+          )}
         </Link>
         <Link href="/orders" className="flex flex-col items-center justify-center gap-1 text-foreground/70 hover:text-primary transition-colors">
           <Package className="h-5 w-5" />

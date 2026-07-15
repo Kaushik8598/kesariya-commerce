@@ -14,6 +14,9 @@ import { ReviewsModule } from './reviews/reviews.module';
 import { WishlistsModule } from './wishlists/wishlists.module';
 
 import { envSchema } from './config/env.validation';
+import { CartsModule } from './carts/carts.module';
+import { CouponsModule } from './coupons/coupons.module';
+import { CheckoutModule } from './checkout/checkout.module';
 
 @Module({
   imports: [
@@ -31,6 +34,9 @@ import { envSchema } from './config/env.validation';
     ProductsModule,
     ReviewsModule,
     WishlistsModule,
+    CartsModule,
+    CouponsModule,
+    CheckoutModule,
   ],
   controllers: [AppController],
   providers: [AppService],

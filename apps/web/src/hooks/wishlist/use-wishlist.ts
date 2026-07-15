@@ -28,7 +28,8 @@ export function useToggleWishlist() {
     mutationFn: async (productId: string) => {
       if (!isAuthenticated) {
         toast.error("Please login to add to wishlist");
-        router.push("/login?redirectTo=" + window.location.pathname);
+        const pathname = typeof window !== 'undefined' ? window.location.pathname : '';
+        router.push("/login?redirectTo=" + pathname);
         throw new Error("Not authenticated");
       }
       const res = await wishlistService.toggleWishlistItem(productId);

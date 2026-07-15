@@ -17,6 +17,8 @@ import { envSchema } from './config/env.validation';
 import { CartsModule } from './carts/carts.module';
 import { CouponsModule } from './coupons/coupons.module';
 import { CheckoutModule } from './checkout/checkout.module';
+import { OrdersModule } from './orders/orders.module';
+import { LocationsModule } from './locations/locations.module';
 
 @Module({
   imports: [
@@ -37,6 +39,8 @@ import { CheckoutModule } from './checkout/checkout.module';
     CartsModule,
     CouponsModule,
     CheckoutModule,
+    OrdersModule,
+    LocationsModule,
   ],
   controllers: [AppController],
   providers: [AppService],

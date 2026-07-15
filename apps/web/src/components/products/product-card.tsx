@@ -8,34 +8,37 @@ import { cn } from "@/lib/utils";
 import { RatingStars } from "@/components/ui/rating-stars";
 import { Price } from "@/components/ui/price";
 import { WishlistButton } from "@/components/wishlist/wishlist-button";
-import type { MockProduct } from "@/constants/mock-data";
+import type { Product } from "@/types/product";
 
 interface ProductCardProps {
-  product: MockProduct;
+  product: Product;
   className?: string;
 }
 
 export function ProductCard({ product, className }: ProductCardProps) {
+  const primaryImage = product.images?.find((img) => img.isPrimary) || product.images?.[0];
+  const imageUrl = primaryImage?.url || "https://images.unsplash.com/photo-1596755094514-f87e34085b2c?w=800";
+  
+  let badge = null;
+  if (product.isNewArrival) badge = "NEW";
+  else if (product.isFeatured) badge = "FEATURED";
+
   return (
     <div className={cn("group relative", className)}>
       <Link href={`/products/${product.slug}`} className="block">
         {/* Image Container */}
         <div className="relative aspect-[3/4] overflow-hidden rounded-xl bg-secondary">
           {/* Badge */}
-          {product.badge && (
+          {badge && (
             <span
               className={cn(
                 "absolute left-3 top-3 z-10 rounded-md px-2.5 py-1 text-[9px] font-extrabold uppercase tracking-widest",
-                product.badge === "NEW"
+                badge === "NEW"
                   ? "bg-emerald-500 text-white"
-                  : product.badge === "PREMIUM"
-                    ? "bg-amber-500 text-white"
-                    : product.badge === "BESTSELLER"
-                      ? "bg-foreground text-background"
-                      : "bg-primary text-primary-foreground",
+                  : "bg-primary text-primary-foreground",
               )}
             >
-              {product.badge}
+              {badge}
             </span>
           )}
 
@@ -47,7 +50,7 @@ export function ProductCard({ product, className }: ProductCardProps) {
 
           {/* Product Image */}
           <Image
-            src={product.image}
+            src={imageUrl}
             alt={product.name}
             fill
             sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
@@ -73,7 +76,7 @@ export function ProductCard({ product, className }: ProductCardProps) {
       {/* Product Info */}
       <div className="mt-3.5 space-y-1.5">
         <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-muted-foreground">
-          {product.category}
+          {product.category?.name}
         </p>
         <h3 className="text-sm font-semibold leading-tight text-foreground line-clamp-1 transition-colors group-hover:text-primary">
           {product.name}
@@ -82,7 +85,7 @@ export function ProductCard({ product, className }: ProductCardProps) {
           basePrice={product.basePrice}
           salePrice={product.salePrice}
         />
-        <RatingStars rating={product.rating} count={product.reviewCount} />
+        <RatingStars rating={product.avgRating || 0} count={product._count?.reviews || 0} />
       </div>
     </div>
   );

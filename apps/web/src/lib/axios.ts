@@ -40,7 +40,13 @@ api.interceptors.request.use((config) => {
 });
 
 api.interceptors.response.use(
-  (response) => response,
+  (response) => {
+    // Unwrap the NestJS ResponseInterceptor payload
+    if (response.data && typeof response.data === 'object' && response.data.success === true && 'data' in response.data) {
+      response.data = response.data.data;
+    }
+    return response;
+  },
 
   async (error: AxiosError) => {
     const originalRequest = error.config as RetryRequestConfig | undefined;

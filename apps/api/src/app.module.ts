@@ -8,6 +8,9 @@ import { PrismaModule } from './prisma/prisma.module';
 import { AuthModule } from './auth/auth.module';
 import { UsersModule } from './users/users.module';
 import { RolesModule } from './roles/roles.module';
+import { CategoriesModule } from './categories/categories.module';
+import { ProductsModule } from './products/products.module';
+import { ReviewsModule } from './reviews/reviews.module';
 
 import { envSchema } from './config/env.validation';
 
@@ -23,8 +26,12 @@ import { envSchema } from './config/env.validation';
     AuthModule,
     UsersModule,
     RolesModule,
+    CategoriesModule,
+    ProductsModule,
+    ReviewsModule,
   ],
   controllers: [AppController],
   providers: [AppService],
 })
 export class AppModule {}
+

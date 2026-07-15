@@ -5,7 +5,8 @@ import { ArrowRight } from "lucide-react";
 
 import { useInView } from "@/hooks/use-in-view";
 import { ProductCard } from "@/components/products/product-card";
-import { newArrivals } from "@/constants/mock-data";
+import { useNewArrivals } from "@/hooks/products/use-products";
+import { Skeleton } from "@/components/ui/skeleton";
 import {
   Carousel,
   CarouselContent,
@@ -16,6 +17,7 @@ import {
 
 export function NewArrivals() {
   const { ref, isInView } = useInView({ threshold: 0.1 });
+  const { products, loading } = useNewArrivals(6);
 
   return (
     <section ref={ref} className="py-20 overflow-hidden">
@@ -63,16 +65,29 @@ export function NewArrivals() {
             style={{ transitionDelay: isInView ? "200ms" : "0ms" }}
           >
             <CarouselContent className="-ml-4 sm:-ml-6 lg:-ml-6">
-              {newArrivals.map((product) => (
-                <CarouselItem
-                  key={product.id}
-                  className="pl-4 sm:pl-6 lg:pl-6 basis-auto"
-                >
-                  <div className="w-[260px] sm:w-[280px] lg:w-[300px]">
-                    <ProductCard product={product} />
-                  </div>
-                </CarouselItem>
-              ))}
+              {loading
+                ? Array.from({ length: 4 }).map((_, i) => (
+                    <CarouselItem
+                      key={i}
+                      className="pl-4 sm:pl-6 lg:pl-6 basis-auto"
+                    >
+                      <div className="w-[260px] sm:w-[280px] lg:w-[300px] space-y-3">
+                        <Skeleton className="aspect-[3/4] w-full rounded-xl" />
+                        <Skeleton className="h-4 w-2/3" />
+                        <Skeleton className="h-4 w-1/2" />
+                      </div>
+                    </CarouselItem>
+                  ))
+                : products.map((product) => (
+                    <CarouselItem
+                      key={product.id}
+                      className="pl-4 sm:pl-6 lg:pl-6 basis-auto"
+                    >
+                      <div className="w-[260px] sm:w-[280px] lg:w-[300px]">
+                        <ProductCard product={product} />
+                      </div>
+                    </CarouselItem>
+                  ))}
 
               {/* "View All" card */}
               <CarouselItem className="pl-4 sm:pl-6 lg:pl-6 basis-auto">

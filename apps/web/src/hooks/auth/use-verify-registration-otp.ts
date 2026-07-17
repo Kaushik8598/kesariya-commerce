@@ -7,25 +7,15 @@ import { useMutation } from "@tanstack/react-query";
 import { authService } from "@/services/auth.service";
 import { useAuth } from "@/providers/auth-provider";
 
-export function useLogin() {
+export function useVerifyRegistrationOtp() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { login } = useAuth();
 
   return useMutation({
-    mutationFn: authService.login,
+    mutationFn: authService.verifyRegistrationOtp,
 
-    onSuccess: (response, variables) => {
-      if (response.data.requiresVerification) {
-        toast.error(response.data.message);
-        router.push(
-          `/verify-account?countryCode=${encodeURIComponent(
-            variables.countryCode,
-          )}&mobile=${variables.mobile}`,
-        );
-        return;
-      }
-
+    onSuccess: (response) => {
       login(
         response.data.accessToken,
         response.data.refreshToken,
@@ -38,7 +28,7 @@ export function useLogin() {
       router.push(redirectTo);
     },
     onError: (error: any) => {
-      toast.error(error.response?.data?.message || "Login failed");
+      toast.error(error.response?.data?.message || "Failed to verify OTP");
     },
   });
 }

@@ -5,25 +5,28 @@ import { useRouter } from "next/navigation";
 import { useMutation } from "@tanstack/react-query";
 
 import { authService } from "@/services/auth.service";
-import { useAuth } from "@/providers/auth-provider";
 
 export function useRegister() {
   const router = useRouter();
-  const { login } = useAuth();
 
   return useMutation({
     mutationFn: authService.register,
 
-    onSuccess: (response) => {
-      login(
-        response.data.accessToken,
-        response.data.refreshToken,
-        response.data.user,
-      );
-
+    onSuccess: (response, variables) => {
       toast.success(response.data.message);
 
-      router.push("/");
+      if (response.data.requiresVerification) {
+        router.push(
+          `/verify-account?countryCode=${encodeURIComponent(
+            variables.countryCode,
+          )}&mobile=${variables.mobile}`,
+        );
+      } else {
+        router.push("/");
+      }
+    },
+    onError: (error: any) => {
+      toast.error(error.response?.data?.message || "Registration failed");
     },
   });
 }

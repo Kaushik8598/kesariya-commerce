@@ -125,7 +125,7 @@ export default function OrdersPage() {
               {/* Filters */}
               <div className="grid grid-cols-1 sm:grid-cols-4 gap-4 p-4 border border-border rounded-lg bg-secondary/5">
                 <div className="sm:col-span-1">
-                  <Select value={filters.status} onValueChange={(val) => setFilters({ ...filters, status: val })}>
+                  <Select value={filters.status} onValueChange={(val) => setFilters({ ...filters, status: val as string })}>
                     <SelectTrigger className="w-full">
                       <SelectValue placeholder="All Statuses" />
                     </SelectTrigger>
@@ -140,7 +140,7 @@ export default function OrdersPage() {
                   </Select>
                 </div>
                 <div className="sm:col-span-1">
-                  <Select value={filters.paymentStatus} onValueChange={(val) => setFilters({ ...filters, paymentStatus: val })}>
+                  <Select value={filters.paymentStatus} onValueChange={(val) => setFilters({ ...filters, paymentStatus: val as string })}>
                     <SelectTrigger className="w-full">
                       <SelectValue placeholder="All Payments" />
                     </SelectTrigger>

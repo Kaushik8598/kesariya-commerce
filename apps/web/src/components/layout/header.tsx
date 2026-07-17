@@ -34,9 +34,9 @@ export function Header() {
 
   const navLinks = [
     { label: "HOME", href: "/" },
-    { label: "SHIRTS", href: "/collection/shirts" },
-    { label: "NEW ARRIVALS", href: "/collection/new-arrivals" },
-    { label: "BEST SELLERS", href: "/collection/best-sellers" },
+    // { label: "SHIRTS", href: "/category/shirts" },
+    { label: "NEW ARRIVALS", href: "/#new-arrivals" },
+    { label: "BEST SELLERS", href: "/#best-sellers" },
   ];
 
   return (
@@ -49,7 +49,7 @@ export function Header() {
 
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <div className="flex h-16 items-center justify-between gap-4">
-            
+
             {/* Site Brand / Logo */}
             <div className="flex-1 md:flex-initial flex items-center justify-center md:justify-start">
               <Link href="/" className="flex items-center">
@@ -67,11 +67,10 @@ export function Header() {
                   <Link
                     key={link.label}
                     href={link.href}
-                    className={`text-xs font-bold tracking-widest transition-all duration-300 relative py-1 border-b-2 hover:text-primary ${
-                      isActive
+                    className={`text-xs font-bold tracking-widest transition-all duration-300 relative py-1 border-b-2 hover:text-primary ${isActive
                         ? "border-primary text-primary"
                         : "border-transparent text-foreground/70 hover:border-foreground/30"
-                    }`}
+                      }`}
                   >
                     {link.label}
                   </Link>
@@ -81,7 +80,7 @@ export function Header() {
 
             {/* Actions (Desktop + Search for Mobile) */}
             <div className="flex items-center gap-2 sm:gap-4 absolute md:static right-4">
-              
+
               {/* Search Bar Button */}
               <Button
                 variant="ghost"
@@ -153,7 +152,7 @@ export function Header() {
                           <User className="h-4 w-4" />
                           My Profile
                         </Link>
-                        
+
                         <Link
                           href="/orders"
                           onClick={() => setUserDropdownOpen(false)}
@@ -225,9 +224,9 @@ export function Header() {
           <User className="h-5 w-5" />
           <span className="text-[9px] font-bold uppercase tracking-widest">Profile</span>
         </Link>
-        <Button 
+        <Button
           variant="ghost"
-          onClick={() => setMobileMenuOpen(true)} 
+          onClick={() => setMobileMenuOpen(true)}
           className="flex h-auto p-0 flex-col items-center justify-center gap-1 text-foreground/70 hover:text-primary hover:bg-transparent cursor-pointer"
         >
           <Menu className="h-5 w-5" />
@@ -240,30 +239,29 @@ export function Header() {
         <div className="md:hidden fixed inset-0 z-50 bg-background flex flex-col animate-in slide-in-from-bottom-4 duration-300">
           <div className="flex h-16 items-center justify-between px-4 border-b border-border">
             <span className="text-sm font-extrabold tracking-[0.25em] uppercase">MENU</span>
-            <Button 
+            <Button
               variant="ghost"
               size="icon"
-              onClick={() => setMobileMenuOpen(false)} 
+              onClick={() => setMobileMenuOpen(false)}
               className="text-foreground/80 hover:text-foreground cursor-pointer h-10 w-10"
               aria-label="Close menu"
             >
               <X className="h-6 w-6" />
             </Button>
           </div>
-          
+
           <div className="flex-1 overflow-y-auto px-6 py-8 flex flex-col">
             {/* Nav Links */}
             <div className="flex flex-col gap-6">
               {navLinks.map((link) => {
                 const isActive = pathname === link.href;
                 return (
-                  <Link 
-                    key={link.label} 
-                    href={link.href} 
-                    onClick={() => setMobileMenuOpen(false)} 
-                    className={`text-xl font-black tracking-widest uppercase transition-colors ${
-                      isActive ? "text-primary" : "text-foreground hover:text-primary"
-                    }`}
+                  <Link
+                    key={link.label}
+                    href={link.href}
+                    onClick={() => setMobileMenuOpen(false)}
+                    className={`text-xl font-black tracking-widest uppercase transition-colors ${isActive ? "text-primary" : "text-foreground hover:text-primary"
+                      }`}
                   >
                     {link.label}
                   </Link>
@@ -283,9 +281,9 @@ export function Header() {
               {/* Authentication */}
               <div className="border-t border-border pt-8 pb-8">
                 {!isAuthenticated ? (
-                  <Link 
-                    href="/login" 
-                    onClick={() => setMobileMenuOpen(false)} 
+                  <Link
+                    href="/login"
+                    onClick={() => setMobileMenuOpen(false)}
                     className="flex items-center justify-center w-full py-4 bg-foreground text-background font-black uppercase tracking-[0.2em] text-xs rounded-xl hover:bg-primary transition-colors"
                   >
                     Login / Register
@@ -301,9 +299,9 @@ export function Header() {
                         <p className="text-[10px] uppercase tracking-widest text-foreground/50">{user?.email}</p>
                       </div>
                     </div>
-                    <Button 
+                    <Button
                       variant="outline"
-                      onClick={() => { setMobileMenuOpen(false); logout(); }} 
+                      onClick={() => { setMobileMenuOpen(false); logout(); }}
                       className="flex h-auto items-center justify-center w-full py-4 border-2 border-border font-black uppercase tracking-[0.2em] text-xs rounded-xl text-destructive hover:text-destructive hover:bg-destructive/5 cursor-pointer"
                     >
                       <LogOut className="mr-2 h-4 w-4" />

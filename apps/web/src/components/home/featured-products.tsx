@@ -13,7 +13,7 @@ export function FeaturedProducts() {
   const { products, loading } = useFeaturedProducts(4);
 
   return (
-    <section ref={ref} className="mx-auto max-w-7xl px-4 py-20 sm:px-6 lg:px-8">
+    <section id="best-sellers" ref={ref} className="mx-auto max-w-7xl px-4 py-20 sm:px-6 lg:px-8">
       {/* Section Header */}
       <div
         className={`flex flex-col items-center justify-between gap-4 sm:flex-row transition-all duration-700 ${

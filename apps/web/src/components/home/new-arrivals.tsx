@@ -20,7 +20,7 @@ export function NewArrivals() {
   const { products, loading } = useNewArrivals(6);
 
   return (
-    <section ref={ref} className="py-20 overflow-hidden">
+    <section id="new-arrivals" ref={ref} className="py-20 overflow-hidden">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <Carousel
           opts={{

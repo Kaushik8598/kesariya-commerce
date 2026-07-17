@@ -7,6 +7,7 @@ import { cn } from "@/lib/utils";
 
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Button } from "@/components/ui/button";
 
 type FormInputProps = React.InputHTMLAttributes<HTMLInputElement> & {
   label: string;
@@ -43,12 +44,13 @@ export const FormInput = forwardRef<HTMLInputElement, FormInputProps>(
           {required && <span className="ml-1 text-destructive">*</span>}
         </Label>
 
-        <div className="relative">
+        <div className="relative mb-0.5">
           <Input
             ref={ref}
             id={id}
             type={isPassword ? (showPassword ? "text" : "password") : type}
             className={cn(
+              "h-10",
               isPassword && "pr-10",
               error && "border-destructive focus-visible:ring-destructive",
               className,
@@ -57,17 +59,19 @@ export const FormInput = forwardRef<HTMLInputElement, FormInputProps>(
           />
 
           {isPassword && (
-            <button
+            <Button
               type="button"
+              variant="ghost"
+              size="icon"
               onClick={() => setShowPassword((prev) => !prev)}
-              className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground transition hover:text-foreground"
+              className="absolute right-3 top-1/2 -translate-y-1/2 h-7 w-7 text-muted-foreground transition hover:text-foreground hover:bg-transparent"
             >
               {showPassword ? (
                 <EyeOff className="h-4 w-4" />
               ) : (
                 <Eye className="h-4 w-4" />
               )}
-            </button>
+            </Button>
           )}
         </div>
 

@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { Tag, Copy, Check } from "lucide-react";
 import { useState } from "react";
+import { Button } from "@/components/ui/button";
 
 import { useInView } from "@/hooks/use-in-view";
 import { CountdownTimer } from "@/components/ui/countdown-timer";
@@ -37,11 +38,10 @@ export function OffersBanner() {
         {offers.map((offer, index) => (
           <div
             key={offer.id}
-            className={`group relative overflow-hidden rounded-2xl transition-all duration-700 ${
-              isInView
+            className={`group relative overflow-hidden rounded-2xl transition-all duration-700 ${isInView
                 ? "translate-y-0 opacity-100"
                 : "translate-y-12 opacity-0"
-            } ${index === 0 ? "bg-gradient-to-br from-primary via-primary/90 to-[#8B2020]" : "bg-gradient-to-br from-[#3E2723] via-[#5D4037] to-[#3E2723]"}`}
+              } ${index === 0 ? "bg-gradient-to-br from-primary via-primary/90 to-[#8B2020]" : "bg-gradient-to-br from-[#3E2723] via-[#5D4037] to-[#3E2723]"}`}
             style={{
               transitionDelay: isInView ? `${index * 150 + 200}ms` : "0ms",
             }}
@@ -86,9 +86,10 @@ export function OffersBanner() {
                     {offer.code}
                   </span>
                 </div>
-                <button
+                <Button
+                  variant="ghost"
                   onClick={() => copyCode(offer.code)}
-                  className="flex items-center gap-1.5 rounded-lg bg-white/10 px-3 py-2.5 text-[10px] font-bold uppercase tracking-widest text-white/80 transition-all hover:bg-white/20 cursor-pointer"
+                  className="flex items-center gap-1.5 rounded-lg bg-white/10 px-3 py-2.5 text-[10px] font-bold uppercase tracking-widest text-white/80 transition-all hover:bg-white/20 hover:text-white cursor-pointer"
                 >
                   {copiedCode === offer.code ? (
                     <>
@@ -98,10 +99,10 @@ export function OffersBanner() {
                   ) : (
                     <>
                       <Copy className="size-3" />
-                      Copy
+                      Copy Code
                     </>
                   )}
-                </button>
+                </Button>
               </div>
 
               {/* Bottom Row: Timer + CTA */}

@@ -2,7 +2,8 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { ShoppingBag } from "lucide-react";
+// import { ShoppingBag } from "lucide-react";
+// import { Button } from "@/components/ui/button";
 
 import { cn } from "@/lib/utils";
 import { RatingStars } from "@/components/ui/rating-stars";
@@ -18,7 +19,7 @@ interface ProductCardProps {
 export function ProductCard({ product, className }: ProductCardProps) {
   const primaryImage = product.images?.find((img) => img.isPrimary) || product.images?.[0];
   const imageUrl = primaryImage?.url || "https://images.unsplash.com/photo-1596755094514-f87e34085b2c?w=800";
-  
+
   let badge = null;
   if (product.isNewArrival) badge = "NEW";
   else if (product.isFeatured) badge = "FEATURED";
@@ -58,8 +59,8 @@ export function ProductCard({ product, className }: ProductCardProps) {
           />
 
           {/* Add to Bag Overlay */}
-          <div className="absolute inset-x-0 bottom-0 flex items-end justify-center p-4 opacity-0 transition-all duration-300 group-hover:opacity-100">
-            <button
+          {/* <div className="absolute inset-x-0 bottom-0 flex items-end justify-center p-4 opacity-0 transition-all duration-300 group-hover:opacity-100">
+            <Button
               onClick={(e) => {
                 e.preventDefault();
                 e.stopPropagation();
@@ -68,8 +69,8 @@ export function ProductCard({ product, className }: ProductCardProps) {
             >
               <ShoppingBag className="size-3.5" />
               Add to Bag
-            </button>
-          </div>
+            </Button>
+          </div> */}
         </div>
       </Link>
 

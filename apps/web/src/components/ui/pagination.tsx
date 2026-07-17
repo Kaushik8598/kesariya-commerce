@@ -2,6 +2,7 @@
 
 import React from "react";
 import { ChevronLeft, ChevronRight } from "lucide-react";
+import { Button } from "@/components/ui/button";
 
 interface PaginationProps {
   currentPage: number;
@@ -42,43 +43,49 @@ export function Pagination({
   return (
     <nav className="flex items-center justify-center gap-1.5 my-8 select-none">
       {/* Prev Button */}
-      <button
+      <Button
         type="button"
+        variant="outline"
+        size="icon"
         disabled={currentPage === 1 || disabled}
         onClick={() => onPageChange(currentPage - 1)}
-        className="flex h-9 w-9 items-center justify-center rounded-md border border-border bg-card text-foreground hover:bg-secondary disabled:opacity-40 transition-all cursor-pointer"
+        className="h-9 w-9 text-foreground hover:bg-secondary disabled:opacity-40 transition-all cursor-pointer"
         aria-label="Previous page"
       >
         <ChevronLeft className="h-4 w-4" />
-      </button>
+      </Button>
 
       {/* Page Numbers */}
       {getPageNumbers().map((page) => (
-        <button
+        <Button
           key={page}
           type="button"
+          variant={currentPage === page ? "default" : "outline"}
+          size="icon"
           disabled={disabled}
           onClick={() => onPageChange(page)}
-          className={`h-9 w-9 text-xs font-bold tracking-wider rounded-md transition-all cursor-pointer ${
+          className={`h-9 w-9 text-xs font-bold tracking-wider transition-all cursor-pointer ${
             currentPage === page
-              ? "bg-primary text-primary-foreground border border-primary shadow-xs"
-              : "border border-border bg-card text-foreground hover:bg-secondary"
+              ? "shadow-xs"
+              : "text-foreground hover:bg-secondary"
           }`}
         >
           {page}
-        </button>
+        </Button>
       ))}
 
       {/* Next Button */}
-      <button
+      <Button
         type="button"
+        variant="outline"
+        size="icon"
         disabled={currentPage === totalPages || disabled}
         onClick={() => onPageChange(currentPage + 1)}
-        className="flex h-9 w-9 items-center justify-center rounded-md border border-border bg-card text-foreground hover:bg-secondary disabled:opacity-40 transition-all cursor-pointer"
+        className="h-9 w-9 text-foreground hover:bg-secondary disabled:opacity-40 transition-all cursor-pointer"
         aria-label="Next page"
       >
         <ChevronRight className="h-4 w-4" />
-      </button>
+      </Button>
     </nav>
   );
 }

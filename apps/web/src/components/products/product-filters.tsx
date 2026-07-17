@@ -3,6 +3,7 @@
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useCallback } from "react";
 import { Check, X } from "lucide-react";
+import { Button } from "@/components/ui/button";
 
 import { cn } from "@/lib/utils";
 import type { ProductFilters } from "@/types/product";
@@ -68,7 +69,8 @@ export function ProductFiltersSidebar({ filters, loading }: ProductFiltersSideba
             const isActive = currentCategory === category.slug;
             return (
               <li key={category.slug}>
-                <button
+                <Button
+                  variant="ghost"
                   onClick={() => {
                     router.push(
                       pathname +
@@ -78,11 +80,11 @@ export function ProductFiltersSidebar({ filters, loading }: ProductFiltersSideba
                           : createQueryString("category", category.slug))
                     );
                   }}
-                  className="group flex w-full items-center justify-between text-sm"
+                  className="group flex h-auto p-0 w-full items-center justify-between text-sm hover:bg-transparent"
                 >
                   <span
                     className={cn(
-                      "transition-colors",
+                      "transition-colors font-normal",
                       isActive
                         ? "font-semibold text-primary"
                         : "text-muted-foreground group-hover:text-foreground"
@@ -90,10 +92,10 @@ export function ProductFiltersSidebar({ filters, loading }: ProductFiltersSideba
                   >
                     {category.name}
                   </span>
-                  <span className="text-xs text-muted-foreground bg-secondary/50 px-2 py-0.5 rounded-full">
+                  <span className="text-xs text-muted-foreground bg-secondary/50 px-2 py-0.5 rounded-full font-normal">
                     {category._count.products}
                   </span>
-                </button>
+                </Button>
               </li>
             );
           })}
@@ -110,7 +112,8 @@ export function ProductFiltersSidebar({ filters, loading }: ProductFiltersSideba
             const isActive = currentBrand === brand.slug;
             return (
               <li key={brand.slug}>
-                <button
+                <Button
+                  variant="ghost"
                   onClick={() => {
                     router.push(
                       pathname +
@@ -120,7 +123,7 @@ export function ProductFiltersSidebar({ filters, loading }: ProductFiltersSideba
                           : createQueryString("brand", brand.slug))
                     );
                   }}
-                  className="group flex w-full items-center gap-3 text-sm"
+                  className="group flex h-auto p-0 w-full items-center gap-3 text-sm hover:bg-transparent"
                 >
                   <div
                     className={cn(
@@ -134,7 +137,7 @@ export function ProductFiltersSidebar({ filters, loading }: ProductFiltersSideba
                   </div>
                   <span
                     className={cn(
-                      "flex-1 text-left transition-colors",
+                      "flex-1 text-left transition-colors font-normal",
                       isActive
                         ? "font-semibold text-foreground"
                         : "text-muted-foreground group-hover:text-foreground"
@@ -142,10 +145,10 @@ export function ProductFiltersSidebar({ filters, loading }: ProductFiltersSideba
                   >
                     {brand.name}
                   </span>
-                  <span className="text-xs text-muted-foreground bg-secondary/50 px-2 py-0.5 rounded-full">
+                  <span className="text-xs text-muted-foreground bg-secondary/50 px-2 py-0.5 rounded-full font-normal">
                     {brand._count.products}
                   </span>
-                </button>
+                </Button>
               </li>
             );
           })}
@@ -155,13 +158,14 @@ export function ProductFiltersSidebar({ filters, loading }: ProductFiltersSideba
       {/* Active Filters Summary */}
       {(currentCategory || currentBrand || currentRating) && (
         <div className="pt-4 border-t border-border">
-          <button
+          <Button
+            variant="ghost"
             onClick={() => router.push(pathname)}
-            className="flex items-center text-xs font-semibold text-destructive hover:underline"
+            className="flex h-auto p-0 items-center text-xs font-semibold text-destructive hover:text-destructive hover:bg-transparent hover:underline"
           >
             <X className="size-3 mr-1" />
             Clear All Filters
-          </button>
+          </Button>
         </div>
       )}
     </div>

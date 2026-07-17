@@ -3,13 +3,15 @@
 import Link from "next/link";
 import { Suspense } from "react";
 
-import { useForm } from "react-hook-form";
+import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 
 import { Card, CardContent } from "@/components/ui/card";
 
 import { FormInput } from "@/components/forms/form-input";
 import { SubmitButton } from "@/components/forms/submit-button";
+import { CountryCodePicker } from "@/components/ui/country-code-picker";
+import { Label } from "@/components/ui/label";
 
 import { loginSchema, LoginSchema } from "@/validations/auth.validation";
 
@@ -19,6 +21,7 @@ function LoginContent() {
   const {
     register,
     handleSubmit,
+    control,
     formState: { errors },
   } = useForm<LoginSchema>({
     resolver: zodResolver(loginSchema as any),
@@ -45,23 +48,44 @@ function LoginContent() {
         </div>
 
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
-          <FormInput
-            label="Country Code"
-            required
-            error={errors.countryCode?.message}
-            {...register("countryCode")}
-          />
-
-          <FormInput
-            label="Mobile Number"
-            required
-            error={errors.mobile?.message}
-            {...register("mobile")}
-          />
+          <div className="space-y-2">
+            <Label>
+              Mobile Number <span className="text-destructive">*</span>
+            </Label>
+            <div className="flex gap-2">
+              <Controller
+                name="countryCode"
+                control={control}
+                render={({ field }) => (
+                  <CountryCodePicker
+                    value={field.value}
+                    onChange={field.onChange}
+                    className="w-[120px] h-10"
+                  />
+                )}
+              />
+              <div className="flex-1">
+                <FormInput
+                  label=""
+                  containerClassName="space-y-0"
+                  className="h-10"
+                  error={errors.mobile?.message}
+                  {...register("mobile")}
+                />
+              </div>
+            </div>
+            {errors.countryCode?.message && (
+              <p className="text-sm text-destructive">
+                {errors.countryCode?.message}
+              </p>
+            )}
+          </div>
 
           <FormInput
             label="Password"
             type="password"
+            className="h-10"
+
             required
             error={errors.password?.message}
             {...register("password")}

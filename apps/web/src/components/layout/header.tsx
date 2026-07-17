@@ -7,7 +7,7 @@ import { Search, ShoppingBag, User, LogOut, Menu, X, ChevronDown, Heart, Package
 import { useAuth } from "@/providers/auth-provider";
 import { ThemeToggle } from "@/components/ui/theme-toggle";
 import { SearchOverlay } from "@/components/search/search-overlay";
-
+import { Button } from "@/components/ui/button";
 import { useCart } from "@/hooks/cart/use-cart";
 
 export function Header() {
@@ -83,13 +83,15 @@ export function Header() {
             <div className="flex items-center gap-2 sm:gap-4 absolute md:static right-4">
               
               {/* Search Bar Button */}
-              <button
+              <Button
+                variant="ghost"
+                size="icon"
                 onClick={() => setSearchOpen(true)}
-                className="p-1.5 text-foreground/70 hover:text-primary transition-colors rounded-full hover:bg-secondary cursor-pointer"
+                className="text-foreground/70 hover:text-primary rounded-full hover:bg-secondary cursor-pointer h-8 w-8"
                 aria-label="Search products"
               >
                 <Search className="h-5 w-5" />
-              </button>
+              </Button>
 
               {/* Theme Toggle (Hidden on mobile) */}
               <div className="hidden md:block">
@@ -123,13 +125,14 @@ export function Header() {
               <div className="hidden md:block relative">
                 {isAuthenticated ? (
                   <>
-                    <button
+                    <Button
+                      variant="ghost"
                       onClick={() => setUserDropdownOpen(!userDropdownOpen)}
-                      className="flex items-center gap-1 p-1.5 text-foreground/77 hover:text-primary transition-colors rounded-full hover:bg-secondary cursor-pointer"
+                      className="flex items-center gap-1 p-1.5 h-auto text-foreground/77 hover:text-primary rounded-full hover:bg-secondary cursor-pointer"
                     >
                       <User className="h-5 w-5" />
                       <ChevronDown className="h-3 w-3 opacity-60" />
-                    </button>
+                    </Button>
 
                     {userDropdownOpen && (
                       <div className="absolute right-0 mt-2.5 w-56 rounded-md border border-border bg-card p-1 shadow-lg ring-1 ring-black/5 focus:outline-hidden animate-in fade-in slide-in-from-top-1 duration-200 z-50">
@@ -170,16 +173,17 @@ export function Header() {
                           </Link>
                         )}
 
-                        <button
+                        <Button
+                          variant="ghost"
                           onClick={() => {
                             setUserDropdownOpen(false);
                             logout();
                           }}
-                          className="flex w-full items-center gap-2.5 px-3 py-2 text-xs font-medium text-destructive hover:bg-destructive/5 rounded-sm transition-colors text-left cursor-pointer"
+                          className="flex h-auto w-full items-center gap-2.5 px-3 py-2 text-xs font-medium text-destructive hover:bg-destructive/5 rounded-sm justify-start cursor-pointer"
                         >
                           <LogOut className="h-4 w-4" />
                           Logout
-                        </button>
+                        </Button>
                       </div>
                     )}
                   </>
@@ -221,13 +225,14 @@ export function Header() {
           <User className="h-5 w-5" />
           <span className="text-[9px] font-bold uppercase tracking-widest">Profile</span>
         </Link>
-        <button 
+        <Button 
+          variant="ghost"
           onClick={() => setMobileMenuOpen(true)} 
-          className="flex flex-col items-center justify-center gap-1 text-foreground/70 hover:text-primary transition-colors cursor-pointer"
+          className="flex h-auto p-0 flex-col items-center justify-center gap-1 text-foreground/70 hover:text-primary hover:bg-transparent cursor-pointer"
         >
           <Menu className="h-5 w-5" />
           <span className="text-[9px] font-bold uppercase tracking-widest">Menu</span>
-        </button>
+        </Button>
       </div>
 
       {/* Full Screen Mobile Menu */}
@@ -235,13 +240,15 @@ export function Header() {
         <div className="md:hidden fixed inset-0 z-50 bg-background flex flex-col animate-in slide-in-from-bottom-4 duration-300">
           <div className="flex h-16 items-center justify-between px-4 border-b border-border">
             <span className="text-sm font-extrabold tracking-[0.25em] uppercase">MENU</span>
-            <button 
+            <Button 
+              variant="ghost"
+              size="icon"
               onClick={() => setMobileMenuOpen(false)} 
-              className="p-2 text-foreground/80 hover:text-foreground cursor-pointer"
+              className="text-foreground/80 hover:text-foreground cursor-pointer h-10 w-10"
               aria-label="Close menu"
             >
               <X className="h-6 w-6" />
-            </button>
+            </Button>
           </div>
           
           <div className="flex-1 overflow-y-auto px-6 py-8 flex flex-col">
@@ -294,13 +301,14 @@ export function Header() {
                         <p className="text-[10px] uppercase tracking-widest text-foreground/50">{user?.email}</p>
                       </div>
                     </div>
-                    <button 
+                    <Button 
+                      variant="outline"
                       onClick={() => { setMobileMenuOpen(false); logout(); }} 
-                      className="flex items-center justify-center w-full py-4 border-2 border-border font-black uppercase tracking-[0.2em] text-xs rounded-xl text-destructive hover:bg-destructive/5 transition-colors cursor-pointer"
+                      className="flex h-auto items-center justify-center w-full py-4 border-2 border-border font-black uppercase tracking-[0.2em] text-xs rounded-xl text-destructive hover:text-destructive hover:bg-destructive/5 cursor-pointer"
                     >
                       <LogOut className="mr-2 h-4 w-4" />
                       Logout
-                    </button>
+                    </Button>
                   </div>
                 )}
               </div>

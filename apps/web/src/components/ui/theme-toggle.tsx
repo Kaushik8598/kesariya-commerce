@@ -3,6 +3,7 @@
 import { useTheme } from "next-themes";
 import { Sun, Moon } from "lucide-react";
 import { useEffect, useState } from "react";
+import { Button } from "@/components/ui/button";
 
 export function ThemeToggle() {
   const { theme, setTheme, resolvedTheme } = useTheme();
@@ -20,7 +21,9 @@ export function ThemeToggle() {
   const currentTheme = theme === "system" ? resolvedTheme : theme;
 
   return (
-    <button
+    <Button
+      variant="outline"
+      size="icon"
       onClick={() => setTheme(currentTheme === "dark" ? "light" : "dark")}
       className="relative flex h-9 w-9 items-center justify-center rounded-full border border-border bg-card text-foreground transition-all duration-300 hover:bg-secondary hover:text-primary focus:outline-hidden cursor-pointer"
       aria-label="Toggle theme"
@@ -41,6 +44,6 @@ export function ThemeToggle() {
           <Sun className="h-5 w-5" />
         </span>
       </div>
-    </button>
+    </Button>
   );
 }

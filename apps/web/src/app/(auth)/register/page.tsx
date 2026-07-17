@@ -3,24 +3,26 @@
 import Link from "next/link";
 import { useState } from "react";
 
-import { useForm } from "react-hook-form";
+import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 
 import { Card, CardContent } from "@/components/ui/card";
 
 import { FormInput } from "@/components/forms/form-input";
 import { SubmitButton } from "@/components/forms/submit-button";
+import { CountryCodePicker } from "@/components/ui/country-code-picker";
+import { Label } from "@/components/ui/label";
 
 import { registerSchema, RegisterSchema } from "@/validations/auth.validation";
 
 import { useRegister } from "@/hooks/auth/use-register";
 
 export default function RegisterPage() {
-  const [loading, setLoading] = useState(false);
 
   const {
     register,
     handleSubmit,
+    control,
     formState: { errors },
   } = useForm<RegisterSchema>({
     resolver: zodResolver(registerSchema as any),
@@ -39,7 +41,6 @@ export default function RegisterPage() {
 
   const onSubmit = (data: RegisterSchema) => {
     const { confirmPassword, ...payload } = data;
-    setLoading(true);
     mutation.mutate(payload);
   };
 
@@ -74,17 +75,35 @@ export default function RegisterPage() {
             {...register("email")}
           />
 
-          <FormInput
-            label="Country Code"
-            error={errors.countryCode?.message}
-            {...register("countryCode")}
-          />
-
-          <FormInput
-            label="Mobile Number"
-            error={errors.mobile?.message}
-            {...register("mobile")}
-          />
+          <div className="space-y-2">
+            <Label>Mobile Number</Label>
+            <div className="flex gap-2">
+              <Controller
+                name="countryCode"
+                control={control}
+                render={({ field }) => (
+                  <CountryCodePicker
+                    value={field.value}
+                    onChange={field.onChange}
+                    className="w-[120px]"
+                  />
+                )}
+              />
+              <div className="flex-1">
+                <FormInput
+                  label=""
+                  containerClassName="space-y-0"
+                  error={errors.mobile?.message}
+                  {...register("mobile")}
+                />
+              </div>
+            </div>
+            {errors.countryCode?.message && (
+              <p className="text-sm text-destructive">
+                {errors.countryCode?.message}
+              </p>
+            )}
+          </div>
 
           <FormInput
             label="Password"
@@ -100,7 +119,7 @@ export default function RegisterPage() {
             {...register("confirmPassword")}
           />
 
-          <SubmitButton loading={loading}>Create Account</SubmitButton>
+          <SubmitButton loading={mutation.isPending}>Create Account</SubmitButton>
 
           <p className="text-center text-sm text-muted-foreground">
             Already have an account?{" "}

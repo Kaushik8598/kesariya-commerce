@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { ChevronDown } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { Button } from "@/components/ui/button";
 import type { Product } from "@/types/product";
 
 interface ProductInfoProps {
@@ -54,9 +55,10 @@ export function ProductInfo({ product }: ProductInfoProps) {
               index === 0 && "border-t"
             )}
           >
-            <button
+            <Button
+              variant="ghost"
               onClick={() => setOpenSection(isOpen ? "" : section.id)}
-              className="flex w-full items-center justify-between py-5 text-left transition-colors hover:text-primary"
+              className="flex w-full h-auto items-center justify-between py-5 px-0 text-left transition-colors hover:text-primary hover:bg-transparent rounded-none"
             >
               <span className="text-xs font-bold uppercase tracking-widest">
                 {section.title}
@@ -67,7 +69,7 @@ export function ProductInfo({ product }: ProductInfoProps) {
                   isOpen && "rotate-180"
                 )}
               />
-            </button>
+            </Button>
             <div
               className={cn(
                 "overflow-hidden transition-all duration-300",

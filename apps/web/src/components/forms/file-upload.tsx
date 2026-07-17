@@ -1,10 +1,12 @@
 "use client";
 
 import React, { useState, useRef } from "react";
-import { Upload, X, File, Image as ImageIcon } from "lucide-react";
+import { Upload, X, File } from "lucide-react";
 import { toast } from "sonner";
 
 import { Label } from "@/components/ui/label";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 
 interface FileUploadProps {
   onChange: (files: File[]) => void;
@@ -101,13 +103,12 @@ export function FileUpload({
         onDragLeave={handleDrag}
         onDrop={handleDrop}
         onClick={() => fileInputRef.current?.click()}
-        className={`relative flex flex-col items-center justify-center border-2 border-dashed rounded-lg p-6 text-center cursor-pointer transition-all duration-300 ${
-          dragActive
+        className={`relative flex flex-col items-center justify-center border-2 border-dashed rounded-lg p-6 text-center cursor-pointer transition-all duration-300 ${dragActive
             ? "border-primary bg-primary/5"
             : "border-border bg-card/50 hover:bg-secondary hover:border-foreground/30"
-        }`}
+          }`}
       >
-        <input
+        <Input
           ref={fileInputRef}
           type="file"
           accept={accept}
@@ -151,16 +152,18 @@ export function FileUpload({
               <p className="text-[9px] font-semibold tracking-wide text-foreground truncate w-full px-1 uppercase">
                 {item.file.name}
               </p>
-              <button
+              <Button
                 type="button"
+                variant="outline"
+                size="icon"
                 onClick={(e) => {
                   e.stopPropagation();
                   removeFile(idx);
                 }}
-                className="absolute top-1 right-1 rounded-full bg-foreground text-background p-1 hover:bg-primary hover:text-primary-foreground opacity-90 transition-all shadow-sm"
+                className="absolute top-1 right-1 h-5 w-5 rounded-full bg-foreground text-background hover:bg-primary hover:text-primary-foreground opacity-90 transition-all shadow-sm border-none"
               >
                 <X className="h-3 w-3" />
-              </button>
+              </Button>
             </div>
           ))}
         </div>

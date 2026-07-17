@@ -2,6 +2,7 @@
 
 import { Heart, Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { Button } from "@/components/ui/button";
 import { useWishlist, useToggleWishlist } from "@/hooks/wishlist/use-wishlist";
 import { useAuth } from "@/providers/auth-provider";
 
@@ -22,7 +23,9 @@ export function WishlistButton({ productId, className }: WishlistButtonProps) {
   const isLoading = authLoading || (isAuthenticated && wishlistLoading);
 
   return (
-    <button
+    <Button
+      variant="outline"
+      size="icon"
       onClick={(e) => {
         e.preventDefault();
         e.stopPropagation();
@@ -30,7 +33,7 @@ export function WishlistButton({ productId, className }: WishlistButtonProps) {
       }}
       disabled={isPending || isLoading}
       className={cn(
-        "flex items-center justify-center rounded-full bg-white/90 p-2 shadow-sm backdrop-blur-sm transition-all duration-300 hover:scale-110 hover:shadow-md cursor-pointer disabled:opacity-50 disabled:hover:scale-100",
+        "rounded-full bg-white/90 shadow-sm backdrop-blur-sm transition-all duration-300 hover:scale-110 hover:shadow-md cursor-pointer disabled:opacity-50 disabled:hover:scale-100 border-none h-8 w-8",
         isWishlisted && "bg-primary/10",
         className,
       )}
@@ -48,6 +51,6 @@ export function WishlistButton({ productId, className }: WishlistButtonProps) {
           )}
         />
       )}
-    </button>
+    </Button>
   );
 }

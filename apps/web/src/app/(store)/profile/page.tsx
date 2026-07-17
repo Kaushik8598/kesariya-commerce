@@ -5,6 +5,7 @@ import { useProfile, useUpdateProfile } from "@/hooks/profile/use-profile";
 import { useAuth } from "@/providers/auth-provider";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Input } from "@/components/ui/input";
 import { User, Mail, Phone, Shield, Loader2, LogOut } from "lucide-react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
@@ -83,7 +84,7 @@ export default function ProfilePage() {
               <Shield className="h-3 w-3" /> {profile?.role?.name || "Customer"}
             </div>
           </div>
-          
+
           <div className="border border-border rounded-xl p-2 bg-secondary/10 flex flex-col gap-1">
             <Link href="/profile" className="px-4 py-3 bg-secondary/50 rounded-lg text-sm font-bold uppercase tracking-widest">
               Profile Details
@@ -117,57 +118,55 @@ export default function ProfilePage() {
                 <p className="text-sm text-foreground/60">Update your account details and contact information.</p>
               </div>
             </div>
-            
+
             <form onSubmit={handleSubmit} className="space-y-6">
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
                 <div>
                   <label className="block text-xs font-bold uppercase tracking-widest text-foreground/70 mb-2">First Name</label>
-                  <input
+                  <Input
                     type="text"
                     value={formData.firstName}
                     onChange={(e) => setFormData({ ...formData, firstName: e.target.value })}
-                    className="w-full bg-background border border-border px-4 py-3 text-sm rounded-md focus:outline-none focus:ring-2 focus:ring-primary/50"
                   />
                 </div>
                 <div>
                   <label className="block text-xs font-bold uppercase tracking-widest text-foreground/70 mb-2">Last Name</label>
-                  <input
+                  <Input
                     type="text"
                     value={formData.lastName}
                     onChange={(e) => setFormData({ ...formData, lastName: e.target.value })}
-                    className="w-full bg-background border border-border px-4 py-3 text-sm rounded-md focus:outline-none focus:ring-2 focus:ring-primary/50"
                   />
                 </div>
               </div>
 
               <div>
                 <label className="block text-xs font-bold uppercase tracking-widest text-foreground/70 mb-2 flex items-center gap-2">
-                  <Mail className="h-4 w-4" /> Email Address
+                  Email Address
                 </label>
-                <input
+                <Input
                   type="email"
                   value={profile?.email || ""}
                   disabled
-                  className="w-full bg-secondary/50 border border-border px-4 py-3 text-sm rounded-md text-foreground/60 cursor-not-allowed"
+                  className="bg-secondary/50 text-foreground/60 cursor-not-allowed"
                 />
                 <p className="text-[10px] text-foreground/50 mt-1 uppercase tracking-widest">Email address cannot be changed.</p>
               </div>
 
               <div>
                 <label className="block text-xs font-bold uppercase tracking-widest text-foreground/70 mb-2 flex items-center gap-2">
-                  <Phone className="h-4 w-4" /> Phone Number
+                  Phone Number
                 </label>
-                <input
+                <Input
                   type="text"
                   value={profile?.mobile ? `${profile.countryCode} ${profile.mobile}` : ""}
                   disabled
-                  className="w-full bg-secondary/50 border border-border px-4 py-3 text-sm rounded-md text-foreground/60 cursor-not-allowed"
+                  className="bg-secondary/50 text-foreground/60 cursor-not-allowed"
                 />
               </div>
 
               <div className="pt-6 border-t border-border">
-                <Button 
-                  type="submit" 
+                <Button
+                  type="submit"
                   disabled={isUpdating || (!formData.firstName && !formData.lastName)}
                   className="w-full sm:w-auto px-8"
                 >

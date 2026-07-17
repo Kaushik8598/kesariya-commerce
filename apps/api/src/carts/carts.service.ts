@@ -3,7 +3,7 @@ import { PrismaService } from '../prisma/prisma.service';
 
 @Injectable()
 export class CartsService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(private readonly prisma: PrismaService) { }
 
   async getCart(userId: string) {
     let cart = await this.prisma.cart.findUnique({
@@ -36,11 +36,10 @@ export class CartsService {
   }
 
   async addItem(userId: string, productId: string, variantId?: string, quantity: number = 1, measurementProfileId?: string) {
-    try {
-      let cart = await this.prisma.cart.findUnique({ where: { userId } });
-      if (!cart) {
-        cart = await this.prisma.cart.create({ data: { userId } });
-      }
+    let cart = await this.prisma.cart.findUnique({ where: { userId } });
+    if (!cart) {
+      cart = await this.prisma.cart.create({ data: { userId } });
+    }
 
     // Check product exists and stock
     const product = await this.prisma.product.findUnique({ where: { id: productId } });
@@ -67,7 +66,7 @@ export class CartsService {
     if (existingItem) {
       // Check total stock before adding
       const newQuantity = existingItem.quantity + quantity;
-      
+
       // Update quantity
       await this.prisma.cartItem.update({
         where: { id: existingItem.id },
@@ -85,11 +84,7 @@ export class CartsService {
       });
     }
 
-      return this.getCart(userId);
-    } catch (e) {
-      require('fs').writeFileSync('carts_error.log', e.stack || String(e));
-      throw e;
-    }
+    return this.getCart(userId);
   }
 
   async updateItemQuantity(userId: string, itemId: string, quantity: number) {
@@ -182,10 +177,10 @@ export class CartsService {
     let subtotal = 0;
 
     const items = cart.items.map((item: any) => {
-      const price = item.variant 
-        ? Number(item.variant.price) 
+      const price = item.variant
+        ? Number(item.variant.price)
         : Number(item.product.salePrice || item.product.basePrice);
-      
+
       const total = price * item.quantity;
       subtotal += total;
 
@@ -216,7 +211,7 @@ export class CartsService {
 
     const tax = (subtotal - discount) * 0.18; // 18% GST (Example)
     const shipping = subtotal > 1000 ? 0 : 50; // Free shipping over 1000, else 50
-    
+
     // Sometimes taxes are included in price, let's assume they are not for this calculation
     const total = subtotal - discount + tax + shipping;
 

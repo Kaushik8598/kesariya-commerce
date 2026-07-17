@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useAuth } from "@/providers/auth-provider";
 import { useProfile, useUpdatePassword } from "@/hooks/profile/use-profile";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
 import { User, Shield, LogOut, Key } from "lucide-react";
 import { useRouter } from "next/navigation";
@@ -121,34 +122,31 @@ export default function PasswordPage() {
             <form onSubmit={handleSubmit} className="space-y-6 max-w-md">
               <div>
                 <label className="block text-xs font-bold uppercase tracking-widest text-foreground/70 mb-2">Current Password</label>
-                <input
+                <Input
                   type="password"
                   value={formData.currentPassword}
                   onChange={(e) => setFormData({ ...formData, currentPassword: e.target.value })}
                   required
-                  className="w-full bg-background border border-border px-4 py-3 text-sm rounded-md focus:outline-none focus:ring-1 focus:ring-primary"
                 />
               </div>
 
               <div>
                 <label className="block text-xs font-bold uppercase tracking-widest text-foreground/70 mb-2">New Password</label>
-                <input
+                <Input
                   type="password"
                   value={formData.newPassword}
                   onChange={(e) => setFormData({ ...formData, newPassword: e.target.value })}
                   required
-                  className="w-full bg-background border border-border px-4 py-3 text-sm rounded-md focus:outline-none focus:ring-1 focus:ring-primary"
                 />
               </div>
 
               <div>
                 <label className="block text-xs font-bold uppercase tracking-widest text-foreground/70 mb-2">Confirm New Password</label>
-                <input
+                <Input
                   type="password"
                   value={formData.confirmPassword}
                   onChange={(e) => setFormData({ ...formData, confirmPassword: e.target.value })}
                   required
-                  className="w-full bg-background border border-border px-4 py-3 text-sm rounded-md focus:outline-none focus:ring-1 focus:ring-primary"
                 />
               </div>
 

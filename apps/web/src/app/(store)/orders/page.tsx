@@ -8,6 +8,8 @@ import { EmptyState } from "@/components/ui/empty-state";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Package, ChevronRight, User, Shield, LogOut, Search } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import Image from "next/image";
 import Link from "next/link";
 import { format } from "date-fns";
@@ -17,15 +19,15 @@ export default function OrdersPage() {
   const { isAuthenticated, logout } = useAuth();
   const { data: profile } = useProfile();
   const router = useRouter();
-  
+
   const [filters, setFilters] = useState({
     search: "",
     status: "",
     paymentStatus: ""
   });
-  
+
   const [debouncedFilters, setDebouncedFilters] = useState(filters);
-  
+
   const { data: orders, isLoading } = useUserOrders(debouncedFilters);
 
   if (!isAuthenticated) {
@@ -83,7 +85,7 @@ export default function OrdersPage() {
               <Shield className="h-3 w-3" /> {profile?.role?.name || "Customer"}
             </div>
           </div>
-          
+
           <div className="border border-border rounded-xl p-2 bg-secondary/10 flex flex-col gap-1">
             <Link href="/profile" className="px-4 py-3 hover:bg-secondary/30 rounded-lg text-sm font-bold uppercase tracking-widest text-foreground/70 transition-colors">
               Profile Details
@@ -118,124 +120,126 @@ export default function OrdersPage() {
                 <p className="text-sm text-foreground/60">View and track your previous orders.</p>
               </div>
             </div>
-            
+
             <div className="mb-6 space-y-4">
-            {/* Filters */}
-            <div className="grid grid-cols-1 sm:grid-cols-4 gap-4 p-4 border border-border rounded-lg bg-secondary/5">
-              <div className="sm:col-span-1">
-                <select 
-                  value={filters.status} 
-                  onChange={(e) => setFilters({...filters, status: e.target.value})}
-                  className="w-full bg-background border border-border px-3 py-2 text-sm rounded-md"
-                >
-                  <option value="">All Statuses</option>
-                  <option value="PENDING">Pending</option>
-                  <option value="PROCESSING">Processing</option>
-                  <option value="SHIPPED">Shipped</option>
-                  <option value="DELIVERED">Delivered</option>
-                  <option value="CANCELLED">Cancelled</option>
-                </select>
-              </div>
-              <div className="sm:col-span-1">
-                <select 
-                  value={filters.paymentStatus} 
-                  onChange={(e) => setFilters({...filters, paymentStatus: e.target.value})}
-                  className="w-full bg-background border border-border px-3 py-2 text-sm rounded-md"
-                >
-                  <option value="">All Payments</option>
-                  <option value="PENDING">Pending</option>
-                  <option value="PAID">Paid</option>
-                  <option value="FAILED">Failed</option>
-                </select>
-              </div>
-              <div className="sm:col-span-2 flex gap-2">
-                <div className="relative flex-1">
-                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                  <input 
-                    type="text" 
-                    placeholder="Search Order Number..." 
-                    value={filters.search}
-                    onChange={(e) => setFilters({...filters, search: e.target.value})}
-                    className="w-full bg-background border border-border pl-9 pr-3 py-2 text-sm rounded-md" 
-                  />
+              {/* Filters */}
+              <div className="grid grid-cols-1 sm:grid-cols-4 gap-4 p-4 border border-border rounded-lg bg-secondary/5">
+                <div className="sm:col-span-1">
+                  <Select value={filters.status} onValueChange={(val) => setFilters({ ...filters, status: val })}>
+                    <SelectTrigger className="w-full">
+                      <SelectValue placeholder="All Statuses" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="">All Statuses</SelectItem>
+                      <SelectItem value="PENDING">Pending</SelectItem>
+                      <SelectItem value="PROCESSING">Processing</SelectItem>
+                      <SelectItem value="SHIPPED">Shipped</SelectItem>
+                      <SelectItem value="DELIVERED">Delivered</SelectItem>
+                      <SelectItem value="CANCELLED">Cancelled</SelectItem>
+                    </SelectContent>
+                  </Select>
                 </div>
-                <Button onClick={applyFilters} size="sm">Apply</Button>
+                <div className="sm:col-span-1">
+                  <Select value={filters.paymentStatus} onValueChange={(val) => setFilters({ ...filters, paymentStatus: val })}>
+                    <SelectTrigger className="w-full">
+                      <SelectValue placeholder="All Payments" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="">All Payments</SelectItem>
+                      <SelectItem value="PENDING">Pending</SelectItem>
+                      <SelectItem value="PAID">Paid</SelectItem>
+                      <SelectItem value="FAILED">Failed</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="sm:col-span-2 flex gap-2">
+                  <div className="relative flex-1">
+                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                    <Input
+                      type="text"
+                      placeholder="Search Order Number..."
+                      value={filters.search}
+                      onChange={(e) => setFilters({ ...filters, search: e.target.value })}
+                      className="pl-9"
+                    />
+                  </div>
+                  <Button onClick={applyFilters}>Apply</Button>
+                </div>
               </div>
             </div>
-          </div>
 
-          {isLoading ? (
-            <div className="space-y-6">
-              <Skeleton className="h-40 w-full" />
-              <Skeleton className="h-40 w-full" />
-            </div>
-          ) : !orders || orders.length === 0 ? (
-            <EmptyState
-              icon={Package}
-              title="No Orders Found"
-              description="No orders match your current filters."
-              actionLabel="Clear Filters"
-              actionHref="#"
-            />
-          ) : (
-            <div className="space-y-6">
-              {orders.map((order: any) => (
-                <div key={order.id} className="border border-border rounded-lg overflow-hidden flex flex-col md:flex-row transition-all hover:border-foreground/20">
-                  <div className="p-6 md:w-2/3 border-b md:border-b-0 md:border-r border-border">
-                    <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-4 gap-2">
-                      <div>
-                        <p className="text-xs font-bold uppercase tracking-widest text-foreground/50 mb-1">Order Placed</p>
-                        <p className="font-medium">{format(new Date(order.createdAt), "MMM d, yyyy")}</p>
+            {isLoading ? (
+              <div className="space-y-6">
+                <Skeleton className="h-40 w-full" />
+                <Skeleton className="h-40 w-full" />
+              </div>
+            ) : !orders || orders.length === 0 ? (
+              <EmptyState
+                icon={Package}
+                title="No Orders Found"
+                description="No orders match your current filters."
+                actionLabel="Clear Filters"
+                actionHref="#"
+              />
+            ) : (
+              <div className="space-y-6">
+                {orders.map((order: any) => (
+                  <div key={order.id} className="border border-border rounded-lg overflow-hidden flex flex-col md:flex-row transition-all hover:border-foreground/20">
+                    <div className="p-6 md:w-2/3 border-b md:border-b-0 md:border-r border-border">
+                      <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-4 gap-2">
+                        <div>
+                          <p className="text-xs font-bold uppercase tracking-widest text-foreground/50 mb-1">Order Placed</p>
+                          <p className="font-medium">{format(new Date(order.createdAt), "MMM d, yyyy")}</p>
+                        </div>
+                        <div>
+                          <p className="text-xs font-bold uppercase tracking-widest text-foreground/50 mb-1">Order #</p>
+                          <p className="font-mono text-sm">{order.orderNumber}</p>
+                        </div>
+                        <div>
+                          <p className="text-xs font-bold uppercase tracking-widest text-foreground/50 mb-1">Total Amount</p>
+                          <p className="font-medium">₹{order.total}</p>
+                        </div>
                       </div>
-                      <div>
-                        <p className="text-xs font-bold uppercase tracking-widest text-foreground/50 mb-1">Order #</p>
-                        <p className="font-mono text-sm">{order.orderNumber}</p>
-                      </div>
-                      <div>
-                        <p className="text-xs font-bold uppercase tracking-widest text-foreground/50 mb-1">Total Amount</p>
-                        <p className="font-medium">₹{order.total}</p>
+
+                      <div className="flex items-center gap-3 border-t border-border pt-4">
+                        <div className={`px-3 py-1 rounded-full border text-xs font-bold tracking-wider uppercase ${getStatusColor(order.status)}`}>
+                          {order.status}
+                        </div>
+                        <div className={`px-3 py-1 rounded-full border text-xs font-bold tracking-wider uppercase ${getStatusColor(order.paymentStatus)}`}>
+                          {order.paymentStatus}
+                        </div>
                       </div>
                     </div>
 
-                    <div className="flex items-center gap-3 border-t border-border pt-4">
-                      <div className={`px-3 py-1 rounded-full border text-xs font-bold tracking-wider uppercase ${getStatusColor(order.status)}`}>
-                        {order.status}
+                    <div className="bg-secondary/10 p-6 flex flex-col justify-center gap-4 md:w-1/3">
+                      <div className="flex items-center -space-x-2 overflow-hidden">
+                        {order.items.slice(0, 3).map((item: any) => (
+                          <div key={item.id} className="relative h-12 w-12 rounded-full border-2 border-background overflow-hidden bg-secondary">
+                            {item.product.images?.[0] ? (
+                              <Image src={item.product.images[0].url} alt={item.product.name} fill className="object-cover" />
+                            ) : (
+                              <div className="w-full h-full flex items-center justify-center text-xs font-bold text-foreground/30">N/A</div>
+                            )}
+                          </div>
+                        ))}
+                        {order.items.length > 3 && (
+                          <div className="relative h-12 w-12 rounded-full border-2 border-background bg-secondary flex items-center justify-center z-10 text-xs font-bold">
+                            +{order.items.length - 3}
+                          </div>
+                        )}
                       </div>
-                      <div className={`px-3 py-1 rounded-full border text-xs font-bold tracking-wider uppercase ${getStatusColor(order.paymentStatus)}`}>
-                        {order.paymentStatus}
-                      </div>
+
+                      <Link href={`/orders/${order.orderNumber}`}>
+                        <Button variant="outline" className="w-full flex items-center justify-between group">
+                          <span className="text-xs font-bold uppercase tracking-widest">View Details</span>
+                          <ChevronRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
+                        </Button>
+                      </Link>
                     </div>
                   </div>
-
-                  <div className="bg-secondary/10 p-6 flex flex-col justify-center gap-4 md:w-1/3">
-                    <div className="flex items-center -space-x-2 overflow-hidden">
-                      {order.items.slice(0, 3).map((item: any) => (
-                        <div key={item.id} className="relative h-12 w-12 rounded-full border-2 border-background overflow-hidden bg-secondary">
-                          {item.product.images?.[0] ? (
-                            <Image src={item.product.images[0].url} alt={item.product.name} fill className="object-cover" />
-                          ) : (
-                            <div className="w-full h-full flex items-center justify-center text-xs font-bold text-foreground/30">N/A</div>
-                          )}
-                        </div>
-                      ))}
-                      {order.items.length > 3 && (
-                        <div className="relative h-12 w-12 rounded-full border-2 border-background bg-secondary flex items-center justify-center z-10 text-xs font-bold">
-                          +{order.items.length - 3}
-                        </div>
-                      )}
-                    </div>
-                    
-                    <Link href={`/orders/${order.orderNumber}`}>
-                      <Button variant="outline" className="w-full flex items-center justify-between group">
-                        <span className="text-xs font-bold uppercase tracking-widest">View Details</span>
-                        <ChevronRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
-                      </Button>
-                    </Link>
-                  </div>
-                </div>
-              ))}
-            </div>
-          )}
+                ))}
+              </div>
+            )}
           </div>
         </div>
       </div>

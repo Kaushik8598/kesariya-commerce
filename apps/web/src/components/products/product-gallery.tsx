@@ -3,6 +3,7 @@
 import { useState } from "react";
 import Image from "next/image";
 import { cn } from "@/lib/utils";
+import { Button } from "@/components/ui/button";
 import type { ProductImage } from "@/types/product";
 
 interface ProductGalleryProps {
@@ -26,11 +27,12 @@ export function ProductGallery({ images, productName }: ProductGalleryProps) {
       {/* Thumbnails */}
       <div className="flex lg:flex-col gap-3 overflow-x-auto lg:overflow-y-auto no-scrollbar pb-2 lg:pb-0 shrink-0">
         {images.map((image, index) => (
-          <button
+          <Button
+            variant="ghost"
             key={image.id}
             onClick={() => setSelectedIndex(index)}
             className={cn(
-              "relative size-20 sm:size-24 lg:size-28 shrink-0 overflow-hidden rounded-xl border-2 transition-all duration-300",
+              "relative size-20 sm:size-24 lg:size-28 shrink-0 overflow-hidden rounded-xl border-2 transition-all duration-300 p-0 h-auto hover:bg-transparent",
               selectedIndex === index
                 ? "border-primary"
                 : "border-transparent opacity-60 hover:opacity-100"
@@ -43,7 +45,7 @@ export function ProductGallery({ images, productName }: ProductGalleryProps) {
               className="object-cover"
               sizes="112px"
             />
-          </button>
+          </Button>
         ))}
       </div>
 

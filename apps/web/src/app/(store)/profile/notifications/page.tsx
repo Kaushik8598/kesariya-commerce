@@ -5,6 +5,7 @@ import { useAuth } from "@/providers/auth-provider";
 import { useProfile, useUpdateNotifications } from "@/hooks/profile/use-profile";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Checkbox } from "@/components/ui/checkbox";
 import { User, Shield, LogOut, Bell } from "lucide-react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
@@ -106,77 +107,65 @@ export default function NotificationsPage() {
               <div className="space-y-4">
                 <h3 className="text-xs font-bold uppercase tracking-widest text-foreground/70 border-b border-border pb-2">Email Notifications</h3>
 
-                <label className="flex items-start gap-3 cursor-pointer group">
-                  <div className="relative flex items-center justify-center mt-1">
-                    <input
-                      type="checkbox"
+                <div className="flex items-start gap-3">
+                  <div className="flex items-center justify-center mt-1">
+                    <Checkbox
+                      id="emailOrderUpdates"
                       checked={formData.emailOrderUpdates}
-                      onChange={(e) => setFormData({ ...formData, emailOrderUpdates: e.target.checked })}
-                      className="sr-only"
+                      onCheckedChange={(checked) => setFormData({ ...formData, emailOrderUpdates: checked as boolean })}
                     />
-                    <div className={`w-10 h-5 rounded-full transition-colors ${formData.emailOrderUpdates ? 'bg-primary' : 'bg-foreground/20'}`}></div>
-                    <div className={`absolute w-3.5 h-3.5 rounded-full bg-background transition-transform ${formData.emailOrderUpdates ? 'translate-x-2.5' : '-translate-x-2.5'}`}></div>
                   </div>
-                  <div>
-                    <p className="text-sm font-bold">Order Updates</p>
+                  <div className="grid gap-1.5 leading-none">
+                    <label htmlFor="emailOrderUpdates" className="text-sm font-bold cursor-pointer">Order Updates</label>
                     <p className="text-xs text-foreground/60">Get emails about your order status and shipping.</p>
                   </div>
-                </label>
+                </div>
 
-                <label className="flex items-start gap-3 cursor-pointer group">
-                  <div className="relative flex items-center justify-center mt-1">
-                    <input
-                      type="checkbox"
+                <div className="flex items-start gap-3">
+                  <div className="flex items-center justify-center mt-1">
+                    <Checkbox
+                      id="emailPromotions"
                       checked={formData.emailPromotions}
-                      onChange={(e) => setFormData({ ...formData, emailPromotions: e.target.checked })}
-                      className="sr-only"
+                      onCheckedChange={(checked) => setFormData({ ...formData, emailPromotions: checked as boolean })}
                     />
-                    <div className={`w-10 h-5 rounded-full transition-colors ${formData.emailPromotions ? 'bg-primary' : 'bg-foreground/20'}`}></div>
-                    <div className={`absolute w-3.5 h-3.5 rounded-full bg-background transition-transform ${formData.emailPromotions ? 'translate-x-2.5' : '-translate-x-2.5'}`}></div>
                   </div>
-                  <div>
-                    <p className="text-sm font-bold">Promotions & Offers</p>
+                  <div className="grid gap-1.5 leading-none">
+                    <label htmlFor="emailPromotions" className="text-sm font-bold cursor-pointer">Promotions & Offers</label>
                     <p className="text-xs text-foreground/60">Get emails about exclusive sales and new products.</p>
                   </div>
-                </label>
+                </div>
               </div>
 
               <div className="space-y-4">
                 <h3 className="text-xs font-bold uppercase tracking-widest text-foreground/70 border-b border-border pb-2">SMS Notifications</h3>
 
-                <label className="flex items-start gap-3 cursor-pointer group">
-                  <div className="relative flex items-center justify-center mt-1">
-                    <input
-                      type="checkbox"
+                <div className="flex items-start gap-3">
+                  <div className="flex items-center justify-center mt-1">
+                    <Checkbox
+                      id="smsOrderUpdates"
                       checked={formData.smsOrderUpdates}
-                      onChange={(e) => setFormData({ ...formData, smsOrderUpdates: e.target.checked })}
-                      className="sr-only"
+                      onCheckedChange={(checked) => setFormData({ ...formData, smsOrderUpdates: checked as boolean })}
                     />
-                    <div className={`w-10 h-5 rounded-full transition-colors ${formData.smsOrderUpdates ? 'bg-primary' : 'bg-foreground/20'}`}></div>
-                    <div className={`absolute w-3.5 h-3.5 rounded-full bg-background transition-transform ${formData.smsOrderUpdates ? 'translate-x-2.5' : '-translate-x-2.5'}`}></div>
                   </div>
-                  <div>
-                    <p className="text-sm font-bold">Delivery Updates</p>
+                  <div className="grid gap-1.5 leading-none">
+                    <label htmlFor="smsOrderUpdates" className="text-sm font-bold cursor-pointer">Delivery Updates</label>
                     <p className="text-xs text-foreground/60">Get text messages when your order is out for delivery.</p>
                   </div>
-                </label>
+                </div>
 
-                <label className="flex items-start gap-3 cursor-pointer group">
-                  <div className="relative flex items-center justify-center mt-1">
-                    <input
-                      type="checkbox"
+                <div className="flex items-start gap-3">
+                  <div className="flex items-center justify-center mt-1">
+                    <Checkbox
+                      id="smsPromotions"
                       checked={formData.smsPromotions}
-                      onChange={(e) => setFormData({ ...formData, smsPromotions: e.target.checked })}
-                      className="sr-only"
+                      onCheckedChange={(checked) => setFormData({ ...formData, smsPromotions: checked as boolean })}
                     />
-                    <div className={`w-10 h-5 rounded-full transition-colors ${formData.smsPromotions ? 'bg-primary' : 'bg-foreground/20'}`}></div>
-                    <div className={`absolute w-3.5 h-3.5 rounded-full bg-background transition-transform ${formData.smsPromotions ? 'translate-x-2.5' : '-translate-x-2.5'}`}></div>
                   </div>
-                  <div>
-                    <p className="text-sm font-bold">Promotions & Offers</p>
+                  <div className="grid gap-1.5 leading-none">
+                    <label htmlFor="smsPromotions" className="text-sm font-bold cursor-pointer">Promotions & Offers</label>
                     <p className="text-xs text-foreground/60">Get text messages about exclusive sales.</p>
                   </div>
-                </label>
+                </div>
               </div>
 
               <div className="pt-4">

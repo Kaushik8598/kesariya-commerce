@@ -4,6 +4,7 @@ import React, { useState } from "react";
 import { Check, ChevronsUpDown, X } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Label } from "@/components/ui/label";
+import { Button } from "@/components/ui/button";
 import {
   Command,
   CommandEmpty,
@@ -143,13 +144,15 @@ export function Select({
                     className="flex items-center gap-1 rounded bg-secondary px-2 py-0.5 text-[10px] font-bold text-foreground tracking-wider uppercase border border-border"
                   >
                     {opt?.label || v}
-                    <button
+                    <Button
                       type="button"
+                      variant="ghost"
+                      size="icon"
                       onClick={(e) => handleRemoveMultiple(e, v)}
-                      className="rounded-full hover:bg-foreground/15 p-0.5 text-foreground/60 transition-colors"
+                      className="h-4 w-4 rounded-full hover:bg-foreground/15 p-0.5 text-foreground/60 transition-colors"
                     >
                       <X className="h-2.5 w-2.5" />
-                    </button>
+                    </Button>
                   </span>
                 );
               })

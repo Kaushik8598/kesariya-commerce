@@ -5,12 +5,12 @@ import { useRouter } from "next/navigation";
 import { useCart, useCheckout } from "@/hooks/cart/use-cart";
 import { useAuth } from "@/providers/auth-provider";
 import { Button } from "@/components/ui/button";
-import { Loader2, ArrowLeft, CheckCircle2, Ruler, MapPin, Plus } from "lucide-react";
+import { Loader2, ArrowLeft, Ruler, MapPin, Plus } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import { AddressForm } from "@/components/profile/address-form";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { useAddresses } from "@/hooks/profile/use-profile";
 
 export default function CheckoutPage() {
@@ -88,31 +88,29 @@ export default function CheckoutPage() {
                   </Button>
                 )}
               </div>
-              
+
               <div className="space-y-4">
                 {isLoadingAddresses ? (
                   <div className="flex h-20 items-center justify-center">
                     <Loader2 className="h-5 w-5 animate-spin text-primary" />
                   </div>
                 ) : isAddingNewAddress ? (
-                  <AddressForm 
-                    onSuccess={() => setIsAddingNewAddress(false)} 
-                    onCancel={() => setIsAddingNewAddress(false)} 
+                  <AddressForm
+                    onSuccess={() => setIsAddingNewAddress(false)}
+                    onCancel={() => setIsAddingNewAddress(false)}
                   />
                 ) : addresses && addresses.length > 0 ? (
-                  <div className="space-y-3">
+                  <RadioGroup value={selectedAddressId || ""} onValueChange={setSelectedAddressId} className="space-y-3">
                     {addresses.map((address: any) => (
-                      <label 
-                        key={address.id} 
+                      <label
+                        key={address.id}
+                        htmlFor={`address-${address.id}`}
                         className={`flex items-start gap-4 p-4 border rounded-md cursor-pointer transition-all ${selectedAddressId === address.id ? 'border-primary bg-primary/5' : 'border-border'}`}
                       >
-                        <input 
-                          type="radio" 
-                          name="address" 
-                          value={address.id} 
-                          checked={selectedAddressId === address.id} 
-                          onChange={() => setSelectedAddressId(address.id)}
-                          className="accent-primary mt-1"
+                        <RadioGroupItem
+                          value={address.id}
+                          id={`address-${address.id}`}
+                          className="mt-1"
                         />
                         <div className="flex-1">
                           <div className="flex items-center gap-2">
@@ -126,7 +124,7 @@ export default function CheckoutPage() {
                         </div>
                       </label>
                     ))}
-                  </div>
+                  </RadioGroup>
                 ) : (
                   <div className="text-center py-6 border border-dashed border-border rounded-lg">
                     <MapPin className="h-8 w-8 text-foreground/20 mx-auto mb-3" />
@@ -134,60 +132,57 @@ export default function CheckoutPage() {
                     <Button type="button" onClick={() => setIsAddingNewAddress(true)}>Add Delivery Address</Button>
                   </div>
                 )}
-                
-                <div className="pt-4 border-t border-border mt-6 space-y-2">
-                  <Label className="text-xs font-bold uppercase tracking-widest text-foreground/70">Delivery Instructions (Optional)</Label>
-                  <Input 
-                    type="text"
-                    value={notes}
-                    onChange={(e) => setNotes(e.target.value)}
-                    placeholder="E.g. Leave at the front door"
-                  />
-                </div>
+
               </div>
+            </div>
+
+            {/* Delivery Instructions */}
+            <div className="border border-border p-6 rounded-xl">
+              <h2 className="text-lg font-bold tracking-widest uppercase mb-6 flex items-center gap-2">
+                <span className="flex h-6 w-6 items-center justify-center rounded-full bg-foreground text-background text-xs">2</span>
+                Delivery Instructions (Optional)
+              </h2>
+              <Input
+                type="text"
+                value={notes}
+                onChange={(e) => setNotes(e.target.value)}
+                placeholder="E.g. Leave at the front door"
+              />
             </div>
 
             {/* Payment Options */}
             <div className="border border-border p-6 rounded-xl">
               <h2 className="text-lg font-bold tracking-widest uppercase mb-6 flex items-center gap-2">
-                <span className="flex h-6 w-6 items-center justify-center rounded-full bg-foreground text-background text-xs">2</span>
+                <span className="flex h-6 w-6 items-center justify-center rounded-full bg-foreground text-background text-xs">3</span>
                 Payment
               </h2>
-              
-              <div className="space-y-3">
-                <label className={`flex items-center gap-4 p-4 border rounded-md cursor-pointer transition-all ${paymentMethod === 'cod' ? 'border-primary bg-primary/5' : 'border-border'}`}>
-                  <input 
-                    type="radio" 
-                    name="payment" 
-                    value="cod" 
-                    checked={paymentMethod === 'cod'} 
-                    onChange={() => setPaymentMethod('cod')}
-                    className="accent-primary"
+
+              <RadioGroup value={paymentMethod} onValueChange={(val) => setPaymentMethod(val as 'cod' | 'online')} className="space-y-3">
+                <label htmlFor="payment-cod" className={`flex items-center gap-4 p-4 border rounded-md cursor-pointer transition-all ${paymentMethod === 'cod' ? 'border-primary bg-primary/5' : 'border-border'}`}>
+                  <RadioGroupItem
+                    value="cod"
+                    id="payment-cod"
                   />
                   <div>
                     <p className="font-bold">Cash on Delivery</p>
                     <p className="text-xs text-foreground/60">Pay when your order arrives</p>
                   </div>
                 </label>
-                
-                <label className={`flex items-center gap-4 p-4 border rounded-md cursor-pointer transition-all ${paymentMethod === 'online' ? 'border-primary bg-primary/5' : 'border-border'}`}>
-                  <input 
-                    type="radio" 
-                    name="payment" 
-                    value="online" 
-                    checked={paymentMethod === 'online'} 
-                    onChange={() => setPaymentMethod('online')}
-                    className="accent-primary"
+
+                <label htmlFor="payment-online" className={`flex items-center gap-4 p-4 border rounded-md cursor-pointer transition-all ${paymentMethod === 'online' ? 'border-primary bg-primary/5' : 'border-border'}`}>
+                  <RadioGroupItem
+                    value="online"
+                    id="payment-online"
                   />
                   <div>
                     <p className="font-bold">Online Payment</p>
                     <p className="text-xs text-foreground/60">UPI, Cards, NetBanking (Coming Soon)</p>
                   </div>
                 </label>
-              </div>
+              </RadioGroup>
             </div>
 
-            <Button 
+            <Button
               onClick={handleCheckout}
               disabled={isCheckingOut || !selectedAddressId || paymentMethod === 'online' || isAddingNewAddress}
               className="w-full h-14 text-sm font-black tracking-widest uppercase"
@@ -210,7 +205,7 @@ export default function CheckoutPage() {
         <div className="lg:col-span-5">
           <div className="bg-secondary/30 p-6 rounded-xl border border-border/50 sticky top-24">
             <h3 className="font-black tracking-widest uppercase mb-6 text-lg">In Your Bag</h3>
-            
+
             <div className="space-y-4 max-h-[40vh] overflow-y-auto pr-2 mb-6">
               {cart.items.map((item: any) => (
                 <div key={item.id} className="flex gap-4">
@@ -225,7 +220,7 @@ export default function CheckoutPage() {
                   <div className="flex-1 flex flex-col justify-center">
                     <p className="font-bold text-sm line-clamp-1">{item.product.name}</p>
                     <div className="text-xs text-foreground/60 mt-1 uppercase tracking-widest">
-                      Qty: {item.quantity} 
+                      Qty: {item.quantity}
                       {item.variant?.color && ` | ${item.variant.color}`}
                       {item.variant?.size && ` | ${item.variant.size}`}
                     </div>
@@ -246,26 +241,26 @@ export default function CheckoutPage() {
                 <span className="text-foreground/70">Subtotal</span>
                 <span className="font-semibold">₹{Number(cart.summary.subtotal).toFixed(2)}</span>
               </div>
-              
+
               {cart.coupon && (
                 <div className="flex justify-between text-primary font-medium">
                   <span>Discount ({cart.coupon.code})</span>
                   <span>-₹{Number(cart.summary.discount).toFixed(2)}</span>
                 </div>
               )}
-              
+
               <div className="flex justify-between">
                 <span className="text-foreground/70">Taxes</span>
                 <span className="font-semibold">₹{Number(cart.summary.tax).toFixed(2)}</span>
               </div>
-              
+
               <div className="flex justify-between">
                 <span className="text-foreground/70">Shipping</span>
                 <span className="font-semibold">
                   {cart.summary.shipping > 0 ? `₹${Number(cart.summary.shipping).toFixed(2)}` : 'FREE'}
                 </span>
               </div>
-              
+
               <div className="border-t border-border pt-4 flex justify-between">
                 <span className="font-bold text-base uppercase tracking-widest">Total to Pay</span>
                 <span className="font-black text-xl">₹{Number(cart.summary.total).toFixed(2)}</span>

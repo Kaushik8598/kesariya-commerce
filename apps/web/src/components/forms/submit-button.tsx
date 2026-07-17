@@ -12,7 +12,7 @@ export function SubmitButton({
   children,
 }: SubmitButtonProps) {
   return (
-    <Button type="submit" className="w-full" disabled={loading}>
+    <Button type="submit" className="w-full h-10" disabled={loading}>
       {loading ? loadingText : children}
     </Button>
   );

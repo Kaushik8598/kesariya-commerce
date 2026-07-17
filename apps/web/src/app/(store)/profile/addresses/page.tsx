@@ -20,6 +20,7 @@ export default function AddressesPage() {
 
   const router = useRouter();
   const [isAddingNew, setIsAddingNew] = useState(false);
+  const [editingAddress, setEditingAddress] = useState<any>(null);
 
   if (!isAuthenticated) {
     return null;
@@ -98,7 +99,7 @@ export default function AddressesPage() {
                   <p className="text-sm text-foreground/60">Manage your shipping and billing addresses.</p>
                 </div>
               </div>
-              {!isAddingNew && (
+              {!isAddingNew && !editingAddress && (
                 <Button size="sm" onClick={() => setIsAddingNew(true)} className="flex items-center gap-2">
                   <Plus className="h-4 w-4" /> Add New
                 </Button>
@@ -111,9 +112,16 @@ export default function AddressesPage() {
                 <Skeleton className="h-32 w-full" />
               </div>
             ) : isAddingNew ? (
-              <AddressForm 
-                onSuccess={() => setIsAddingNew(false)} 
-                onCancel={() => setIsAddingNew(false)} 
+              <AddressForm
+                onSuccess={() => setIsAddingNew(false)}
+                onCancel={() => setIsAddingNew(false)}
+              />
+            ) : editingAddress ? (
+              <AddressForm
+                key={editingAddress.id}
+                initialData={editingAddress}
+                onSuccess={() => setEditingAddress(null)}
+                onCancel={() => setEditingAddress(null)}
               />
             ) : addresses && addresses.length > 0 ? (
               <div className="space-y-4">
@@ -133,7 +141,7 @@ export default function AddressesPage() {
                       </div>
                     </div>
                     <div className="flex flex-col gap-2">
-                      <Button variant="outline" size="icon" className="h-8 w-8 hover:text-primary">
+                      <Button variant="outline" size="icon" onClick={() => setEditingAddress(address)} className="h-8 w-8 hover:text-primary">
                         <Edit2 className="h-4 w-4" />
                       </Button>
                       <Button variant="outline" size="icon" onClick={() => deleteAddress(address.id)} disabled={isDeleting} className="h-8 w-8 hover:text-destructive hover:border-destructive hover:bg-destructive/10">

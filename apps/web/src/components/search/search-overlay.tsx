@@ -8,6 +8,8 @@ import { Search, X, Loader2, ArrowRight } from "lucide-react";
 import { useDebounce } from "@/hooks/use-debounce";
 import { useProducts } from "@/hooks/products/use-products";
 import { formatPrice } from "@/components/ui/price";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 
 interface SearchOverlayProps {
   isOpen: boolean;
@@ -65,21 +67,24 @@ export function SearchOverlay({ isOpen, onClose }: SearchOverlayProps) {
         <div className="flex items-center justify-between gap-4 border-b-2 border-foreground/10 pb-4 focus-within:border-primary transition-colors">
           <Search className="h-6 w-6 text-foreground/50" />
           <form onSubmit={handleSubmit} className="flex-1">
-            <input
+            <Input
               ref={inputRef}
               type="text"
               placeholder="Search for products, categories..."
-              className="w-full bg-transparent text-xl sm:text-2xl md:text-3xl font-light outline-none placeholder:text-foreground/30"
+              className="w-full bg-transparent border-none shadow-none text-xl sm:text-2xl md:text-3xl font-light outline-none focus-visible:ring-0 px-0 placeholder:text-foreground/30"
               value={query}
               onChange={(e) => setQuery(e.target.value)}
             />
           </form>
-          <button
+          <Button
+            type="button"
+            variant="ghost"
+            size="icon"
             onClick={onClose}
-            className="p-2 rounded-full hover:bg-foreground/5 transition-colors cursor-pointer group"
+            className="rounded-full hover:bg-foreground/5 transition-colors cursor-pointer group"
           >
             <X className="h-6 w-6 text-foreground/50 group-hover:text-foreground transition-colors" />
-          </button>
+          </Button>
         </div>
 
         <div className="flex-1 overflow-y-auto mt-8 pb-10">
@@ -87,15 +92,18 @@ export function SearchOverlay({ isOpen, onClose }: SearchOverlayProps) {
             <div className="text-center text-foreground/40 mt-20">
               <p className="text-lg">Start typing to search...</p>
               <div className="flex flex-wrap justify-center gap-2 mt-6">
-                <span className="text-xs uppercase tracking-widest font-bold">Trending:</span>
+                <span className="text-xs uppercase tracking-widest font-bold flex items-center">Trending:</span>
                 {["Shirts", "Kurtas", "Linen", "Denim"].map((term) => (
-                  <button
+                  <Button
                     key={term}
+                    type="button"
+                    variant="ghost"
+                    size="sm"
                     onClick={() => setQuery(term)}
-                    className="text-xs uppercase tracking-widest hover:text-primary transition-colors cursor-pointer"
+                    className="text-xs uppercase tracking-widest hover:text-primary transition-colors cursor-pointer h-7"
                   >
                     {term}
-                  </button>
+                  </Button>
                 ))}
               </div>
             </div>

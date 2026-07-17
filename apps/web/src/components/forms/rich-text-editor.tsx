@@ -16,6 +16,7 @@ import {
 } from "lucide-react";
 
 import { Label } from "@/components/ui/label";
+import { Button } from "@/components/ui/button";
 
 interface RichTextEditorProps {
   value: string;
@@ -60,16 +61,18 @@ export function RichTextEditor({ value, onChange, label }: RichTextEditorProps) 
     children: React.ReactNode;
     title: string;
   }) => (
-    <button
+    <Button
       type="button"
+      variant="ghost"
+      size="icon"
       onClick={onClick}
       title={title}
-      className={`p-1.5 rounded-sm hover:bg-secondary hover:text-primary transition-colors cursor-pointer ${
+      className={`h-8 w-8 rounded-sm transition-colors ${
         isActive ? "bg-primary/10 text-primary" : "text-foreground/60"
       }`}
     >
       {children}
-    </button>
+    </Button>
   );
 
   return (

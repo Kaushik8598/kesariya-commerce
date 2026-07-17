@@ -15,7 +15,17 @@ export function useLogin() {
   return useMutation({
     mutationFn: authService.login,
 
-    onSuccess: (response) => {
+    onSuccess: (response, variables) => {
+      if (response.data.requiresVerification) {
+        toast.error(response.data.message);
+        router.push(
+          `/verify-account?countryCode=${encodeURIComponent(
+            variables.countryCode,
+          )}&mobile=${variables.mobile}`,
+        );
+        return;
+      }
+
       login(
         response.data.accessToken,
         response.data.refreshToken,
@@ -26,6 +36,9 @@ export function useLogin() {
 
       const redirectTo = searchParams.get("redirectTo") || "/";
       router.push(redirectTo);
+    },
+    onError: (error: any) => {
+      toast.error(error.response?.data?.message || "Login failed");
     },
   });
 }

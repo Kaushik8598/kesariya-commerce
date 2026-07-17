@@ -6,6 +6,8 @@ import type {
   ForgotPasswordSchema,
   VerifyForgotPasswordOtpSchema,
   ResetPasswordSchema,
+  VerifyRegistrationOtpSchema,
+  ResendRegistrationOtpSchema,
 } from "@/validations/auth.validation";
 
 export const authService = {
@@ -21,6 +23,12 @@ export const authService = {
 
   resetPassword: (data: Omit<ResetPasswordSchema, "confirmPassword">) =>
     api.post("/auth/reset-password", data),
+
+  verifyRegistrationOtp: (data: VerifyRegistrationOtpSchema) =>
+    api.post("/auth/verify-registration-otp", data),
+
+  resendRegistrationOtp: (data: ResendRegistrationOtpSchema) =>
+    api.post("/auth/resend-registration-otp", data),
 
   me: () => api.get("/auth/me"),
 

@@ -51,3 +51,18 @@ export const resetPasswordSchema = z
     message: "Passwords do not match",
   });
 export type ResetPasswordSchema = z.infer<typeof resetPasswordSchema>;
+
+export const verifyRegistrationOtpSchema = z.object({
+  countryCode: z.string().min(1),
+  mobile: z.string().min(10),
+  otp: z.string().length(6, "OTP must be exactly 6 digits"),
+});
+export type VerifyRegistrationOtpSchema = z.infer<
+  typeof verifyRegistrationOtpSchema
+>;
+
+export const resendRegistrationOtpSchema = z.object({
+  countryCode: z.string().min(1, "Country code is required"),
+  mobile: z.string().min(10, "Mobile number must be at least 10 digits"),
+});
+export type ResendRegistrationOtpSchema = z.infer<typeof resendRegistrationOtpSchema>;

@@ -2,7 +2,8 @@
 
 import { useState } from "react";
 import { Mail, ArrowRight, Check } from "lucide-react";
-
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { useInView } from "@/hooks/use-in-view";
 
 export function NewsletterSection() {
@@ -21,9 +22,8 @@ export function NewsletterSection() {
   return (
     <section ref={ref} className="mx-auto max-w-7xl px-4 py-20 sm:px-6 lg:px-8">
       <div
-        className={`relative overflow-hidden rounded-3xl bg-gradient-to-br from-[#3E2723] via-[#4E342E] to-[#3E2723] transition-all duration-700 ${
-          isInView ? "translate-y-0 opacity-100" : "translate-y-8 opacity-0"
-        }`}
+        className={`relative overflow-hidden rounded-3xl bg-gradient-to-br from-[#3E2723] via-[#4E342E] to-[#3E2723] transition-all duration-700 ${isInView ? "translate-y-0 opacity-100" : "translate-y-8 opacity-0"
+          }`}
       >
         {/* Decorative Elements */}
         <div className="pointer-events-none absolute inset-0">
@@ -58,20 +58,19 @@ export function NewsletterSection() {
             className="mx-auto mt-8 flex max-w-md flex-col gap-3 sm:flex-row"
           >
             <div className="relative flex-1">
-              <Mail className="absolute left-4 top-1/2 size-4 -translate-y-1/2 text-white/30" />
-              <input
+              <Input
                 type="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 placeholder="YOUR EMAIL ADDRESS"
                 required
-                className="h-13 w-full rounded-xl border border-white/10 bg-white/[0.06] pl-11 pr-4 text-xs font-bold uppercase tracking-widest text-white placeholder:text-white/25 focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary backdrop-blur-sm"
+                className="w-full rounded-xl border border-white/10 bg-white/[0.06] pr-4 text-xs font-bold uppercase tracking-widest text-white placeholder:text-white/25 focus-visible:border-primary focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-primary backdrop-blur-sm"
               />
             </div>
-            <button
+            <Button
               type="submit"
               disabled={subscribed}
-              className="group flex h-13 items-center justify-center gap-2 rounded-xl bg-white px-6 text-xs font-extrabold uppercase tracking-[0.2em] text-[#3E2723] transition-all hover:bg-primary hover:text-white disabled:opacity-80 cursor-pointer"
+              className="group flex items-center justify-center gap-2 rounded-xl bg-white px-6 text-xs font-extrabold uppercase tracking-[0.2em] text-[#3E2723] transition-all hover:bg-primary hover:text-white disabled:opacity-80 cursor-pointer"
             >
               {subscribed ? (
                 <>
@@ -84,7 +83,7 @@ export function NewsletterSection() {
                   <ArrowRight className="size-3.5 transition-transform group-hover:translate-x-1" />
                 </>
               )}
-            </button>
+            </Button>
           </form>
 
           <p className="mt-4 text-[10px] text-white/30">

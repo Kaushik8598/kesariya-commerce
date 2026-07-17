@@ -6,12 +6,19 @@ import { useState, useEffect } from "react";
 import { Search, ShoppingBag, User, LogOut, Menu, X, ChevronDown, Heart, Package } from "lucide-react";
 import { useAuth } from "@/providers/auth-provider";
 import { ThemeToggle } from "@/components/ui/theme-toggle";
+import { SearchOverlay } from "@/components/search/search-overlay";
+import { Button } from "@/components/ui/button";
+import { useCart } from "@/hooks/cart/use-cart";
 
 export function Header() {
   const pathname = usePathname();
   const { isAuthenticated, user, logout } = useAuth();
+  const { data: cart } = useCart();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [userDropdownOpen, setUserDropdownOpen] = useState(false);
+  const [searchOpen, setSearchOpen] = useState(false);
+
+  const cartItemCount = cart?.items?.reduce((acc: number, item: any) => acc + item.quantity, 0) || 0;
 
   // Prevent scroll when mobile menu is open
   useEffect(() => {
@@ -27,9 +34,9 @@ export function Header() {
 
   const navLinks = [
     { label: "HOME", href: "/" },
-    { label: "SHIRTS", href: "/collection/shirts" },
-    { label: "NEW ARRIVALS", href: "/collection/new-arrivals" },
-    { label: "BEST SELLERS", href: "/collection/best-sellers" },
+    // { label: "SHIRTS", href: "/category/shirts" },
+    { label: "NEW ARRIVALS", href: "/#new-arrivals" },
+    { label: "BEST SELLERS", href: "/#best-sellers" },
   ];
 
   return (
@@ -42,7 +49,7 @@ export function Header() {
 
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <div className="flex h-16 items-center justify-between gap-4">
-            
+
             {/* Site Brand / Logo */}
             <div className="flex-1 md:flex-initial flex items-center justify-center md:justify-start">
               <Link href="/" className="flex items-center">
@@ -60,11 +67,10 @@ export function Header() {
                   <Link
                     key={link.label}
                     href={link.href}
-                    className={`text-xs font-bold tracking-widest transition-all duration-300 relative py-1 border-b-2 hover:text-primary ${
-                      isActive
+                    className={`text-xs font-bold tracking-widest transition-all duration-300 relative py-1 border-b-2 hover:text-primary ${isActive
                         ? "border-primary text-primary"
                         : "border-transparent text-foreground/70 hover:border-foreground/30"
-                    }`}
+                      }`}
                   >
                     {link.label}
                   </Link>
@@ -74,15 +80,17 @@ export function Header() {
 
             {/* Actions (Desktop + Search for Mobile) */}
             <div className="flex items-center gap-2 sm:gap-4 absolute md:static right-4">
-              
-              {/* Search Bar Link (Visible on both) */}
-              <Link
-                href="/search"
-                className="p-1.5 text-foreground/70 hover:text-primary transition-colors rounded-full hover:bg-secondary"
+
+              {/* Search Bar Button */}
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={() => setSearchOpen(true)}
+                className="text-foreground/70 hover:text-primary rounded-full hover:bg-secondary cursor-pointer h-8 w-8"
                 aria-label="Search products"
               >
                 <Search className="h-5 w-5" />
-              </Link>
+              </Button>
 
               {/* Theme Toggle (Hidden on mobile) */}
               <div className="hidden md:block">
@@ -105,22 +113,25 @@ export function Header() {
                 aria-label="Cart"
               >
                 <ShoppingBag className="h-5 w-5" />
-                <span className="absolute -top-0.5 -right-0.5 flex h-4 w-4 items-center justify-center rounded-full bg-primary text-[9px] font-bold text-primary-foreground">
-                  0
-                </span>
+                {cartItemCount > 0 && (
+                  <span className="absolute -top-0.5 -right-0.5 flex h-4 w-4 items-center justify-center rounded-full bg-primary text-[9px] font-bold text-primary-foreground">
+                    {cartItemCount > 99 ? '99+' : cartItemCount}
+                  </span>
+                )}
               </Link>
 
               {/* User Dropdown / Authentication (Hidden on mobile) */}
               <div className="hidden md:block relative">
                 {isAuthenticated ? (
                   <>
-                    <button
+                    <Button
+                      variant="ghost"
                       onClick={() => setUserDropdownOpen(!userDropdownOpen)}
-                      className="flex items-center gap-1 p-1.5 text-foreground/77 hover:text-primary transition-colors rounded-full hover:bg-secondary cursor-pointer"
+                      className="flex items-center gap-1 p-1.5 h-auto text-foreground/77 hover:text-primary rounded-full hover:bg-secondary cursor-pointer"
                     >
                       <User className="h-5 w-5" />
                       <ChevronDown className="h-3 w-3 opacity-60" />
-                    </button>
+                    </Button>
 
                     {userDropdownOpen && (
                       <div className="absolute right-0 mt-2.5 w-56 rounded-md border border-border bg-card p-1 shadow-lg ring-1 ring-black/5 focus:outline-hidden animate-in fade-in slide-in-from-top-1 duration-200 z-50">
@@ -141,7 +152,7 @@ export function Header() {
                           <User className="h-4 w-4" />
                           My Profile
                         </Link>
-                        
+
                         <Link
                           href="/orders"
                           onClick={() => setUserDropdownOpen(false)}
@@ -161,16 +172,17 @@ export function Header() {
                           </Link>
                         )}
 
-                        <button
+                        <Button
+                          variant="ghost"
                           onClick={() => {
                             setUserDropdownOpen(false);
                             logout();
                           }}
-                          className="flex w-full items-center gap-2.5 px-3 py-2 text-xs font-medium text-destructive hover:bg-destructive/5 rounded-sm transition-colors text-left cursor-pointer"
+                          className="flex h-auto w-full items-center gap-2.5 px-3 py-2 text-xs font-medium text-destructive hover:bg-destructive/5 rounded-sm justify-start cursor-pointer"
                         >
                           <LogOut className="h-4 w-4" />
                           Logout
-                        </button>
+                        </Button>
                       </div>
                     )}
                   </>
@@ -198,9 +210,11 @@ export function Header() {
         <Link href="/cart" className="relative flex flex-col items-center justify-center gap-1 text-foreground/70 hover:text-primary transition-colors">
           <ShoppingBag className="h-5 w-5" />
           <span className="text-[9px] font-bold uppercase tracking-widest">Bag</span>
-          <span className="absolute -top-1 right-2 flex h-3.5 w-3.5 items-center justify-center rounded-full bg-primary text-[8px] font-bold text-primary-foreground">
-            0
-          </span>
+          {cartItemCount > 0 && (
+            <span className="absolute -top-1 right-2 flex h-3.5 w-3.5 items-center justify-center rounded-full bg-primary text-[8px] font-bold text-primary-foreground">
+              {cartItemCount > 99 ? '99+' : cartItemCount}
+            </span>
+          )}
         </Link>
         <Link href="/orders" className="flex flex-col items-center justify-center gap-1 text-foreground/70 hover:text-primary transition-colors">
           <Package className="h-5 w-5" />
@@ -210,13 +224,14 @@ export function Header() {
           <User className="h-5 w-5" />
           <span className="text-[9px] font-bold uppercase tracking-widest">Profile</span>
         </Link>
-        <button 
-          onClick={() => setMobileMenuOpen(true)} 
-          className="flex flex-col items-center justify-center gap-1 text-foreground/70 hover:text-primary transition-colors cursor-pointer"
+        <Button
+          variant="ghost"
+          onClick={() => setMobileMenuOpen(true)}
+          className="flex h-auto p-0 flex-col items-center justify-center gap-1 text-foreground/70 hover:text-primary hover:bg-transparent cursor-pointer"
         >
           <Menu className="h-5 w-5" />
           <span className="text-[9px] font-bold uppercase tracking-widest">Menu</span>
-        </button>
+        </Button>
       </div>
 
       {/* Full Screen Mobile Menu */}
@@ -224,28 +239,29 @@ export function Header() {
         <div className="md:hidden fixed inset-0 z-50 bg-background flex flex-col animate-in slide-in-from-bottom-4 duration-300">
           <div className="flex h-16 items-center justify-between px-4 border-b border-border">
             <span className="text-sm font-extrabold tracking-[0.25em] uppercase">MENU</span>
-            <button 
-              onClick={() => setMobileMenuOpen(false)} 
-              className="p-2 text-foreground/80 hover:text-foreground cursor-pointer"
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => setMobileMenuOpen(false)}
+              className="text-foreground/80 hover:text-foreground cursor-pointer h-10 w-10"
               aria-label="Close menu"
             >
               <X className="h-6 w-6" />
-            </button>
+            </Button>
           </div>
-          
+
           <div className="flex-1 overflow-y-auto px-6 py-8 flex flex-col">
             {/* Nav Links */}
             <div className="flex flex-col gap-6">
               {navLinks.map((link) => {
                 const isActive = pathname === link.href;
                 return (
-                  <Link 
-                    key={link.label} 
-                    href={link.href} 
-                    onClick={() => setMobileMenuOpen(false)} 
-                    className={`text-xl font-black tracking-widest uppercase transition-colors ${
-                      isActive ? "text-primary" : "text-foreground hover:text-primary"
-                    }`}
+                  <Link
+                    key={link.label}
+                    href={link.href}
+                    onClick={() => setMobileMenuOpen(false)}
+                    className={`text-xl font-black tracking-widest uppercase transition-colors ${isActive ? "text-primary" : "text-foreground hover:text-primary"
+                      }`}
                   >
                     {link.label}
                   </Link>
@@ -265,9 +281,9 @@ export function Header() {
               {/* Authentication */}
               <div className="border-t border-border pt-8 pb-8">
                 {!isAuthenticated ? (
-                  <Link 
-                    href="/login" 
-                    onClick={() => setMobileMenuOpen(false)} 
+                  <Link
+                    href="/login"
+                    onClick={() => setMobileMenuOpen(false)}
                     className="flex items-center justify-center w-full py-4 bg-foreground text-background font-black uppercase tracking-[0.2em] text-xs rounded-xl hover:bg-primary transition-colors"
                   >
                     Login / Register
@@ -283,13 +299,14 @@ export function Header() {
                         <p className="text-[10px] uppercase tracking-widest text-foreground/50">{user?.email}</p>
                       </div>
                     </div>
-                    <button 
-                      onClick={() => { setMobileMenuOpen(false); logout(); }} 
-                      className="flex items-center justify-center w-full py-4 border-2 border-border font-black uppercase tracking-[0.2em] text-xs rounded-xl text-destructive hover:bg-destructive/5 transition-colors cursor-pointer"
+                    <Button
+                      variant="outline"
+                      onClick={() => { setMobileMenuOpen(false); logout(); }}
+                      className="flex h-auto items-center justify-center w-full py-4 border-2 border-border font-black uppercase tracking-[0.2em] text-xs rounded-xl text-destructive hover:text-destructive hover:bg-destructive/5 cursor-pointer"
                     >
                       <LogOut className="mr-2 h-4 w-4" />
                       Logout
-                    </button>
+                    </Button>
                   </div>
                 )}
               </div>
@@ -297,6 +314,8 @@ export function Header() {
           </div>
         </div>
       )}
+      {/* Search Overlay */}
+      <SearchOverlay isOpen={searchOpen} onClose={() => setSearchOpen(false)} />
     </>
   );
 }

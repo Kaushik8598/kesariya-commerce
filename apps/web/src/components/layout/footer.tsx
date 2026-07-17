@@ -1,14 +1,15 @@
 "use client";
 
 import Link from "next/link";
-import { Mail, Phone, MapPin } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 
 export function Footer() {
   return (
     <footer className="border-t border-border bg-card text-foreground">
       <div className="mx-auto max-w-7xl px-4 py-16 sm:px-6 lg:px-8">
         <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
-          
+
           {/* Column 1: Brand Info */}
           <div className="space-y-4">
             <span className="text-lg font-bold tracking-[0.25em] text-foreground">
@@ -95,18 +96,18 @@ export function Footer() {
               Join the club to get updates on new arrivals, exclusive discounts, and style tips.
             </p>
             <form className="flex max-w-sm flex-col sm:flex-row gap-2" onSubmit={(e) => e.preventDefault()}>
-              <input
+              <Input
                 type="email"
                 placeholder="YOUR EMAIL"
-                className="w-full rounded-md border border-border bg-background px-3 py-2 text-xs font-semibold uppercase tracking-wider placeholder-foreground/30 focus:border-primary focus:outline-hidden"
+                className="w-full rounded-md border border-border bg-background px-3 py-2 text-xs font-semibold uppercase tracking-wider placeholder-foreground/30 focus-visible:border-primary focus-visible:outline-none"
                 required
               />
-              <button
+              <Button
                 type="submit"
                 className="w-full sm:w-auto rounded-md bg-foreground px-4 py-2 text-xs font-bold tracking-widest text-background hover:bg-primary hover:text-primary-foreground transition-all duration-300 uppercase cursor-pointer"
               >
                 JOIN
-              </button>
+              </Button>
             </form>
           </div>
 

@@ -5,13 +5,15 @@ import { ArrowRight } from "lucide-react";
 
 import { useInView } from "@/hooks/use-in-view";
 import { ProductCard } from "@/components/products/product-card";
-import { featuredProducts } from "@/constants/mock-data";
+import { useFeaturedProducts } from "@/hooks/products/use-products";
+import { Skeleton } from "@/components/ui/skeleton";
 
 export function FeaturedProducts() {
   const { ref, isInView } = useInView({ threshold: 0.1 });
+  const { products, loading } = useFeaturedProducts(4);
 
   return (
-    <section ref={ref} className="mx-auto max-w-7xl px-4 py-20 sm:px-6 lg:px-8">
+    <section id="best-sellers" ref={ref} className="mx-auto max-w-7xl px-4 py-20 sm:px-6 lg:px-8">
       {/* Section Header */}
       <div
         className={`flex flex-col items-center justify-between gap-4 sm:flex-row transition-all duration-700 ${
@@ -37,21 +39,29 @@ export function FeaturedProducts() {
 
       {/* Product Grid */}
       <div className="mt-10 grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4 lg:gap-6">
-        {featuredProducts.map((product, index) => (
-          <div
-            key={product.id}
-            className={`transition-all duration-700 ${
-              isInView
-                ? "translate-y-0 opacity-100"
-                : "translate-y-12 opacity-0"
-            }`}
-            style={{
-              transitionDelay: isInView ? `${index * 80 + 200}ms` : "0ms",
-            }}
-          >
-            <ProductCard product={product} />
-          </div>
-        ))}
+        {loading
+          ? Array.from({ length: 4 }).map((_, i) => (
+              <div key={i} className="space-y-3">
+                <Skeleton className="aspect-[3/4] w-full rounded-xl" />
+                <Skeleton className="h-4 w-2/3" />
+                <Skeleton className="h-4 w-1/2" />
+              </div>
+            ))
+          : products.map((product, index) => (
+              <div
+                key={product.id}
+                className={`transition-all duration-700 ${
+                  isInView
+                    ? "translate-y-0 opacity-100"
+                    : "translate-y-12 opacity-0"
+                }`}
+                style={{
+                  transitionDelay: isInView ? `${index * 80 + 200}ms` : "0ms",
+                }}
+              >
+                <ProductCard product={product} />
+              </div>
+            ))}
       </div>
     </section>
   );

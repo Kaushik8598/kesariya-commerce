@@ -1,24 +1,41 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useCart, useCheckout } from "@/hooks/cart/use-cart";
 import { useAuth } from "@/providers/auth-provider";
 import { Button } from "@/components/ui/button";
-import { Loader2, ArrowLeft, CheckCircle2, Ruler } from "lucide-react";
+import { Loader2, ArrowLeft, CheckCircle2, Ruler, MapPin, Plus } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
+import { AddressForm } from "@/components/profile/address-form";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { useAddresses } from "@/hooks/profile/use-profile";
 
 export default function CheckoutPage() {
   const router = useRouter();
   const { isAuthenticated } = useAuth();
   const { data: cart, isLoading } = useCart();
   const { mutate: processCheckout, isPending: isCheckingOut } = useCheckout();
+  const { data: addresses, isLoading: isLoadingAddresses } = useAddresses();
 
-  // Simplistic checkout state for demonstration
-  const [shippingAddress, setShippingAddress] = useState("");
+  const [selectedAddressId, setSelectedAddressId] = useState<string>("");
+  const [isAddingNewAddress, setIsAddingNewAddress] = useState(false);
   const [notes, setNotes] = useState("");
   const [paymentMethod, setPaymentMethod] = useState("cod");
+
+  // Auto-select default address if available
+  useEffect(() => {
+    if (addresses && addresses.length > 0 && !selectedAddressId) {
+      const defaultAddr = addresses.find((a: any) => a.isDefault);
+      if (defaultAddr) {
+        setSelectedAddressId(defaultAddr.id);
+      } else {
+        setSelectedAddressId(addresses[0].id);
+      }
+    }
+  }, [addresses, selectedAddressId]);
 
   if (!isAuthenticated) {
     router.push("/login?redirectTo=/checkout");
@@ -38,12 +55,12 @@ export default function CheckoutPage() {
     return null;
   }
 
-  const handleCheckout = (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleCheckout = (e?: React.FormEvent | React.MouseEvent) => {
+    if (e) e.preventDefault();
     processCheckout({
-      // We don't have full address management in UI yet, passing null/empty
-      shippingAddressId: undefined,
-      notes: notes || `Shipping to: ${shippingAddress} | Payment: ${paymentMethod}`,
+      shippingAddressId: selectedAddressId || undefined,
+      notes: notes || undefined,
+      paymentMethod: paymentMethod === 'online' ? 'ONLINE' : 'COD',
     });
   };
 
@@ -57,34 +74,74 @@ export default function CheckoutPage() {
 
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-10">
         <div className="lg:col-span-7">
-          <form onSubmit={handleCheckout} className="space-y-8">
+          <div className="space-y-8">
             {/* Delivery Details */}
             <div className="border border-border p-6 rounded-xl">
-              <h2 className="text-lg font-bold tracking-widest uppercase mb-6 flex items-center gap-2">
-                <span className="flex h-6 w-6 items-center justify-center rounded-full bg-foreground text-background text-xs">1</span>
-                Delivery Details
-              </h2>
+              <div className="flex items-center justify-between mb-6">
+                <h2 className="text-lg font-bold tracking-widest uppercase flex items-center gap-2">
+                  <span className="flex h-6 w-6 items-center justify-center rounded-full bg-foreground text-background text-xs">1</span>
+                  Delivery Details
+                </h2>
+                {!isAddingNewAddress && (
+                  <Button type="button" size="sm" variant="outline" onClick={() => setIsAddingNewAddress(true)} className="flex items-center gap-2 h-8">
+                    <Plus className="h-3 w-3" /> Add New
+                  </Button>
+                )}
+              </div>
               
               <div className="space-y-4">
-                <div>
-                  <label className="block text-xs font-bold uppercase tracking-widest text-foreground/70 mb-2">Full Delivery Address</label>
-                  <textarea 
-                    required
-                    value={shippingAddress}
-                    onChange={(e) => setShippingAddress(e.target.value)}
-                    rows={3}
-                    placeholder="Enter your complete address, landmark, city, state, pincode"
-                    className="w-full bg-background border border-border px-4 py-3 text-sm rounded-md focus:outline-none focus:ring-2 focus:ring-primary/50"
+                {isLoadingAddresses ? (
+                  <div className="flex h-20 items-center justify-center">
+                    <Loader2 className="h-5 w-5 animate-spin text-primary" />
+                  </div>
+                ) : isAddingNewAddress ? (
+                  <AddressForm 
+                    onSuccess={() => setIsAddingNewAddress(false)} 
+                    onCancel={() => setIsAddingNewAddress(false)} 
                   />
-                </div>
-                <div>
-                  <label className="block text-xs font-bold uppercase tracking-widest text-foreground/70 mb-2">Delivery Instructions (Optional)</label>
-                  <input 
+                ) : addresses && addresses.length > 0 ? (
+                  <div className="space-y-3">
+                    {addresses.map((address: any) => (
+                      <label 
+                        key={address.id} 
+                        className={`flex items-start gap-4 p-4 border rounded-md cursor-pointer transition-all ${selectedAddressId === address.id ? 'border-primary bg-primary/5' : 'border-border'}`}
+                      >
+                        <input 
+                          type="radio" 
+                          name="address" 
+                          value={address.id} 
+                          checked={selectedAddressId === address.id} 
+                          onChange={() => setSelectedAddressId(address.id)}
+                          className="accent-primary mt-1"
+                        />
+                        <div className="flex-1">
+                          <div className="flex items-center gap-2">
+                            <p className="font-bold text-sm">{address.fullName}</p>
+                            {address.isDefault && <span className="bg-primary/10 text-primary text-[10px] px-2 py-0.5 rounded-full font-bold tracking-widest uppercase">Default</span>}
+                          </div>
+                          <p className="text-xs text-foreground/80 mt-1">{address.addressLine1}</p>
+                          {address.addressLine2 && <p className="text-xs text-foreground/80">{address.addressLine2}</p>}
+                          <p className="text-xs text-foreground/80">{address.city?.name || address.cityId}, {address.state?.name || address.stateId} {address.postalCode}</p>
+                          <p className="text-xs text-foreground/60 mt-1">Phone: {address.phoneCode} {address.mobile}</p>
+                        </div>
+                      </label>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="text-center py-6 border border-dashed border-border rounded-lg">
+                    <MapPin className="h-8 w-8 text-foreground/20 mx-auto mb-3" />
+                    <p className="text-sm text-foreground/60 mb-3">No saved addresses found.</p>
+                    <Button type="button" onClick={() => setIsAddingNewAddress(true)}>Add Delivery Address</Button>
+                  </div>
+                )}
+                
+                <div className="pt-4 border-t border-border mt-6 space-y-2">
+                  <Label className="text-xs font-bold uppercase tracking-widest text-foreground/70">Delivery Instructions (Optional)</Label>
+                  <Input 
                     type="text"
                     value={notes}
                     onChange={(e) => setNotes(e.target.value)}
                     placeholder="E.g. Leave at the front door"
-                    className="w-full bg-background border border-border px-4 py-3 text-sm rounded-md focus:outline-none focus:ring-2 focus:ring-primary/50"
                   />
                 </div>
               </div>
@@ -131,8 +188,8 @@ export default function CheckoutPage() {
             </div>
 
             <Button 
-              type="submit" 
-              disabled={isCheckingOut || !shippingAddress || paymentMethod === 'online'}
+              onClick={handleCheckout}
+              disabled={isCheckingOut || !selectedAddressId || paymentMethod === 'online' || isAddingNewAddress}
               className="w-full h-14 text-sm font-black tracking-widest uppercase"
             >
               {isCheckingOut ? (
@@ -146,7 +203,7 @@ export default function CheckoutPage() {
                 'Place Order'
               )}
             </Button>
-          </form>
+          </div>
         </div>
 
         {/* Order Summary Sidebar */}

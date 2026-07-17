@@ -1,6 +1,6 @@
 "use client";
 
-import { useAddresses, useAddAddress, useDeleteAddress, useUpdateAddress, useCountries, useStates, useCities, useProfile } from "@/hooks/profile/use-profile";
+import { useAddresses, useDeleteAddress, useProfile } from "@/hooks/profile/use-profile";
 import { useAuth } from "@/providers/auth-provider";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -9,35 +9,17 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { useState, useEffect } from "react";
 import { toast } from "sonner";
+import { AddressForm } from "@/components/profile/address-form";
 
 
 export default function AddressesPage() {
   const { isAuthenticated, logout } = useAuth();
   const { data: addresses, isLoading } = useAddresses();
   const { data: profile, isLoading: isLoadingProfile } = useProfile();
-  const { mutate: addAddress, isPending: isAdding } = useAddAddress();
   const { mutate: deleteAddress, isPending: isDeleting } = useDeleteAddress();
 
   const router = useRouter();
   const [isAddingNew, setIsAddingNew] = useState(false);
-
-  const [formData, setFormData] = useState({
-    fullName: "", phoneCode: "", mobile: "", addressLine1: "", addressLine2: "",
-    countryId: "", stateId: "", cityId: "", postalCode: "", isDefault: false
-  });
-
-  const { data: countries, isLoading: isCountriesLoading } = useCountries();
-  const { data: states, isLoading: isStatesLoading } = useStates(formData.countryId);
-  const { data: cities, isLoading: isCitiesLoading } = useCities(formData.stateId);
-
-  useEffect(() => {
-    if (formData.countryId) {
-      const country = countries?.find((c: any) => c.id === formData.countryId);
-      if (country && !formData.phoneCode) {
-        setFormData(prev => ({ ...prev, phoneCode: country.phoneCode }));
-      }
-    }
-  }, [formData.countryId, countries]);
 
   if (!isAuthenticated) {
     return null;
@@ -46,24 +28,6 @@ export default function AddressesPage() {
   const handleLogout = () => {
     logout();
     router.push("/");
-  };
-
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!formData.countryId || !formData.stateId || !formData.cityId) {
-      toast.error("Please select country, state and city");
-      return;
-    }
-
-    addAddress(formData, {
-      onSuccess: () => {
-        setIsAddingNew(false);
-        setFormData({
-          fullName: "", phoneCode: "", mobile: "", addressLine1: "", addressLine2: "",
-          countryId: "", stateId: "", cityId: "", postalCode: "", isDefault: false
-        });
-      }
-    });
   };
 
   if (isLoading) {
@@ -147,77 +111,10 @@ export default function AddressesPage() {
                 <Skeleton className="h-32 w-full" />
               </div>
             ) : isAddingNew ? (
-              <form onSubmit={handleSubmit} className="space-y-4 border border-border p-6 rounded-lg bg-background">
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-xs font-bold uppercase tracking-widest text-foreground/70 mb-2">Full Name</label>
-                    <input required type="text" value={formData.fullName} onChange={(e) => setFormData({ ...formData, fullName: e.target.value })} className="w-full bg-background border border-border px-4 py-2.5 text-sm rounded-md" />
-                  </div>
-                  <div>
-                    <label className="block text-xs font-bold uppercase tracking-widest text-foreground/70 mb-2">Phone Number</label>
-                    <div className="flex gap-2">
-                      <input required type="text" value={formData.phoneCode} readOnly className="w-20 bg-secondary/50 border border-border px-3 py-2.5 text-sm rounded-md cursor-not-allowed text-center" />
-                      <input required type="text" value={formData.mobile} onChange={(e) => setFormData({ ...formData, mobile: e.target.value })} className="flex-1 bg-background border border-border px-4 py-2.5 text-sm rounded-md" />
-                    </div>
-                  </div>
-                </div>
-
-                <div>
-                  <label className="block text-xs font-bold uppercase tracking-widest text-foreground/70 mb-2">Address Line 1</label>
-                  <input required type="text" value={formData.addressLine1} onChange={(e) => setFormData({ ...formData, addressLine1: e.target.value })} className="w-full bg-background border border-border px-4 py-2.5 text-sm rounded-md" />
-                </div>
-                <div>
-                  <label className="block text-xs font-bold uppercase tracking-widest text-foreground/70 mb-2">Address Line 2 (Optional)</label>
-                  <input type="text" value={formData.addressLine2} onChange={(e) => setFormData({ ...formData, addressLine2: e.target.value })} className="w-full bg-background border border-border px-4 py-2.5 text-sm rounded-md" />
-                </div>
-
-                <div className="grid grid-cols-2 sm:grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-xs font-bold uppercase tracking-widest text-foreground/70 mb-2">Country</label>
-                    <select required value={formData.countryId} onChange={(e) => setFormData({ ...formData, countryId: e.target.value, stateId: "", cityId: "" })} className="w-full bg-background border border-border px-4 py-2.5 text-sm rounded-md appearance-none">
-                      <option value="" disabled>Select Country</option>
-                      {countries?.map((c: any) => (
-                        <option key={c.id} value={c.id}>{c.name}</option>
-                      ))}
-                    </select>
-                  </div>
-                  <div>
-                    <label className="block text-xs font-bold uppercase tracking-widest text-foreground/70 mb-2">State</label>
-                    <select required value={formData.stateId} onChange={(e) => setFormData({ ...formData, stateId: e.target.value, cityId: "" })} disabled={!formData.countryId} className="w-full bg-background border border-border px-4 py-2.5 text-sm rounded-md appearance-none disabled:opacity-50">
-                      <option value="" disabled>Select State</option>
-                      {states?.map((s: any) => (
-                        <option key={s.id} value={s.id}>{s.name}</option>
-                      ))}
-                    </select>
-                  </div>
-                  <div>
-                    <label className="block text-xs font-bold uppercase tracking-widest text-foreground/70 mb-2">City</label>
-                    <select required value={formData.cityId} onChange={(e) => setFormData({ ...formData, cityId: e.target.value })} disabled={!formData.stateId} className="w-full bg-background border border-border px-4 py-2.5 text-sm rounded-md appearance-none disabled:opacity-50">
-                      <option value="" disabled>Select City</option>
-                      {cities?.map((c: any) => (
-                        <option key={c.id} value={c.id}>{c.name}</option>
-                      ))}
-                    </select>
-                  </div>
-                  <div>
-                    <label className="block text-xs font-bold uppercase tracking-widest text-foreground/70 mb-2">Pincode</label>
-                    <input required type="text" value={formData.postalCode} onChange={(e) => setFormData({ ...formData, postalCode: e.target.value })} className="w-full bg-background border border-border px-4 py-2.5 text-sm rounded-md" />
-                  </div>
-                </div>
-
-                <label className="flex items-center gap-2 mt-4 cursor-pointer">
-                  <input type="checkbox" checked={formData.isDefault} onChange={(e) => setFormData({ ...formData, isDefault: e.target.checked })} className="accent-primary" />
-                  <span className="text-sm font-medium">Set as default address</span>
-                </label>
-
-                <div className="flex gap-4 pt-4">
-                  <Button type="button" variant="outline" onClick={() => setIsAddingNew(false)}>Cancel</Button>
-                  <Button type="submit" disabled={isAdding}>
-                    {isAdding && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                    Save Address
-                  </Button>
-                </div>
-              </form>
+              <AddressForm 
+                onSuccess={() => setIsAddingNew(false)} 
+                onCancel={() => setIsAddingNew(false)} 
+              />
             ) : addresses && addresses.length > 0 ? (
               <div className="space-y-4">
                 {addresses.map((address: any) => (

@@ -115,7 +115,7 @@ export function useCheckout() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async (data: { shippingAddressId?: string; notes?: string }) => {
+    mutationFn: async (data: { shippingAddressId?: string; notes?: string; paymentMethod?: string }) => {
       const res = await checkoutService.processCheckout(data);
       return res.data;
     },

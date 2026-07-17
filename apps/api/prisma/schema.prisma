@@ -639,6 +639,11 @@ enum PaymentStatus {
   REFUNDED
 }
 
+enum PaymentMethod {
+  COD
+  ONLINE
+}
+
 model Order {
   id String @id @default(cuid())
 
@@ -660,7 +665,7 @@ model Order {
 
   status        OrderStatus   @default(PENDING)
   paymentStatus PaymentStatus @default(PENDING) @map("payment_status")
-  paymentMethod String?       @map("payment_method")
+  paymentMethod PaymentMethod @default(COD) @map("payment_method")
   transactionId String?       @map("transaction_id")
 
   shippingAddressId String?  @map("shipping_address_id")

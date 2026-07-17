@@ -15,7 +15,7 @@ export class CheckoutController {
   @Post('process')
   processCheckout(
     @CurrentUser('id') userId: string,
-    @Body() body: { shippingAddressId?: string; notes?: string },
+    @Body() body: { shippingAddressId?: string; notes?: string; paymentMethod?: 'COD' | 'ONLINE' },
   ) {
     return this.checkoutService.processCheckout(userId, body);
   }

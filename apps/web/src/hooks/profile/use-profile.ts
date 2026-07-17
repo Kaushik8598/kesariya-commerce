@@ -107,7 +107,7 @@ export function useCountries() {
     queryKey: ["countries"],
     queryFn: async () => {
       const res = await profileService.getCountries();
-      return res.data?.data || [];
+      return res.data || [];
     },
   });
 }
@@ -117,7 +117,7 @@ export function useStates(countryId: string) {
     queryKey: ["states", countryId],
     queryFn: async () => {
       const res = await profileService.getStates(countryId);
-      return res.data?.data || [];
+      return res.data || [];
     },
     enabled: !!countryId,
   });
@@ -128,7 +128,7 @@ export function useCities(stateId: string) {
     queryKey: ["cities", stateId],
     queryFn: async () => {
       const res = await profileService.getCities(stateId);
-      return res.data?.data || [];
+      return res.data || [];
     },
     enabled: !!stateId,
   });

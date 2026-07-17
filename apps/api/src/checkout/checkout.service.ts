@@ -9,7 +9,10 @@ export class CheckoutService {
     private readonly cartsService: CartsService,
   ) {}
 
-  async processCheckout(userId: string, data: { shippingAddressId?: string; notes?: string }) {
+  async processCheckout(
+    userId: string,
+    data: { shippingAddressId?: string; notes?: string; paymentMethod?: 'COD' | 'ONLINE' },
+  ) {
     // 1. Get the current cart with totals calculated
     const cartData = await this.cartsService.getCart(userId);
 
@@ -48,6 +51,7 @@ export class CheckoutService {
           couponId: cartData.coupon?.id || null,
           status: 'PENDING',
           paymentStatus: 'PENDING',
+          paymentMethod: data.paymentMethod || 'COD',
           shippingAddressId: data.shippingAddressId || null,
           notes: data.notes || null,
         },

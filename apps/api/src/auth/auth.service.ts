@@ -21,7 +21,7 @@ import { VerifyForgotPasswordOtpDto } from './dto/verify-forgot-password-otp.dto
 import { ResetPasswordDto } from './dto/reset-password.dto';
 import { VerifyRegistrationOtpDto } from './dto/verify-registration-otp.dto';
 import { ResendRegistrationOtpDto } from './dto/resend-registration-otp.dto';
-import { OtpType } from '@prisma/client';
+import { OtpType } from '../../generated/prisma';
 
 @Injectable()
 export class AuthService {
@@ -143,7 +143,7 @@ export class AuthService {
         text: `Your OTP for account verification is ${otp}. It is valid for 10 minutes.`,
         html: `<p>Your OTP for account verification is <b>${otp}</b>. It is valid for 10 minutes.</p>`,
       });
-      
+
       console.log(`Registration email sent to ${dto.email} (OTP: ${otp})`);
     } catch (error) {
       console.error('Error sending registration email:', error);
@@ -425,7 +425,7 @@ export class AuthService {
         text: `Your OTP for password reset is ${otp}. It is valid for 10 minutes.`,
         html: `<p>Your OTP for password reset is <b>${otp}</b>. It is valid for 10 minutes.</p>`,
       });
-      
+
       console.log(`Password reset email sent to ${user.email} (OTP: ${otp})`);
     } catch (error) {
       console.error('Error sending email:', error);

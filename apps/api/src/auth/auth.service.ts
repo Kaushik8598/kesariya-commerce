@@ -21,7 +21,7 @@ import { VerifyForgotPasswordOtpDto } from './dto/verify-forgot-password-otp.dto
 import { ResetPasswordDto } from './dto/reset-password.dto';
 import { VerifyRegistrationOtpDto } from './dto/verify-registration-otp.dto';
 import { ResendRegistrationOtpDto } from './dto/resend-registration-otp.dto';
-import { OtpType } from '@prisma/client';
+import { OtpType } from '../../generated/prisma';
 
 @Injectable()
 export class AuthService {

@@ -17,6 +17,7 @@ export class CartsService {
               },
             },
             variant: true,
+            measurementProfile: { include: { values: true } },
           },
           orderBy: { createdAt: 'desc' },
         },
@@ -27,18 +28,19 @@ export class CartsService {
     if (!cart) {
       cart = await this.prisma.cart.create({
         data: { userId },
-        include: { items: { include: { product: { include: { images: true } }, variant: true } }, coupon: true },
+        include: { items: { include: { product: { include: { images: true } }, variant: true, measurementProfile: { include: { values: true } } } }, coupon: true },
       });
     }
 
     return this.calculateCartTotals(cart);
   }
 
-  async addItem(userId: string, productId: string, variantId?: string, quantity: number = 1) {
-    let cart = await this.prisma.cart.findUnique({ where: { userId } });
-    if (!cart) {
-      cart = await this.prisma.cart.create({ data: { userId } });
-    }
+  async addItem(userId: string, productId: string, variantId?: string, quantity: number = 1, measurementProfileId?: string) {
+    try {
+      let cart = await this.prisma.cart.findUnique({ where: { userId } });
+      if (!cart) {
+        cart = await this.prisma.cart.create({ data: { userId } });
+      }
 
     // Check product exists and stock
     const product = await this.prisma.product.findUnique({ where: { id: productId } });
@@ -58,6 +60,7 @@ export class CartsService {
         cartId: cart.id,
         productId,
         variantId: variantId || null,
+        measurementProfileId: measurementProfileId || null,
       },
     });
 
@@ -76,12 +79,17 @@ export class CartsService {
           cartId: cart.id,
           productId,
           variantId: variantId || null,
+          measurementProfileId: measurementProfileId || null,
           quantity,
         },
       });
     }
 
-    return this.getCart(userId);
+      return this.getCart(userId);
+    } catch (e) {
+      require('fs').writeFileSync('carts_error.log', e.stack || String(e));
+      throw e;
+    }
   }
 
   async updateItemQuantity(userId: string, itemId: string, quantity: number) {

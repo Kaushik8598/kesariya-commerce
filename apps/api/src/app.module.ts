@@ -19,6 +19,7 @@ import { CouponsModule } from './coupons/coupons.module';
 import { CheckoutModule } from './checkout/checkout.module';
 import { OrdersModule } from './orders/orders.module';
 import { LocationsModule } from './locations/locations.module';
+import { MeasurementsModule } from './measurements/measurements.module';
 
 @Module({
   imports: [
@@ -41,6 +42,7 @@ import { LocationsModule } from './locations/locations.module';
     CheckoutModule,
     OrdersModule,
     LocationsModule,
+    MeasurementsModule,
   ],
   controllers: [AppController],
   providers: [AppService],

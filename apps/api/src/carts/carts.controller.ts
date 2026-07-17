@@ -21,9 +21,9 @@ export class CartsController {
   @Post('items')
   addItem(
     @CurrentUser('id') userId: string,
-    @Body() body: { productId: string; variantId?: string; quantity?: number },
+    @Body() body: { productId: string; variantId?: string; quantity?: number; measurementProfileId?: string },
   ) {
-    return this.cartsService.addItem(userId, body.productId, body.variantId, body.quantity || 1);
+    return this.cartsService.addItem(userId, body.productId, body.variantId, body.quantity || 1, body.measurementProfileId);
   }
 
   @ApiOperation({ summary: 'Update item quantity' })

@@ -91,6 +91,9 @@ export default function ProfilePage() {
             <Link href="/profile/addresses" className="px-4 py-3 hover:bg-secondary/30 rounded-lg text-sm font-bold uppercase tracking-widest text-foreground/70 transition-colors">
               Saved Addresses
             </Link>
+            <Link href="/profile/measurements" className="px-4 py-3 hover:bg-secondary/30 rounded-lg text-sm font-bold uppercase tracking-widest text-foreground/70 transition-colors">
+              Measurements
+            </Link>
             <Link href="/orders" className="px-4 py-3 hover:bg-secondary/30 rounded-lg text-sm font-bold uppercase tracking-widest text-foreground/70 transition-colors">
               Order History
             </Link>
@@ -179,3 +182,4 @@ export default function ProfilePage() {
     </div>
   );
 }
+

@@ -6,7 +6,7 @@ import { useAuth } from "@/providers/auth-provider";
 import { Button } from "@/components/ui/button";
 import { EmptyState } from "@/components/ui/empty-state";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Trash2, Plus, Minus, Tag, X, ArrowRight, Loader2, ShoppingBag } from "lucide-react";
+import { Trash2, Plus, Minus, Tag, X, ArrowRight, Loader2, ShoppingBag, Ruler } from "lucide-react";
 import Image from "next/image";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
@@ -97,6 +97,13 @@ export default function CartPage() {
                         {item.variant.color && <span>{item.variant.color}</span>}
                         {item.variant.color && item.variant.size && <span>|</span>}
                         {item.variant.size && <span>{item.variant.size}</span>}
+                      </div>
+                    )}
+                    
+                    {item.measurementProfile && (
+                      <div className="mt-2 flex items-center gap-1.5 text-xs text-primary font-bold uppercase tracking-widest bg-primary/10 w-fit px-2 py-1 rounded-sm">
+                        <Ruler className="h-3 w-3" />
+                        <span>Fit: {item.measurementProfile.name}</span>
                       </div>
                     )}
                   </div>

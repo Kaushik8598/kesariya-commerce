@@ -63,6 +63,7 @@ export class CheckoutService {
             quantity: item.quantity,
             price: item.price,
             total: item.total,
+            measurementProfileId: item.measurementProfileId || null,
           },
         });
 

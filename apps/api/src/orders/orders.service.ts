@@ -31,6 +31,7 @@ export class OrdersService {
             variant: {
               select: { size: true, color: true },
             },
+            measurementProfile: { include: { values: true } },
           },
         },
       },
@@ -50,6 +51,7 @@ export class OrdersService {
             variant: {
               select: { size: true, color: true },
             },
+            measurementProfile: { include: { values: true } },
           },
         },
         shippingAddress: true,

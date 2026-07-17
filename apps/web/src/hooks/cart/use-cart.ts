@@ -25,7 +25,7 @@ export function useAddToCart() {
   const router = useRouter();
 
   return useMutation({
-    mutationFn: async (data: { productId: string; variantId?: string; quantity?: number }) => {
+    mutationFn: async (data: { productId: string; variantId?: string; quantity?: number; measurementProfileId?: string }) => {
       if (!isAuthenticated) {
         toast.error("Please login to add to bag");
         const pathname = typeof window !== 'undefined' ? window.location.pathname : '';

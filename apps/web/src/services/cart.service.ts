@@ -3,7 +3,7 @@ import { api } from '@/lib/axios';
 export const cartService = {
   getCart: () => api.get('/cart'),
   
-  addItem: (data: { productId: string; variantId?: string; quantity?: number }) => 
+  addItem: (data: { productId: string; variantId?: string; quantity?: number; measurementProfileId?: string }) => 
     api.post('/cart/items', data),
     
   updateItemQuantity: (itemId: string, quantity: number) => 

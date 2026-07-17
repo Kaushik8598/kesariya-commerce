@@ -4,7 +4,7 @@ import { useOrderDetails } from "@/hooks/order/use-order";
 import { useAuth } from "@/providers/auth-provider";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
-import { ArrowLeft, Package, MapPin, CreditCard, Download } from "lucide-react";
+import { Package, Truck, CheckCircle2, Clock, XCircle, CreditCard, MapPin, Download, Ruler, ArrowLeft } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import { format } from "date-fns";
@@ -117,6 +117,13 @@ export default function OrderDetailsPage({ params }: { params: Promise<{ orderNu
                         {item.variant?.size && <p>Size: {item.variant.size}</p>}
                         <p className="mt-1 font-bold text-foreground/80">Qty: {item.quantity}</p>
                       </div>
+
+                      {item.measurementProfile && (
+                        <div className="mt-3 flex items-center gap-1.5 text-xs text-primary font-bold uppercase tracking-widest bg-primary/10 w-fit px-2 py-1 rounded-sm">
+                          <Ruler className="h-3 w-3" />
+                          <span>Fit: {item.measurementProfile.name}</span>
+                        </div>
+                      )}
                     </div>
                   </div>
                 </div>

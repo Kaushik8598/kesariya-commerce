@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { useCart, useCheckout } from "@/hooks/cart/use-cart";
 import { useAuth } from "@/providers/auth-provider";
 import { Button } from "@/components/ui/button";
-import { Loader2, ArrowLeft, CheckCircle2 } from "lucide-react";
+import { Loader2, ArrowLeft, CheckCircle2, Ruler } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 
@@ -172,6 +172,12 @@ export default function CheckoutPage() {
                       {item.variant?.color && ` | ${item.variant.color}`}
                       {item.variant?.size && ` | ${item.variant.size}`}
                     </div>
+                    {item.measurementProfile && (
+                      <div className="mt-1 flex items-center gap-1 text-[10px] text-primary font-bold uppercase tracking-widest">
+                        <Ruler className="h-3 w-3" />
+                        <span>Fit: {item.measurementProfile.name}</span>
+                      </div>
+                    )}
                     <p className="font-bold text-sm mt-1">₹{Number(item.price).toFixed(2)}</p>
                   </div>
                 </div>

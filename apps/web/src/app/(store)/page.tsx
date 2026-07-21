@@ -7,7 +7,7 @@ import { FeaturedProducts } from "@/components/home/featured-products";
 import { NewArrivals } from "@/components/home/new-arrivals";
 import { OffersBanner } from "@/components/home/offers-banner";
 import { Testimonials } from "@/components/home/testimonials";
-import { NewsletterSection } from "@/components/home/newsletter-section";
+// import { NewsletterSection } from "@/components/home/newsletter-section";
 
 export const metadata: Metadata = {
   title: "Kesariya — Premium Indian Fashion | Handcrafted Clothing",
@@ -33,7 +33,7 @@ export default function HomePage() {
       <NewArrivals />
       <OffersBanner />
       <Testimonials />
-      <NewsletterSection />
+      {/* <NewsletterSection /> */}
     </>
   );
 }

@@ -17,14 +17,32 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { useRouter, useSearchParams, usePathname } from "next/navigation";
+import { useEffect } from "react";
 
 interface AddToCartButtonProps {
   product: Product;
 }
 
 export function AddToCartButton({ product }: AddToCartButtonProps) {
-  const [selectedSize, setSelectedSize] = useState<string | null>(null);
-  const [selectedColor, setSelectedColor] = useState<string | null>(null);
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const pathname = usePathname();
+
+  const selectedSize = searchParams.get("size");
+  const selectedColor = searchParams.get("color");
+
+  const setSelectedSize = (size: string) => {
+    const params = new URLSearchParams(searchParams.toString());
+    params.set("size", size);
+    router.replace(`${pathname}?${params.toString()}`, { scroll: false });
+  };
+
+  const setSelectedColor = (color: string) => {
+    const params = new URLSearchParams(searchParams.toString());
+    params.set("color", color);
+    router.replace(`${pathname}?${params.toString()}`, { scroll: false });
+  };
 
   const { mutate: addToCart, isPending: isAdding } = useAddToCart();
 
@@ -42,6 +60,31 @@ export function AddToCartButton({ product }: AddToCartButtonProps) {
 
   // Check if product has variants
   const hasVariants = product.variants && product.variants.length > 0;
+
+  // Auto-select defaults if missing
+  useEffect(() => {
+    if (!hasVariants) return;
+
+    const availableSizes = Array.from(new Set(product.variants.map((v) => v.size).filter(Boolean))) as string[];
+    const availableColors = Array.from(new Set(product.variants.map((v) => v.color).filter(Boolean))) as string[];
+
+    const params = new URLSearchParams(searchParams.toString());
+    let changed = false;
+
+    if (availableSizes.length > 0 && !selectedSize) {
+      params.set("size", availableSizes[0]);
+      changed = true;
+    }
+
+    if (availableColors.length > 0 && !selectedColor) {
+      params.set("color", availableColors[0]);
+      changed = true;
+    }
+
+    if (changed) {
+      router.replace(`${pathname}?${params.toString()}`, { scroll: false });
+    }
+  }, [hasVariants, product.variants, selectedSize, selectedColor, pathname, router, searchParams]);
 
   // Find the selected variant to get accurate stock/price
   const selectedVariant = useMemo(() => {

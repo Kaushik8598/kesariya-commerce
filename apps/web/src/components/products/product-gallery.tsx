@@ -1,7 +1,8 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Image from "next/image";
+import { useSearchParams } from "next/navigation";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import type { ProductImage } from "@/types/product";
@@ -13,6 +14,21 @@ interface ProductGalleryProps {
 
 export function ProductGallery({ images, productName }: ProductGalleryProps) {
   const [selectedIndex, setSelectedIndex] = useState(0);
+  const searchParams = useSearchParams();
+  const selectedColor = searchParams.get("color");
+
+  useEffect(() => {
+    if (selectedColor && images && images.length > 0) {
+      const matchIndex = images.findIndex(
+        (img) =>
+          img.color?.toLowerCase() === selectedColor.toLowerCase() ||
+          img.alt?.toLowerCase().includes(selectedColor.toLowerCase())
+      );
+      if (matchIndex !== -1) {
+        setSelectedIndex(matchIndex);
+      }
+    }
+  }, [selectedColor, images]);
 
   if (!images || images.length === 0) {
     return (

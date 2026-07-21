@@ -448,6 +448,7 @@ model ProductImage {
   url      String
   publicId String? @map("public_id")
   alt      String?
+  color    String?
 
   sortOrder Int     @default(0) @map("sort_order")
   isPrimary Boolean @default(false) @map("is_primary")

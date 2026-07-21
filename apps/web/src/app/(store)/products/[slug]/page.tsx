@@ -1,5 +1,6 @@
 import { Metadata } from "next";
 import { notFound } from "next/navigation";
+import { Suspense } from "react";
 import { productService } from "@/services/product.service";
 import { ProductGallery } from "@/components/products/product-gallery";
 import { ProductBreadcrumb } from "@/components/products/product-breadcrumb";
@@ -54,7 +55,9 @@ export default async function ProductDetailsPage({
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-10 lg:gap-16">
           {/* Left Column: Images */}
           <div className="w-full">
-            <ProductGallery images={product.images} productName={product.name} />
+            <Suspense fallback={<div className="aspect-[3/4] w-full rounded-2xl bg-secondary animate-pulse" />}>
+              <ProductGallery images={product.images} productName={product.name} />
+            </Suspense>
           </div>
 
           {/* Right Column: Product Details */}
@@ -94,7 +97,9 @@ export default async function ProductDetailsPage({
 
             {/* Client Component for Selection & Cart */}
             <div className="mb-10">
-              <AddToCartButton product={product} />
+              <Suspense fallback={<div className="h-20 bg-secondary animate-pulse rounded-lg" />}>
+                <AddToCartButton product={product} />
+              </Suspense>
             </div>
 
             {/* Product Information Accordion */}

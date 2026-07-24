@@ -1,29 +1,41 @@
 import type { Metadata } from "next";
-import { Inter } from "next/font/google";
+import { Montserrat, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { AuthProvider } from "@/providers/auth-provider";
 import { QueryProvider } from "@/providers/query-provider";
 import { Toaster } from "sonner";
 
-const inter = Inter({
+const montserrat = Montserrat({
   subsets: ["latin"],
-  variable: "--font-inter",
-  display: "swap",
+  variable: "--font-montserrat",
+  weight: ["300", "400", "500", "600", "700", "800"],
+});
+
+const geistMono = Geist_Mono({
+  subsets: ["latin"],
+  variable: "--font-geist-mono",
 });
 
 export const metadata: Metadata = {
-  title: "Kesariya Admin",
-  description: "Admin dashboard for Kesariya e-commerce platform",
+  title: {
+    default: "Kesariya Admin Dashboard",
+    template: "%s | Kesariya Admin",
+  },
+  description: "Admin management dashboard for Kesariya E-Commerce",
 };
 
 export default function RootLayout({
   children,
-}: {
+}: Readonly<{
   children: React.ReactNode;
-}) {
+}>) {
   return (
-    <html lang="en" className={inter.variable} style={{ colorScheme: "dark" }}>
-      <body style={{ background: "var(--background)", color: "var(--foreground)", minHeight: "100vh" }}>
+    <html
+      lang="en"
+      className={`dark ${montserrat.variable} ${geistMono.variable} h-full antialiased`}
+      suppressHydrationWarning
+    >
+      <body className="bg-background text-foreground min-h-full font-sans antialiased">
         <QueryProvider>
           <AuthProvider>
             {children}
@@ -32,9 +44,9 @@ export default function RootLayout({
               theme="dark"
               toastOptions={{
                 style: {
-                  background: "var(--surface)",
+                  background: "var(--card)",
                   border: "1px solid var(--border)",
-                  color: "var(--foreground)",
+                  color: "var(--card-foreground)",
                 },
               }}
             />

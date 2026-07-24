@@ -4,8 +4,9 @@ import { Sidebar } from "@/components/layout/sidebar";
 import { Header } from "@/components/layout/header";
 import { useAuth } from "@/providers/auth-provider";
 import { useRouter, usePathname } from "next/navigation";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { Loader2 } from "lucide-react";
+import { cn } from "@/lib/utils";
 
 const pageTitles: Record<string, string> = {
   "/": "Dashboard",
@@ -35,6 +36,22 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   const { isAuthenticated, isLoading } = useAuth();
   const router = useRouter();
   const pathname = usePathname();
+  const [collapsed, setCollapsed] = useState(false);
+
+  useEffect(() => {
+    const saved = localStorage.getItem("admin_sidebar_collapsed");
+    if (saved === "true") {
+      setCollapsed(true);
+    }
+  }, []);
+
+  const toggleCollapsed = () => {
+    setCollapsed((prev) => {
+      const next = !prev;
+      localStorage.setItem("admin_sidebar_collapsed", String(next));
+      return next;
+    });
+  };
 
   useEffect(() => {
     if (!isLoading && !isAuthenticated) {
@@ -44,40 +61,30 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
 
   if (isLoading) {
     return (
-      <div
-        style={{
-          height: "100vh",
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-          background: "var(--background)",
-        }}
-      >
-        <Loader2 size={32} color="var(--primary)" style={{ animation: "spin 1s linear infinite" }} />
-        <style>{`@keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }`}</style>
+      <div className="h-screen w-screen flex items-center justify-center bg-background text-foreground">
+        <Loader2 className="h-8 w-8 text-primary animate-spin" />
       </div>
     );
   }
 
   if (!isAuthenticated) return null;
 
-  const title = pageTitles[pathname] || pageTitles[Object.keys(pageTitles).find((k) => k !== "/" && pathname.startsWith(k)) || ""] || "Admin";
+  const title =
+    pageTitles[pathname] ||
+    pageTitles[Object.keys(pageTitles).find((k) => k !== "/" && pathname.startsWith(k)) || ""] ||
+    "Admin";
 
   return (
-    <div style={{ display: "flex", minHeight: "100vh", background: "var(--background)" }}>
-      <Sidebar />
+    <div className="flex min-h-screen bg-background text-foreground font-sans antialiased">
+      <Sidebar collapsed={collapsed} onToggle={toggleCollapsed} />
       <div
-        style={{
-          flex: 1,
-          marginLeft: "var(--sidebar-width)",
-          display: "flex",
-          flexDirection: "column",
-          minHeight: "100vh",
-          transition: "margin-left 0.2s ease",
-        }}
+        className={cn(
+          "flex-1 flex flex-col min-h-screen min-w-0 transition-all duration-200",
+          collapsed ? "ml-20" : "ml-64"
+        )}
       >
         <Header title={title} />
-        <main style={{ flex: 1, padding: "24px 28px", overflowX: "hidden" }}>
+        <main className="flex-1 p-6 md:p-8 overflow-x-hidden w-full mx-auto">
           {children}
         </main>
       </div>

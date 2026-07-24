@@ -1,6 +1,6 @@
 "use client";
 
-import { Bell, Search, LogOut, User, Settings } from "lucide-react";
+import { Bell, Search, LogOut, Settings } from "lucide-react";
 import { useAuth } from "@/providers/auth-provider";
 import { getInitials } from "@/lib/utils";
 import { useState, useRef, useEffect } from "react";
@@ -26,180 +26,64 @@ export function Header({ title }: HeaderProps) {
   }, []);
 
   return (
-    <header
-      style={{
-        height: "var(--header-height)",
-        background: "var(--background-secondary)",
-        borderBottom: "1px solid var(--border)",
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "space-between",
-        padding: "0 20px",
-        position: "sticky",
-        top: 0,
-        zIndex: 30,
-        gap: 16,
-      }}
-    >
-      {/* Title / Breadcrumb */}
-      <div style={{ fontWeight: 600, fontSize: 15, color: "var(--foreground)" }}>
+    <header className="h-16 bg-sidebar/90 backdrop-blur border-b border-border flex items-center justify-between px-6 sticky top-0 z-30 shrink-0">
+      {/* Page Title */}
+      <div className="font-bold text-lg text-foreground tracking-tight">
         {title}
       </div>
 
-      {/* Right Side */}
-      <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-        {/* Search hint */}
-        <button
-          style={{
-            display: "flex",
-            alignItems: "center",
-            gap: 8,
-            padding: "6px 12px",
-            background: "var(--surface)",
-            border: "1px solid var(--border)",
-            borderRadius: 7,
-            color: "var(--foreground-muted)",
-            fontSize: 13,
-            cursor: "pointer",
-          }}
-        >
-          <Search size={14} />
-          <span>Search...</span>
-          <kbd
-            style={{
-              background: "var(--border)",
-              borderRadius: 4,
-              padding: "1px 5px",
-              fontSize: 10,
-              color: "var(--foreground-muted)",
-            }}
-          >
-            ⌘K
-          </kbd>
-        </button>
-
-        {/* Notifications */}
-        <button
-          style={{
-            position: "relative",
-            width: 36,
-            height: 36,
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            background: "var(--surface)",
-            border: "1px solid var(--border)",
-            borderRadius: 8,
-            color: "var(--foreground-muted)",
-            cursor: "pointer",
-          }}
-        >
-          <Bell size={16} />
-          <span
-            style={{
-              position: "absolute",
-              top: 7,
-              right: 7,
-              width: 6,
-              height: 6,
-              background: "var(--primary)",
-              borderRadius: "50%",
-              border: "1px solid var(--background-secondary)",
-            }}
+      {/* Right side tools */}
+      <div className="flex items-center gap-4">
+        {/* Search Input */}
+        <div className="relative">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground pointer-events-none" />
+          <input
+            type="text"
+            placeholder="Quick search..."
+            className="h-9 w-52 pl-9 pr-3 rounded-lg bg-card border border-border text-xs text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary transition-colors"
           />
+        </div>
+
+        {/* Bell Button */}
+        <button className="relative h-9 w-9 flex items-center justify-center bg-card border border-border rounded-lg text-muted-foreground hover:text-foreground hover:border-primary/50 transition-colors">
+          <Bell className="h-4 w-4" />
+          <span className="absolute top-2 right-2 h-2 w-2 bg-primary rounded-full ring-2 ring-background" />
         </button>
 
-        {/* User Avatar */}
-        <div style={{ position: "relative" }} ref={dropdownRef}>
+        {/* User Profile Menu */}
+        <div className="relative" ref={dropdownRef}>
           <button
             onClick={() => setDropdownOpen((o) => !o)}
-            style={{
-              display: "flex",
-              alignItems: "center",
-              gap: 8,
-              padding: "4px 10px 4px 4px",
-              background: "var(--surface)",
-              border: "1px solid var(--border)",
-              borderRadius: 8,
-              cursor: "pointer",
-              color: "var(--foreground)",
-            }}
+            className="flex items-center gap-2.5 p-1 pr-3 bg-card border border-border rounded-lg hover:border-primary/50 transition-colors cursor-pointer"
           >
-            <div
-              style={{
-                width: 28,
-                height: 28,
-                borderRadius: 6,
-                background: "var(--primary)",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                fontSize: 11,
-                fontWeight: 700,
-                color: "white",
-                flexShrink: 0,
-              }}
-            >
-              {user ? getInitials(`${user.firstName} ${user.lastName}`) : "A"}
+            <div className="h-7 w-7 rounded-md bg-primary flex items-center justify-center text-xs font-bold text-primary-foreground shrink-0 shadow-sm">
+              {user ? getInitials(`${user.firstName} ${user.lastName}`) : "SA"}
             </div>
-            <div style={{ textAlign: "left" }}>
-              <div style={{ fontSize: 12.5, fontWeight: 600, lineHeight: 1.2 }}>
-                {user ? `${user.firstName} ${user.lastName}` : "Admin"}
+            <div className="text-left hidden sm:block">
+              <div className="text-xs font-bold text-foreground leading-tight">
+                {user ? `${user.firstName} ${user.lastName}` : "Super Admin"}
               </div>
-              <div style={{ fontSize: 10.5, color: "var(--foreground-muted)", textTransform: "capitalize" }}>
-                {user?.role?.slug || "admin"}
+              <div className="text-[10px] text-muted-foreground capitalize">
+                {user?.role?.slug || "super-admin"}
               </div>
             </div>
           </button>
 
-          {/* Dropdown */}
           {dropdownOpen && (
-            <div
-              style={{
-                position: "absolute",
-                top: "calc(100% + 8px)",
-                right: 0,
-                background: "var(--surface)",
-                border: "1px solid var(--border)",
-                borderRadius: 10,
-                width: 180,
-                boxShadow: "0 8px 24px rgba(0,0,0,0.4)",
-                overflow: "hidden",
-                zIndex: 50,
-              }}
-            >
+            <div className="absolute right-0 top-full mt-2 w-48 rounded-xl border border-border bg-popover shadow-2xl p-1.5 z-50 animate-in fade-in zoom-in-95 duration-100">
               <Link
                 href="/settings"
-                style={{
-                  display: "flex",
-                  alignItems: "center",
-                  gap: 8,
-                  padding: "10px 14px",
-                  color: "var(--foreground-muted)",
-                  textDecoration: "none",
-                  fontSize: 13,
-                }}
+                className="flex items-center gap-2 px-3 py-2 text-xs font-medium text-foreground hover:bg-secondary rounded-lg transition-colors"
+                onClick={() => setDropdownOpen(false)}
               >
-                <Settings size={14} /> Settings
+                <Settings className="h-4 w-4 text-muted-foreground" /> Settings
               </Link>
-              <div style={{ height: 1, background: "var(--border)" }} />
+              <div className="my-1 border-t border-border" />
               <button
                 onClick={logout}
-                style={{
-                  display: "flex",
-                  alignItems: "center",
-                  gap: 8,
-                  padding: "10px 14px",
-                  color: "var(--danger)",
-                  background: "transparent",
-                  border: "none",
-                  width: "100%",
-                  textAlign: "left",
-                  cursor: "pointer",
-                  fontSize: 13,
-                }}
+                className="flex items-center gap-2 w-full px-3 py-2 text-xs font-semibold text-destructive hover:bg-destructive/10 rounded-lg transition-colors text-left cursor-pointer"
               >
-                <LogOut size={14} /> Logout
+                <LogOut className="h-4 w-4 text-destructive" /> Logout
               </button>
             </div>
           )}

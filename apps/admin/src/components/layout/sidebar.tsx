@@ -2,7 +2,6 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useState } from "react";
 import { cn } from "@/lib/utils";
 import {
   LayoutDashboard,
@@ -16,7 +15,7 @@ import {
   UserCog,
   Palette,
   Home,
-  Image,
+  Image as ImageIcon,
   Ticket,
   FileText,
   BarChart3,
@@ -25,9 +24,9 @@ import {
   Truck,
   Receipt,
   ScrollText,
+  Store,
   ChevronLeft,
   ChevronRight,
-  Store,
 } from "lucide-react";
 
 const navGroups = [
@@ -60,7 +59,7 @@ const navGroups = [
     items: [
       { label: "Theme", href: "/theme", icon: Palette },
       { label: "Homepage", href: "/homepage", icon: Home },
-      { label: "Banners", href: "/banners", icon: Image },
+      { label: "Banners", href: "/banners", icon: ImageIcon },
       { label: "Coupons", href: "/coupons", icon: Ticket },
       { label: "CMS Pages", href: "/cms", icon: FileText },
     ],
@@ -78,9 +77,13 @@ const navGroups = [
   },
 ];
 
-export function Sidebar() {
+interface SidebarProps {
+  collapsed: boolean;
+  onToggle: () => void;
+}
+
+export function Sidebar({ collapsed, onToggle }: SidebarProps) {
   const pathname = usePathname();
-  const [collapsed, setCollapsed] = useState(false);
 
   const isActive = (href: string) => {
     if (href === "/") return pathname === "/";
@@ -89,77 +92,41 @@ export function Sidebar() {
 
   return (
     <aside
-      style={{
-        width: collapsed ? "var(--sidebar-collapsed-width)" : "var(--sidebar-width)",
-        background: "var(--background-secondary)",
-        borderRight: "1px solid var(--border)",
-        height: "100vh",
-        position: "fixed",
-        top: 0,
-        left: 0,
-        zIndex: 40,
-        display: "flex",
-        flexDirection: "column",
-        transition: "width 0.2s ease",
-        overflow: "hidden",
-      }}
+      className={cn(
+        "fixed top-0 left-0 z-40 h-screen flex flex-col bg-sidebar border-r border-sidebar-border shrink-0 transition-all duration-200",
+        collapsed ? "w-20" : "w-64"
+      )}
     >
-      {/* Logo */}
+      {/* Brand Header */}
       <div
-        style={{
-          height: "var(--header-height)",
-          borderBottom: "1px solid var(--border)",
-          display: "flex",
-          alignItems: "center",
-          gap: "10px",
-          padding: "0 16px",
-          flexShrink: 0,
-        }}
-      >
-        <div
-          style={{
-            width: 32,
-            height: 32,
-            background: "var(--primary)",
-            borderRadius: 8,
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            flexShrink: 0,
-          }}
-        >
-          <Store size={18} color="white" />
-        </div>
-        {!collapsed && (
-          <div style={{ overflow: "hidden" }}>
-            <div style={{ fontWeight: 700, fontSize: 15, color: "var(--foreground)", whiteSpace: "nowrap" }}>
-              Kesariya
-            </div>
-            <div style={{ fontSize: 11, color: "var(--foreground-muted)", whiteSpace: "nowrap" }}>
-              Admin Panel
-            </div>
-          </div>
+        className={cn(
+          "h-16 border-b border-sidebar-border flex items-center px-4 shrink-0 transition-all",
+          collapsed ? "justify-center" : "justify-between gap-3"
         )}
+      >
+        <div className="flex items-center gap-3 overflow-hidden">
+          <div className="h-9 w-9 rounded-xl bg-primary flex items-center justify-center text-primary-foreground shrink-0 shadow-lg shadow-primary/25">
+            <Store className="h-5 w-5" />
+          </div>
+          {!collapsed && (
+            <div className="overflow-hidden">
+              <div className="font-extrabold text-sm text-foreground tracking-tight leading-none uppercase truncate">
+                KESARIYA
+              </div>
+              <div className="text-[11px] font-medium text-muted-foreground mt-1 truncate">
+                Admin Panel
+              </div>
+            </div>
+          )}
+        </div>
       </div>
 
-      {/* Nav */}
-      <nav
-        style={{ flex: 1, overflowY: "auto", overflowX: "hidden", padding: "12px 8px" }}
-        className="no-scrollbar"
-      >
+      {/* Navigation Groups */}
+      <nav className="flex-1 overflow-y-auto p-3 space-y-5 scrollbar-hide">
         {navGroups.map((group) => (
-          <div key={group.label} style={{ marginBottom: 4 }}>
+          <div key={group.label} className="space-y-1.5">
             {!collapsed && (
-              <div
-                style={{
-                  fontSize: 10,
-                  fontWeight: 600,
-                  textTransform: "uppercase",
-                  letterSpacing: "0.08em",
-                  color: "var(--foreground-subtle)",
-                  padding: "12px 8px 4px",
-                }}
-              >
+              <div className="px-3 pb-1 text-[10px] font-extrabold uppercase tracking-wider text-muted-foreground/70 truncate">
                 {group.label}
               </div>
             )}
@@ -171,70 +138,42 @@ export function Sidebar() {
                   key={item.href}
                   href={item.href}
                   title={collapsed ? item.label : undefined}
-                  style={{
-                    display: "flex",
-                    alignItems: "center",
-                    gap: 10,
-                    padding: collapsed ? "10px 0" : "9px 10px",
-                    justifyContent: collapsed ? "center" : "flex-start",
-                    borderRadius: 7,
-                    marginBottom: 2,
-                    color: active ? "var(--primary)" : "var(--foreground-muted)",
-                    background: active ? "var(--accent-muted)" : "transparent",
-                    fontWeight: active ? 600 : 400,
-                    fontSize: 13.5,
-                    textDecoration: "none",
-                    whiteSpace: "nowrap",
-                    overflow: "hidden",
-                  }}
-                  onMouseEnter={(e) => {
-                    if (!active) {
-                      (e.currentTarget as HTMLElement).style.background = "var(--surface-hover)";
-                      (e.currentTarget as HTMLElement).style.color = "var(--foreground)";
-                    }
-                  }}
-                  onMouseLeave={(e) => {
-                    if (!active) {
-                      (e.currentTarget as HTMLElement).style.background = "transparent";
-                      (e.currentTarget as HTMLElement).style.color = "var(--foreground-muted)";
-                    }
-                  }}
+                  className={cn(
+                    "flex items-center gap-3 rounded-lg text-xs font-semibold transition-all duration-150 relative",
+                    collapsed ? "justify-center p-2.5" : "px-3 py-2.5",
+                    active
+                      ? "bg-primary/15 text-primary font-bold border border-primary/25 shadow-sm"
+                      : "text-muted-foreground hover:bg-secondary hover:text-foreground"
+                  )}
                 >
-                  <Icon size={17} style={{ flexShrink: 0 }} />
-                  {!collapsed && <span>{item.label}</span>}
+                  <Icon className={cn("h-4 w-4 shrink-0", active ? "text-primary" : "text-muted-foreground")} />
+                  {!collapsed && <span className="truncate">{item.label}</span>}
+                  {active && (
+                    <span className="absolute left-0 top-2 bottom-2 w-1 bg-primary rounded-r-full" />
+                  )}
                 </Link>
               );
             })}
-            {collapsed && (
-              <div style={{ height: 8 }} />
-            )}
           </div>
         ))}
       </nav>
 
-      {/* Collapse toggle */}
-      <div style={{ padding: "12px 8px", borderTop: "1px solid var(--border)" }}>
+      {/* Collapse Toggle Footer Button */}
+      <div className="p-3 border-t border-sidebar-border shrink-0">
         <button
-          onClick={() => setCollapsed((c) => !c)}
-          style={{
-            display: "flex",
-            alignItems: "center",
-            gap: 8,
-            width: "100%",
-            padding: collapsed ? "9px 0" : "9px 10px",
-            justifyContent: collapsed ? "center" : "flex-start",
-            borderRadius: 7,
-            border: "none",
-            background: "transparent",
-            color: "var(--foreground-muted)",
-            cursor: "pointer",
-            fontSize: 13.5,
-          }}
+          onClick={onToggle}
+          className={cn(
+            "flex items-center gap-3 w-full rounded-lg text-xs font-semibold text-muted-foreground hover:bg-secondary hover:text-foreground transition-all duration-150 cursor-pointer",
+            collapsed ? "justify-center p-2.5" : "px-3 py-2.5"
+          )}
+          title={collapsed ? "Expand Sidebar" : "Collapse Sidebar"}
         >
-          {collapsed ? <ChevronRight size={17} /> : (
+          {collapsed ? (
+            <ChevronRight className="h-4 w-4 shrink-0" />
+          ) : (
             <>
-              <ChevronLeft size={17} />
-              <span>Collapse</span>
+              <ChevronLeft className="h-4 w-4 shrink-0" />
+              <span className="truncate">Collapse Menu</span>
             </>
           )}
         </button>

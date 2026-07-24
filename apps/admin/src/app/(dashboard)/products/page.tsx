@@ -5,18 +5,19 @@ import { useQuery } from "@tanstack/react-query";
 import {
   Plus,
   Search,
-  Edit,
+  Edit2,
   Trash2,
   Eye,
-  Filter,
-  ArrowUpDown,
-  MoreHorizontal,
   Package,
+  CheckCircle2,
+  XCircle,
+  Image as ImageIcon,
+  Tag,
+  Filter,
 } from "lucide-react";
 import api from "@/lib/api";
 import { formatCurrency } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
 import {
@@ -40,11 +41,8 @@ interface Product {
   status: "ACTIVE" | "DRAFT" | "ARCHIVED";
   category?: { name: string };
   brand?: { name: string };
-  isFeatured: boolean;
-  isNewArrival: boolean;
 }
 
-// Mock products for fallback if API database has limited data
 const mockProducts: Product[] = [
   {
     id: "1",
@@ -57,8 +55,6 @@ const mockProducts: Product[] = [
     status: "ACTIVE",
     category: { name: "Kurtas" },
     brand: { name: "Kesariya Ethnic" },
-    isFeatured: true,
-    isNewArrival: true,
   },
   {
     id: "2",
@@ -71,8 +67,6 @@ const mockProducts: Product[] = [
     status: "ACTIVE",
     category: { name: "Anarkali" },
     brand: { name: "Kesariya Ethnic" },
-    isFeatured: true,
-    isNewArrival: false,
   },
   {
     id: "3",
@@ -85,8 +79,6 @@ const mockProducts: Product[] = [
     status: "DRAFT",
     category: { name: "Dupattas" },
     brand: { name: "Kesariya Heritage" },
-    isFeatured: false,
-    isNewArrival: true,
   },
   {
     id: "4",
@@ -99,8 +91,6 @@ const mockProducts: Product[] = [
     status: "ACTIVE",
     category: { name: "Jackets" },
     brand: { name: "Kesariya Men" },
-    isFeatured: false,
-    isNewArrival: false,
   },
   {
     id: "5",
@@ -113,8 +103,6 @@ const mockProducts: Product[] = [
     status: "ACTIVE",
     category: { name: "Sherwanis" },
     brand: { name: "Kesariya Royal" },
-    isFeatured: true,
-    isNewArrival: false,
   },
 ];
 
@@ -123,7 +111,6 @@ export default function ProductsPage() {
   const [statusFilter, setStatusFilter] = useState("ALL");
   const [showAddModal, setShowAddModal] = useState(false);
 
-  // Fetch real products from API
   const { data: apiProducts, isLoading } = useQuery<Product[]>({
     queryKey: ["adminProducts"],
     queryFn: async () => {
@@ -141,50 +128,102 @@ export default function ProductsPage() {
   const filteredProducts = productsList.filter((product) => {
     const matchesSearch =
       product.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      product.sku.toLowerCase().includes(searchTerm.toLowerCase());
+      product.sku.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      product.slug.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesStatus = statusFilter === "ALL" || product.status === statusFilter;
     return matchesSearch && matchesStatus;
   });
 
-  const handleDelete = (id: string, name: string) => {
+  const activeCount = productsList.filter((p) => p.status === "ACTIVE").length;
+  const outOfStockCount = productsList.filter((p) => p.stock === 0).length;
+
+  const handleDelete = (name: string) => {
     if (confirm(`Are you sure you want to delete "${name}"?`)) {
       toast.success(`Product "${name}" deleted`);
     }
   };
 
   return (
-    <div className="flex flex-col gap-6">
-      {/* Header */}
+    <div className="space-y-6">
+      {/* Header Banner */}
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight text-foreground">Products Management</h1>
-          <p className="text-xs text-foreground-muted mt-1">
-            Manage your store catalog, pricing, inventory, and product details.
+          <h1 className="text-2xl font-extrabold tracking-tight text-foreground font-heading">
+            Products Management
+          </h1>
+          <p className="text-xs text-muted-foreground mt-1">
+            Manage store catalog, pricing, inventory stock, and product details.
           </p>
         </div>
-        <Button onClick={() => setShowAddModal(true)} className="gap-2">
+        <Button onClick={() => setShowAddModal(true)} className="gap-2 shrink-0">
           <Plus className="h-4 w-4" /> Add New Product
         </Button>
       </div>
 
-      {/* Filters & Actions Bar */}
+      {/* KPI Overview Cards */}
+      <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
+        <Card className="p-4 flex items-center justify-between">
+          <div>
+            <div className="text-xs font-semibold text-muted-foreground">Total Products</div>
+            <div className="text-2xl font-extrabold text-foreground mt-1">{productsList.length}</div>
+          </div>
+          <div className="h-10 w-10 rounded-xl bg-primary/15 text-primary flex items-center justify-center">
+            <Package className="h-5 w-5" />
+          </div>
+        </Card>
+
+        <Card className="p-4 flex items-center justify-between">
+          <div>
+            <div className="text-xs font-semibold text-muted-foreground">Active Catalog</div>
+            <div className="text-2xl font-extrabold text-emerald-400 mt-1">{activeCount}</div>
+          </div>
+          <div className="h-10 w-10 rounded-xl bg-emerald-500/15 text-emerald-400 flex items-center justify-center">
+            <CheckCircle2 className="h-5 w-5" />
+          </div>
+        </Card>
+
+        <Card className="p-4 flex items-center justify-between">
+          <div>
+            <div className="text-xs font-semibold text-muted-foreground">Out of Stock</div>
+            <div className="text-2xl font-extrabold text-rose-400 mt-1">{outOfStockCount}</div>
+          </div>
+          <div className="h-10 w-10 rounded-xl bg-rose-500/15 text-rose-400 flex items-center justify-center">
+            <XCircle className="h-5 w-5" />
+          </div>
+        </Card>
+
+        <Card className="p-4 flex items-center justify-between">
+          <div>
+            <div className="text-xs font-semibold text-muted-foreground">Categories</div>
+            <div className="text-2xl font-extrabold text-sky-400 mt-1">5</div>
+          </div>
+          <div className="h-10 w-10 rounded-xl bg-sky-500/15 text-sky-400 flex items-center justify-center">
+            <Tag className="h-5 w-5" />
+          </div>
+        </Card>
+      </div>
+
+      {/* Filter Bar */}
       <Card className="p-4">
         <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <div className="relative flex-1 max-w-md">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-foreground-muted" />
-            <Input
-              placeholder="Search by product name or SKU..."
+            <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
+            <input
+              type="text"
+              placeholder="Search product by name, SKU or slug..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="pl-9"
+              className="h-10 w-full pl-10 pr-4 rounded-lg bg-card border border-border text-xs text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary transition-colors"
             />
           </div>
 
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2">
+            <Filter className="h-4 w-4 text-muted-foreground shrink-0" />
+            <span className="text-xs text-muted-foreground font-semibold">Status:</span>
             <select
               value={statusFilter}
               onChange={(e) => setStatusFilter(e.target.value)}
-              className="h-9 rounded-lg border border-border bg-surface px-3 text-xs text-foreground outline-none cursor-pointer"
+              className="h-10 rounded-lg border border-border bg-card px-3 text-xs font-semibold text-foreground outline-none cursor-pointer focus:border-primary"
             >
               <option value="ALL">All Statuses</option>
               <option value="ACTIVE">Active</option>
@@ -195,73 +234,99 @@ export default function ProductsPage() {
         </div>
       </Card>
 
-      {/* Products Table */}
+      {/* Table */}
       <Card className="p-0 overflow-hidden">
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead>Product</TableHead>
-              <TableHead>SKU</TableHead>
-              <TableHead>Category</TableHead>
-              <TableHead>Price</TableHead>
-              <TableHead>Stock</TableHead>
-              <TableHead>Status</TableHead>
-              <TableHead className="text-right">Actions</TableHead>
+              <TableHead className="py-3.5 pl-6 min-w-[280px]">Product Details</TableHead>
+              <TableHead className="py-3.5">SKU</TableHead>
+              <TableHead className="py-3.5">Category</TableHead>
+              <TableHead className="py-3.5">Price</TableHead>
+              <TableHead className="py-3.5">Stock Level</TableHead>
+              <TableHead className="py-3.5">Status</TableHead>
+              <TableHead className="py-3.5 text-right pr-6">Actions</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {isLoading ? (
               <TableRow>
-                <TableCell colSpan={7} className="text-center py-8 text-foreground-muted">
-                  Loading products...
+                <TableCell colSpan={7} className="text-center py-12 text-muted-foreground">
+                  Loading product catalog...
                 </TableCell>
               </TableRow>
             ) : filteredProducts.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={7} className="text-center py-12 text-foreground-muted">
-                  <Package className="h-8 w-8 mx-auto mb-2 opacity-50" />
-                  No products found.
+                <TableCell colSpan={7} className="text-center py-14 text-muted-foreground">
+                  <Package className="h-10 w-10 mx-auto mb-2 opacity-40 text-muted-foreground" />
+                  <p className="text-sm font-semibold">No products match your search.</p>
                 </TableCell>
               </TableRow>
             ) : (
               filteredProducts.map((product) => (
                 <TableRow key={product.id}>
-                  <TableCell>
-                    <div className="flex flex-col">
-                      <span className="font-semibold text-foreground">{product.name}</span>
-                      <span className="text-xs text-foreground-muted">{product.slug}</span>
+                  {/* Single Clean Product Column */}
+                  <TableCell className="py-4 pl-6">
+                    <div className="flex items-center gap-3.5">
+                      <div className="h-11 w-11 rounded-lg bg-secondary border border-border flex items-center justify-center shrink-0">
+                        <ImageIcon className="h-5 w-5 text-muted-foreground opacity-60" />
+                      </div>
+                      <div className="flex flex-col gap-1 overflow-hidden">
+                        <span className="font-bold text-xs text-foreground truncate">
+                          {product.name}
+                        </span>
+                        <span className="text-[11px] font-mono text-muted-foreground truncate">
+                          {product.slug}
+                        </span>
+                      </div>
                     </div>
                   </TableCell>
-                  <TableCell className="font-mono text-xs text-foreground-muted">
-                    {product.sku}
+
+                  {/* SKU */}
+                  <TableCell className="py-4">
+                    <span className="font-mono text-[11px] font-bold text-primary bg-primary/10 px-2.5 py-1 rounded-md border border-primary/20">
+                      {product.sku}
+                    </span>
                   </TableCell>
-                  <TableCell>{product.category?.name || "Uncategorized"}</TableCell>
-                  <TableCell>
-                    <div className="flex flex-col">
-                      <span className="font-semibold text-foreground">
+
+                  {/* Category */}
+                  <TableCell className="py-4 text-xs font-semibold text-foreground">
+                    {product.category?.name || "Uncategorized"}
+                  </TableCell>
+
+                  {/* Price */}
+                  <TableCell className="py-4">
+                    <div className="flex flex-col gap-0.5">
+                      <span className="text-xs font-bold text-emerald-400">
                         {formatCurrency(product.salePrice || product.basePrice)}
                       </span>
                       {product.salePrice && (
-                        <span className="text-xs text-foreground-muted line-through">
+                        <span className="text-[10px] text-muted-foreground line-through">
                           {formatCurrency(product.basePrice)}
                         </span>
                       )}
                     </div>
                   </TableCell>
-                  <TableCell>
-                    <span
-                      className={`font-medium ${
-                        product.stock === 0
-                          ? "text-danger"
-                          : product.stock < 10
-                          ? "text-warning"
-                          : "text-foreground"
-                      }`}
-                    >
-                      {product.stock} units
-                    </span>
+
+                  {/* Stock */}
+                  <TableCell className="py-4">
+                    {product.stock === 0 ? (
+                      <span className="text-xs font-bold text-rose-400 bg-rose-500/10 px-2 py-0.5 rounded">
+                        0 (Out of stock)
+                      </span>
+                    ) : product.stock < 10 ? (
+                      <span className="text-xs font-bold text-amber-400 bg-amber-500/10 px-2 py-0.5 rounded">
+                        {product.stock} left (Low)
+                      </span>
+                    ) : (
+                      <span className="text-xs font-medium text-foreground">
+                        {product.stock} units
+                      </span>
+                    )}
                   </TableCell>
-                  <TableCell>
+
+                  {/* Status */}
+                  <TableCell className="py-4">
                     <Badge
                       variant={
                         product.status === "ACTIVE"
@@ -274,31 +339,36 @@ export default function ProductsPage() {
                       {product.status}
                     </Badge>
                   </TableCell>
-                  <TableCell className="text-right">
-                    <div className="flex items-center justify-end gap-1">
+
+                  {/* Actions */}
+                  <TableCell className="py-4 text-right pr-6">
+                    <div className="flex items-center justify-end gap-1.5">
                       <Button
-                        variant="ghost"
-                        size="icon-sm"
-                        onClick={() => toast.info(`Viewing ${product.name}`)}
-                        title="View"
+                        variant="secondary"
+                        size="xs"
+                        onClick={() => toast.info(`View details for ${product.name}`)}
+                        className="h-7 px-2.5 gap-1"
                       >
-                        <Eye className="h-4 w-4 text-foreground-muted" />
+                        <Eye className="h-3.5 w-3.5" />
+                        <span>View</span>
                       </Button>
                       <Button
-                        variant="ghost"
-                        size="icon-sm"
+                        variant="outline"
+                        size="xs"
                         onClick={() => toast.info(`Edit ${product.name}`)}
-                        title="Edit"
+                        className="h-7 px-2.5 gap-1"
                       >
-                        <Edit className="h-4 w-4 text-foreground-muted" />
+                        <Edit2 className="h-3.5 w-3.5" />
+                        <span>Edit</span>
                       </Button>
                       <Button
-                        variant="ghost"
-                        size="icon-sm"
-                        onClick={() => handleDelete(product.id, product.name)}
+                        variant="destructive"
+                        size="xs"
+                        onClick={() => handleDelete(product.name)}
+                        className="h-7 px-2"
                         title="Delete"
                       >
-                        <Trash2 className="h-4 w-4 text-danger" />
+                        <Trash2 className="h-3.5 w-3.5" />
                       </Button>
                     </div>
                   </TableCell>
@@ -309,54 +379,86 @@ export default function ProductsPage() {
         </Table>
       </Card>
 
-      {/* Add Product Modal (Dummy for UX preview) */}
+      {/* Add Modal */}
       {showAddModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
-          <div className="w-full max-w-lg rounded-xl border border-border bg-background-secondary p-6 shadow-2xl">
-            <h2 className="text-lg font-bold text-foreground mb-4">Add New Product</h2>
-            <div className="flex flex-col gap-4">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4">
+          <div className="w-full max-w-lg rounded-2xl border border-border bg-card p-6 shadow-2xl flex flex-col gap-5">
+            <div className="flex items-center justify-between border-b border-border pb-3">
               <div>
-                <label className="text-xs font-medium text-foreground-muted mb-1 block">
+                <h2 className="text-base font-bold text-foreground">Add New Product</h2>
+                <p className="text-xs text-muted-foreground mt-0.5">Fill details to create catalog item</p>
+              </div>
+              <Button variant="ghost" size="icon-sm" onClick={() => setShowAddModal(false)}>
+                ✕
+              </Button>
+            </div>
+
+            <div className="space-y-4">
+              <div>
+                <label className="text-xs font-semibold text-foreground mb-1.5 block">
                   Product Name *
                 </label>
-                <Input placeholder="e.g. Royal Silk Kurta" />
+                <input
+                  type="text"
+                  placeholder="e.g. Royal Kesariya Silk Kurta"
+                  className="h-10 w-full px-3.5 rounded-lg bg-secondary border border-border text-xs text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary"
+                />
               </div>
+
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="text-xs font-medium text-foreground-muted mb-1 block">
+                  <label className="text-xs font-semibold text-foreground mb-1.5 block">
                     Base Price (₹) *
                   </label>
-                  <Input type="number" placeholder="4999" />
+                  <input
+                    type="number"
+                    placeholder="4999"
+                    className="h-10 w-full px-3.5 rounded-lg bg-secondary border border-border text-xs text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary"
+                  />
                 </div>
                 <div>
-                  <label className="text-xs font-medium text-foreground-muted mb-1 block">
+                  <label className="text-xs font-semibold text-foreground mb-1.5 block">
                     Sale Price (₹)
                   </label>
-                  <Input type="number" placeholder="3999" />
+                  <input
+                    type="number"
+                    placeholder="3999"
+                    className="h-10 w-full px-3.5 rounded-lg bg-secondary border border-border text-xs text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary"
+                  />
                 </div>
               </div>
+
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="text-xs font-medium text-foreground-muted mb-1 block">
+                  <label className="text-xs font-semibold text-foreground mb-1.5 block">
                     SKU Code *
                   </label>
-                  <Input placeholder="KURTA-SILK-001" />
+                  <input
+                    type="text"
+                    placeholder="KURTA-SILK-001"
+                    className="h-10 w-full px-3.5 rounded-lg bg-secondary border border-border text-xs text-foreground font-mono placeholder:text-muted-foreground focus:outline-none focus:border-primary"
+                  />
                 </div>
                 <div>
-                  <label className="text-xs font-medium text-foreground-muted mb-1 block">
+                  <label className="text-xs font-semibold text-foreground mb-1.5 block">
                     Stock Quantity *
                   </label>
-                  <Input type="number" placeholder="50" />
+                  <input
+                    type="number"
+                    placeholder="50"
+                    className="h-10 w-full px-3.5 rounded-lg bg-secondary border border-border text-xs text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary"
+                  />
                 </div>
               </div>
             </div>
-            <div className="flex justify-end gap-3 mt-6 pt-4 border-t border-border">
+
+            <div className="flex items-center justify-end gap-3 pt-4 border-t border-border">
               <Button variant="outline" onClick={() => setShowAddModal(false)}>
                 Cancel
               </Button>
               <Button
                 onClick={() => {
-                  toast.success("Product created successfully!");
+                  toast.success("Product created!");
                   setShowAddModal(false);
                 }}
               >

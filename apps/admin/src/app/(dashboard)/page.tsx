@@ -21,7 +21,24 @@ import {
   ResponsiveContainer,
 } from "recharts";
 
-// Mock data — will be replaced with real API calls
+import {
+  Card,
+  CardHeader,
+  CardTitle,
+  CardContent,
+  CardDescription,
+} from "@/components/ui/card";
+import {
+  Table,
+  TableHeader,
+  TableBody,
+  TableRow,
+  TableHead,
+  TableCell,
+} from "@/components/ui/table";
+import { Badge } from "@/components/ui/badge";
+import { Button, buttonVariants } from "@/components/ui/button";
+
 const revenueData = [
   { month: "Jan", revenue: 420000 },
   { month: "Feb", revenue: 380000 },
@@ -79,263 +96,151 @@ const kpiCards = [
   },
 ];
 
-const statusColors: Record<string, { bg: string; color: string }> = {
-  PENDING: { bg: "var(--warning-muted)", color: "var(--warning)" },
-  PROCESSING: { bg: "var(--info-muted)", color: "var(--info)" },
-  SHIPPED: { bg: "var(--accent-muted)", color: "var(--primary)" },
-  DELIVERED: { bg: "var(--success-muted)", color: "var(--success)" },
-  CANCELLED: { bg: "var(--danger-muted)", color: "var(--danger)" },
+type BadgeVariant = "warning" | "info" | "default" | "success" | "danger";
+
+const statusBadges: Record<string, BadgeVariant> = {
+  PENDING: "warning",
+  PROCESSING: "info",
+  SHIPPED: "default",
+  DELIVERED: "success",
+  CANCELLED: "danger",
 };
 
 export default function DashboardPage() {
   return (
-    <div style={{ display: "flex", flexDirection: "column", gap: 24 }}>
-      {/* Page Title */}
+    <div className="flex flex-col gap-6">
+      {/* Header */}
       <div>
-        <h1 style={{ fontSize: 22, fontWeight: 700, color: "var(--foreground)" }}>Dashboard</h1>
-        <p style={{ fontSize: 13, color: "var(--foreground-muted)", marginTop: 4 }}>
-          Welcome back! Here&apos;s what&apos;s happening in your store.
+        <h1 className="text-2xl font-bold tracking-tight text-foreground">Dashboard</h1>
+        <p className="text-xs text-foreground-muted mt-1">
+          Welcome back! Here&apos;s what&apos;s happening in your store today.
         </p>
       </div>
 
       {/* KPI Cards */}
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))", gap: 16 }}>
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
         {kpiCards.map((card) => {
           const Icon = card.icon;
           const Trend = card.positive ? TrendingUp : TrendingDown;
           return (
-            <div
-              key={card.label}
-              style={{
-                background: "var(--background-secondary)",
-                border: "1px solid var(--border)",
-                borderRadius: 12,
-                padding: "20px 22px",
-              }}
-            >
-              <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", marginBottom: 14 }}>
+            <Card key={card.label} className="p-5">
+              <div className="flex items-center justify-between mb-3">
                 <div
-                  style={{
-                    width: 40,
-                    height: 40,
-                    background: card.bg,
-                    borderRadius: 10,
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "center",
-                    color: card.color,
-                  }}
+                  className="flex h-10 w-10 items-center justify-center rounded-lg"
+                  style={{ background: card.bg, color: card.color }}
                 >
-                  <Icon size={18} />
+                  <Icon className="h-5 w-5" />
                 </div>
-                <div
-                  style={{
-                    display: "flex",
-                    alignItems: "center",
-                    gap: 4,
-                    fontSize: 12,
-                    fontWeight: 600,
-                    color: card.positive ? "var(--success)" : "var(--danger)",
-                    background: card.positive ? "var(--success-muted)" : "var(--danger-muted)",
-                    padding: "3px 8px",
-                    borderRadius: 20,
-                  }}
-                >
-                  <Trend size={11} />
+                <Badge variant={card.positive ? "success" : "danger"}>
+                  <Trend className="h-3 w-3 mr-0.5" />
                   {card.change}
-                </div>
+                </Badge>
               </div>
-              <div style={{ fontSize: 24, fontWeight: 700, color: "var(--foreground)", marginBottom: 4 }}>
-                {card.value}
-              </div>
-              <div style={{ fontSize: 12.5, color: "var(--foreground-muted)" }}>{card.label}</div>
-            </div>
+              <div className="text-2xl font-bold tracking-tight text-foreground">{card.value}</div>
+              <div className="text-xs text-foreground-muted mt-1">{card.label}</div>
+            </Card>
           );
         })}
       </div>
 
-      {/* Revenue Chart */}
-      <div
-        style={{
-          background: "var(--background-secondary)",
-          border: "1px solid var(--border)",
-          borderRadius: 12,
-          padding: "22px 24px",
-        }}
-      >
-        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 20 }}>
+      {/* Revenue Chart Card */}
+      <Card>
+        <CardHeader className="flex flex-row items-center justify-between pb-4">
           <div>
-            <div style={{ fontWeight: 600, fontSize: 15, color: "var(--foreground)" }}>Revenue Overview</div>
-            <div style={{ fontSize: 12, color: "var(--foreground-muted)", marginTop: 2 }}>Monthly revenue for 2025</div>
+            <CardTitle>Revenue Overview</CardTitle>
+            <CardDescription>Monthly revenue breakdown for 2025</CardDescription>
           </div>
-          <select
-            style={{
-              background: "var(--surface)",
-              border: "1px solid var(--border)",
-              borderRadius: 7,
-              padding: "6px 10px",
-              color: "var(--foreground-muted)",
-              fontSize: 12,
-              cursor: "pointer",
-            }}
-          >
+          <select className="h-8 rounded-md border border-border bg-surface px-2.5 text-xs text-foreground-muted outline-none cursor-pointer">
             <option>Last 7 months</option>
             <option>Last 12 months</option>
           </select>
-        </div>
-        <ResponsiveContainer width="100%" height={220}>
-          <AreaChart data={revenueData}>
-            <defs>
-              <linearGradient id="revenueGrad" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="5%" stopColor="#f97316" stopOpacity={0.25} />
-                <stop offset="95%" stopColor="#f97316" stopOpacity={0} />
-              </linearGradient>
-            </defs>
-            <CartesianGrid stroke="var(--border)" strokeDasharray="4 4" vertical={false} />
-            <XAxis
-              dataKey="month"
-              tick={{ fill: "var(--foreground-muted)", fontSize: 12 }}
-              axisLine={false}
-              tickLine={false}
-            />
-            <YAxis
-              tickFormatter={(v) => `₹${(v / 1000).toFixed(0)}K`}
-              tick={{ fill: "var(--foreground-muted)", fontSize: 11 }}
-              axisLine={false}
-              tickLine={false}
-            />
-            <Tooltip
-              contentStyle={{
-                background: "var(--surface)",
-                border: "1px solid var(--border)",
-                borderRadius: 8,
-                color: "var(--foreground)",
-                fontSize: 12,
-              }}
-              formatter={(v) => [formatCurrency(Number(v)), "Revenue"]}
-            />
-            <Area
-              type="monotone"
-              dataKey="revenue"
-              stroke="#f97316"
-              strokeWidth={2.5}
-              fill="url(#revenueGrad)"
-            />
-          </AreaChart>
-        </ResponsiveContainer>
-      </div>
+        </CardHeader>
+        <CardContent>
+          <ResponsiveContainer width="100%" height={240}>
+            <AreaChart data={revenueData}>
+              <defs>
+                <linearGradient id="revenueGrad" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="5%" stopColor="#f97316" stopOpacity={0.25} />
+                  <stop offset="95%" stopColor="#f97316" stopOpacity={0} />
+                </linearGradient>
+              </defs>
+              <CartesianGrid stroke="var(--border)" strokeDasharray="4 4" vertical={false} />
+              <XAxis
+                dataKey="month"
+                tick={{ fill: "var(--foreground-muted)", fontSize: 12 }}
+                axisLine={false}
+                tickLine={false}
+              />
+              <YAxis
+                tickFormatter={(v) => `₹${(v / 1000).toFixed(0)}K`}
+                tick={{ fill: "var(--foreground-muted)", fontSize: 11 }}
+                axisLine={false}
+                tickLine={false}
+              />
+              <Tooltip
+                contentStyle={{
+                  background: "var(--surface)",
+                  border: "1px solid var(--border)",
+                  borderRadius: 8,
+                  color: "var(--foreground)",
+                  fontSize: 12,
+                }}
+                formatter={(v) => [formatCurrency(Number(v)), "Revenue"]}
+              />
+              <Area
+                type="monotone"
+                dataKey="revenue"
+                stroke="#f97316"
+                strokeWidth={2.5}
+                fill="url(#revenueGrad)"
+              />
+            </AreaChart>
+          </ResponsiveContainer>
+        </CardContent>
+      </Card>
 
-      {/* Recent Orders */}
-      <div
-        style={{
-          background: "var(--background-secondary)",
-          border: "1px solid var(--border)",
-          borderRadius: 12,
-          overflow: "hidden",
-        }}
-      >
-        <div
-          style={{
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "space-between",
-            padding: "18px 24px",
-            borderBottom: "1px solid var(--border)",
-          }}
-        >
-          <div style={{ fontWeight: 600, fontSize: 15, color: "var(--foreground)" }}>Recent Orders</div>
-          <Link
-            href="/orders"
-            style={{
-              display: "flex",
-              alignItems: "center",
-              gap: 4,
-              fontSize: 12.5,
-              color: "var(--primary)",
-              textDecoration: "none",
-              fontWeight: 500,
-            }}
-          >
-            View All <ArrowRight size={13} />
+      {/* Recent Orders Table Card */}
+      <Card className="p-0 overflow-hidden">
+        <div className="flex items-center justify-between p-5 border-b border-border">
+          <div>
+            <CardTitle>Recent Orders</CardTitle>
+            <CardDescription className="mt-0.5">Latest transactions from your customers</CardDescription>
+          </div>
+          <Link href="/orders" className={buttonVariants({ variant: "ghost", size: "sm" }) + " text-primary hover:text-primary"}>
+            View All <ArrowRight className="ml-1 h-3.5 w-3.5" />
           </Link>
         </div>
-        <div style={{ overflowX: "auto" }}>
-          <table style={{ width: "100%", borderCollapse: "collapse" }}>
-            <thead>
-              <tr style={{ borderBottom: "1px solid var(--border)" }}>
-                {["Order ID", "Customer", "Amount", "Status", "Date"].map((col) => (
-                  <th
-                    key={col}
-                    style={{
-                      padding: "10px 24px",
-                      textAlign: "left",
-                      fontSize: 11,
-                      fontWeight: 600,
-                      textTransform: "uppercase",
-                      letterSpacing: "0.06em",
-                      color: "var(--foreground-muted)",
-                      whiteSpace: "nowrap",
-                    }}
-                  >
-                    {col}
-                  </th>
-                ))}
-              </tr>
-            </thead>
-            <tbody>
-              {recentOrders.map((order, i) => {
-                const s = statusColors[order.status];
-                return (
-                  <tr
-                    key={order.id}
-                    style={{
-                      borderBottom: i < recentOrders.length - 1 ? "1px solid var(--border-muted)" : "none",
-                    }}
-                  >
-                    <td style={{ padding: "14px 24px", fontSize: 13, color: "var(--primary)", fontWeight: 600 }}>
-                      {order.id}
-                    </td>
-                    <td style={{ padding: "14px 24px", fontSize: 13, color: "var(--foreground)" }}>
-                      {order.customer}
-                    </td>
-                    <td style={{ padding: "14px 24px", fontSize: 13, fontWeight: 600, color: "var(--foreground)" }}>
-                      {formatCurrency(order.amount)}
-                    </td>
-                    <td style={{ padding: "14px 24px" }}>
-                      <span
-                        style={{
-                          display: "inline-block",
-                          padding: "3px 10px",
-                          borderRadius: 20,
-                          fontSize: 11.5,
-                          fontWeight: 600,
-                          background: s?.bg,
-                          color: s?.color,
-                        }}
-                      >
-                        {order.status}
-                      </span>
-                    </td>
-                    <td
-                      style={{
-                        padding: "14px 24px",
-                        fontSize: 12.5,
-                        color: "var(--foreground-muted)",
-                        display: "flex",
-                        alignItems: "center",
-                        gap: 5,
-                      }}
-                    >
-                      <Clock size={12} />
-                      {formatDate(order.date)}
-                    </td>
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
-        </div>
-      </div>
+
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead>Order ID</TableHead>
+              <TableHead>Customer</TableHead>
+              <TableHead>Amount</TableHead>
+              <TableHead>Status</TableHead>
+              <TableHead>Date</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {recentOrders.map((order) => (
+              <TableRow key={order.id}>
+                <TableCell className="font-semibold text-primary">{order.id}</TableCell>
+                <TableCell>{order.customer}</TableCell>
+                <TableCell className="font-semibold">{formatCurrency(order.amount)}</TableCell>
+                <TableCell>
+                  <Badge variant={statusBadges[order.status] || "default"}>
+                    {order.status}
+                  </Badge>
+                </TableCell>
+                <TableCell className="text-foreground-muted flex items-center gap-1.5">
+                  <Clock className="h-3.5 w-3.5" />
+                  {formatDate(order.date)}
+                </TableCell>
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
+      </Card>
     </div>
   );
 }

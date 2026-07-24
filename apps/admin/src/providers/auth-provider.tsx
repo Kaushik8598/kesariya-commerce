@@ -1,95 +1,122 @@
 "use client";
 
-import {
-  createContext,
-  useContext,
-  useEffect,
-  useState,
-  useCallback,
-  ReactNode,
-} from "react";
+import React, { createContext, useContext, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { authStorage } from "@/lib/auth-storage";
 import api from "@/lib/api";
 
-interface AdminUser {
+interface Role {
+  id: string;
+  name: string;
+  slug: string;
+}
+
+interface User {
   id: string;
   firstName: string;
   lastName: string;
-  email: string | null;
+  email?: string;
+  countryCode: string;
   mobile: string;
-  role: { id: string; name: string; slug: string };
+  role: Role;
 }
 
-interface AuthState {
-  user: AdminUser | null;
-  isLoading: boolean;
+interface AuthContextType {
+  user: User | null;
   isAuthenticated: boolean;
-}
-
-interface AuthContextValue extends AuthState {
-  login: (accessToken: string, refreshToken: string, user: AdminUser) => void;
+  isLoading: boolean;
+  login: (accessToken: string, refreshToken: string, user: User) => void;
   logout: () => void;
 }
 
-const AuthContext = createContext<AuthContextValue | null>(null);
-
+const AuthContext = createContext<AuthContextType | undefined>(undefined);
 const ALLOWED_ROLES = ["admin", "super-admin"];
 
-export function AuthProvider({ children }: { children: ReactNode }) {
+export function AuthProvider({ children }: { children: React.ReactNode }) {
   const router = useRouter();
-  const [state, setState] = useState<AuthState>({
-    user: null,
-    isLoading: true,
-    isAuthenticated: false,
+  const queryClient = useQueryClient();
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  const hasToken = typeof window !== "undefined" && !!authStorage.getAccessToken();
+
+  const {
+    data: user,
+    isLoading: isQueryLoading,
+    isError,
+  } = useQuery<User>({
+    queryKey: ["currentAdminUser"],
+    queryFn: async () => {
+      const response = await api.get("/auth/me");
+      const userData = response.data;
+      if (!userData?.role?.slug || !ALLOWED_ROLES.includes(userData.role.slug)) {
+        throw new Error("Access denied: Not an admin");
+      }
+      return userData;
+    },
+    enabled: mounted && hasToken,
+    retry: false,
+    staleTime: 1000 * 60 * 10,
   });
 
   useEffect(() => {
-    const storedUser = localStorage.getItem("admin_user");
-    const token = localStorage.getItem("admin_access_token");
-
-    if (storedUser && token) {
-      try {
-        const user: AdminUser = JSON.parse(storedUser);
-        if (ALLOWED_ROLES.includes(user.role.slug)) {
-          setState({ user, isLoading: false, isAuthenticated: true });
-          return;
-        }
-      } catch {}
+    if (isError) {
+      authStorage.clear();
+      queryClient.setQueryData(["currentAdminUser"], null);
     }
+  }, [isError, queryClient]);
 
-    setState({ user: null, isLoading: false, isAuthenticated: false });
-  }, []);
-
-  const login = useCallback(
-    (accessToken: string, refreshToken: string, user: AdminUser) => {
-      localStorage.setItem("admin_access_token", accessToken);
-      localStorage.setItem("admin_refresh_token", refreshToken);
-      localStorage.setItem("admin_user", JSON.stringify(user));
-      setState({ user, isLoading: false, isAuthenticated: true });
+  const logoutMutation = useMutation({
+    mutationFn: async () => {
+      const refreshToken = authStorage.getRefreshToken();
+      if (refreshToken) {
+        await api.post("/auth/logout", { refreshToken });
+      }
     },
-    []
-  );
+    onSettled: () => {
+      authStorage.clear();
+      queryClient.setQueryData(["currentAdminUser"], null);
+      queryClient.clear();
+      router.push("/login");
+    },
+  });
 
-  const logout = useCallback(async () => {
-    try {
-      await api.post("/auth/logout");
-    } catch {}
-    localStorage.removeItem("admin_access_token");
-    localStorage.removeItem("admin_refresh_token");
-    localStorage.removeItem("admin_user");
-    setState({ user: null, isLoading: false, isAuthenticated: false });
-    router.push("/login");
-  }, [router]);
+  const login = (accessToken: string, refreshToken: string, userData: User) => {
+    authStorage.setAccessToken(accessToken);
+    authStorage.setRefreshToken(refreshToken);
+    queryClient.setQueryData(["currentAdminUser"], userData);
+  };
+
+  const logout = () => {
+    logoutMutation.mutate();
+  };
+
+  const isAuthenticated = !!user && ALLOWED_ROLES.includes(user.role?.slug);
+  const isLoading = !mounted || (hasToken && isQueryLoading);
 
   return (
-    <AuthContext.Provider value={{ ...state, login, logout }}>
+    <AuthContext.Provider
+      value={{
+        user: user || null,
+        isAuthenticated,
+        isLoading,
+        login,
+        logout,
+      }}
+    >
       {children}
     </AuthContext.Provider>
   );
 }
 
 export function useAuth() {
-  const ctx = useContext(AuthContext);
-  if (!ctx) throw new Error("useAuth must be used within AuthProvider");
-  return ctx;
+  const context = useContext(AuthContext);
+  if (context === undefined) {
+    throw new Error("useAuth must be used within an AuthProvider");
+  }
+  return context;
 }

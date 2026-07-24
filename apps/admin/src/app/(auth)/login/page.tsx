@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -24,9 +24,17 @@ const ALLOWED_ROLES = ["admin", "super-admin"];
 function LoginContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const { login } = useAuth();
+  const { login, isAuthenticated, isLoading } = useAuth();
   const [showPassword, setShowPassword] = useState(false);
   const [serverError, setServerError] = useState("");
+
+  const redirectTo = searchParams.get("redirectTo") || "/";
+
+  useEffect(() => {
+    if (!isLoading && isAuthenticated) {
+      router.push(redirectTo);
+    }
+  }, [isAuthenticated, isLoading, router, redirectTo]);
 
   const {
     register,
@@ -41,20 +49,16 @@ function LoginContent() {
     setServerError("");
     try {
       const res = await api.post("/auth/login", data);
-      const { accessToken, refreshToken, user } = res.data;
+      const resData = res.data;
+      const { accessToken, refreshToken, user } = resData;
 
-      if (!ALLOWED_ROLES.includes(user?.role?.slug)) {
+      if (!user?.role?.slug || !ALLOWED_ROLES.includes(user.role.slug)) {
         setServerError("Access denied. Admin privileges required.");
         return;
       }
 
-      // Set cookie for middleware
-      document.cookie = `admin_token=${accessToken}; path=/; max-age=${60 * 60 * 24 * 7}; SameSite=Lax`;
-
       login(accessToken, refreshToken, user);
       toast.success(`Welcome back, ${user.firstName}!`);
-
-      const redirectTo = searchParams.get("redirectTo") || "/";
       router.push(redirectTo);
     } catch (err: any) {
       const msg = err.response?.data?.message;

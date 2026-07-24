@@ -1,56 +1,79 @@
-import axios from "axios";
+import axios, { AxiosError, InternalAxiosRequestConfig } from "axios";
+import { authStorage } from "./auth-storage";
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3000/api";
 
 export const api = axios.create({
   baseURL: API_BASE_URL,
+  withCredentials: true,
   headers: {
     "Content-Type": "application/json",
   },
 });
 
+interface RetryRequestConfig extends InternalAxiosRequestConfig {
+  _retry?: boolean;
+}
+
 // Request interceptor — attach access token
 api.interceptors.request.use(
   (config) => {
-    if (typeof window !== "undefined") {
-      const token = localStorage.getItem("admin_access_token");
-      if (token) {
-        config.headers.Authorization = `Bearer ${token}`;
-      }
+    const token = authStorage.getAccessToken();
+    if (token) {
+      config.headers.Authorization = `Bearer ${token}`;
     }
     return config;
   },
   (error) => Promise.reject(error)
 );
 
-// Response interceptor — handle 401 / refresh token
+// Response interceptor — unwrap payload & handle refresh token
 api.interceptors.response.use(
-  (response) => response,
-  async (error) => {
-    const originalRequest = error.config;
+  (response) => {
+    if (
+      response.data &&
+      typeof response.data === "object" &&
+      response.data.success === true &&
+      "data" in response.data
+    ) {
+      response.data = response.data.data;
+    }
+    return response;
+  },
+  async (error: AxiosError) => {
+    const originalRequest = error.config as RetryRequestConfig | undefined;
+
+    if (!originalRequest) {
+      return Promise.reject(error);
+    }
 
     if (error.response?.status === 401 && !originalRequest._retry) {
       originalRequest._retry = true;
 
       try {
-        const refreshToken = localStorage.getItem("admin_refresh_token");
+        const refreshToken = authStorage.getRefreshToken();
         if (!refreshToken) throw new Error("No refresh token");
 
         const res = await axios.post(`${API_BASE_URL}/auth/refresh`, {
           refreshToken,
         });
 
-        const { accessToken, refreshToken: newRefreshToken } = res.data;
-        localStorage.setItem("admin_access_token", accessToken);
-        localStorage.setItem("admin_refresh_token", newRefreshToken);
+        const data = res.data?.data || res.data;
+        const accessToken = data.accessToken;
+        const newRefreshToken = data.refreshToken;
 
-        originalRequest.headers.Authorization = `Bearer ${accessToken}`;
-        return api(originalRequest);
+        if (accessToken) {
+          authStorage.setAccessToken(accessToken);
+          if (newRefreshToken) authStorage.setRefreshToken(newRefreshToken);
+
+          originalRequest.headers.Authorization = `Bearer ${accessToken}`;
+          return api(originalRequest);
+        }
       } catch {
-        localStorage.removeItem("admin_access_token");
-        localStorage.removeItem("admin_refresh_token");
-        localStorage.removeItem("admin_user");
-        window.location.href = "/login";
+        authStorage.clear();
+        if (typeof window !== "undefined") {
+          window.location.href = "/login";
+        }
       }
     }
 

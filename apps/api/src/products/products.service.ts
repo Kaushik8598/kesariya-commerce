@@ -1,6 +1,8 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable, NotFoundException, ConflictException, BadRequestException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { ProductQueryDto, ProductSortOption } from './dto/product-query.dto';
+import { CreateProductDto } from './dto/create-product.dto';
+import { UpdateProductDto } from './dto/update-product.dto';
 import { Prisma } from '../../generated/prisma';
 
 @Injectable()
@@ -309,5 +311,121 @@ export class ProductsService {
         max: Number(priceRange._max.basePrice || 10000),
       },
     };
+  }
+
+  async findAdminAll(page = 1, limit = 10, search?: string, status?: string) {
+    const where: Prisma.ProductWhereInput = {};
+
+    if (status && status !== 'ALL') {
+      where.status = status as any;
+    }
+
+    if (search) {
+      where.OR = [
+        { name: { contains: search, mode: 'insensitive' } },
+        { sku: { contains: search, mode: 'insensitive' } },
+        { slug: { contains: search, mode: 'insensitive' } },
+      ];
+    }
+
+    const [products, total] = await Promise.all([
+      this.prisma.product.findMany({
+        where,
+        include: {
+          images: { take: 1 },
+          category: { select: { id: true, name: true, slug: true } },
+          brand: { select: { id: true, name: true, slug: true } },
+        },
+        orderBy: { createdAt: 'desc' },
+        skip: (page - 1) * limit,
+        take: limit,
+      }),
+      this.prisma.product.count({ where }),
+    ]);
+
+    return {
+      data: products,
+      pagination: {
+        total,
+        page,
+        limit,
+        totalPages: Math.ceil(total / limit) || 1,
+      },
+    };
+  }
+
+  async create(dto: CreateProductDto) {
+    const slug = dto.slug || dto.name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)+/g, '');
+    const existing = await this.prisma.product.findFirst({
+      where: { OR: [{ slug }, { sku: dto.sku }] },
+    });
+    if (existing) {
+      throw new ConflictException('Product with this slug or SKU already exists');
+    }
+
+    let categoryId = dto.categoryId;
+    if (!categoryId) {
+      const defaultCat = await this.prisma.category.findFirst();
+      if (!defaultCat) {
+        throw new BadRequestException('At least one category must exist before creating products');
+      }
+      categoryId = defaultCat.id;
+    }
+
+    return this.prisma.product.create({
+      data: {
+        name: dto.name,
+        slug,
+        description: dto.description || '',
+        sku: dto.sku,
+        basePrice: dto.basePrice,
+        salePrice: dto.salePrice ?? null,
+        stock: dto.stock ?? 0,
+        status: dto.status || 'ACTIVE',
+        categoryId,
+        ...(dto.brandId ? { brandId: dto.brandId } : {}),
+        tags: dto.tags || [],
+      },
+      include: {
+        category: { select: { name: true } },
+        brand: { select: { name: true } },
+      },
+    });
+  }
+
+  async update(id: string, dto: UpdateProductDto) {
+    const product = await this.prisma.product.findUnique({ where: { id } });
+    if (!product) {
+      throw new NotFoundException('Product not found');
+    }
+
+    return this.prisma.product.update({
+      where: { id },
+      data: {
+        ...(dto.name && { name: dto.name }),
+        ...(dto.slug && { slug: dto.slug }),
+        ...(dto.description !== undefined && { description: dto.description }),
+        ...(dto.sku && { sku: dto.sku }),
+        ...(dto.basePrice !== undefined && { basePrice: dto.basePrice }),
+        ...(dto.salePrice !== undefined && { salePrice: dto.salePrice }),
+        ...(dto.stock !== undefined && { stock: dto.stock }),
+        ...(dto.status && { status: dto.status }),
+        ...(dto.categoryId && { categoryId: dto.categoryId }),
+        ...(dto.brandId && { brandId: dto.brandId }),
+        ...(dto.tags && { tags: dto.tags }),
+      },
+      include: {
+        category: { select: { name: true } },
+        brand: { select: { name: true } },
+      },
+    });
+  }
+
+  async remove(id: string) {
+    const product = await this.prisma.product.findUnique({ where: { id } });
+    if (!product) {
+      throw new NotFoundException('Product not found');
+    }
+    return this.prisma.product.delete({ where: { id } });
   }
 }

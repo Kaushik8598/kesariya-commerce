@@ -594,7 +594,7 @@ export default function CategoriesPage() {
         </DialogHeader>
 
         <div className="py-3 text-xs text-muted-foreground">
-          This action will delete category <span className="font-mono text-foreground font-bold">{deleteTarget?.slug}</span> from Neon PostgreSQL database.
+          This action will permanently delete category <span className="text-foreground font-bold font-heading">"{deleteTarget?.name}"</span> from Neon PostgreSQL database. This action cannot be undone.
         </div>
 
         <DialogFooter>

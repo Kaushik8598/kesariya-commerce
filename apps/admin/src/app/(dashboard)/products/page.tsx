@@ -708,7 +708,7 @@ export default function ProductsPage() {
         </DialogHeader>
 
         <div className="py-3 text-xs text-muted-foreground">
-          This action will permanently delete SKU <span className="font-mono text-foreground font-bold">{deleteProductTarget?.sku}</span> from Neon PostgreSQL database. This action cannot be undone.
+          This action will permanently delete product <span className="text-foreground font-bold font-heading">"{deleteProductTarget?.name}"</span> (SKU: <span className="font-mono text-primary font-bold">{deleteProductTarget?.sku}</span>) from Neon PostgreSQL database. This action cannot be undone.
         </div>
 
         <DialogFooter>

@@ -9,17 +9,18 @@ import { AuthModule } from './auth/auth.module';
 import { UsersModule } from './users/users.module';
 import { RolesModule } from './roles/roles.module';
 import { CategoriesModule } from './categories/categories.module';
+import { BrandsModule } from './brands/brands.module';
 import { ProductsModule } from './products/products.module';
 import { ReviewsModule } from './reviews/reviews.module';
 import { WishlistsModule } from './wishlists/wishlists.module';
-
-import { envSchema } from './config/env.validation';
 import { CartsModule } from './carts/carts.module';
 import { CouponsModule } from './coupons/coupons.module';
 import { CheckoutModule } from './checkout/checkout.module';
 import { OrdersModule } from './orders/orders.module';
 import { LocationsModule } from './locations/locations.module';
 import { MeasurementsModule } from './measurements/measurements.module';
+
+import { envSchema } from './config/env.validation';
 
 @Module({
   imports: [
@@ -34,6 +35,7 @@ import { MeasurementsModule } from './measurements/measurements.module';
     UsersModule,
     RolesModule,
     CategoriesModule,
+    BrandsModule,
     ProductsModule,
     ReviewsModule,
     WishlistsModule,
@@ -48,4 +50,3 @@ import { MeasurementsModule } from './measurements/measurements.module';
   providers: [AppService],
 })
 export class AppModule {}
-

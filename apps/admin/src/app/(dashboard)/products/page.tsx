@@ -19,6 +19,7 @@ import {
   ChevronRight,
   ChevronsLeft,
   ChevronsRight,
+  FileText,
 } from "lucide-react";
 import api from "@/lib/api";
 import { formatCurrency } from "@/lib/utils";
@@ -226,6 +227,7 @@ export default function ProductsPage() {
   };
 
   const activeCount = productsList.filter((p) => p.status === "ACTIVE").length;
+  const draftArchivedCount = productsList.filter((p) => p.status !== "ACTIVE").length;
   const outOfStockCount = productsList.filter((p) => p.stock === 0).length;
 
   const startItemIndex = (pagination.page - 1) * pagination.limit + 1;
@@ -248,7 +250,7 @@ export default function ProductsPage() {
         </Button>
       </div>
 
-      {/* Overview Stat Cards */}
+      {/* Overview Stat Cards (No Page Number Card) */}
       <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
         <Card className="p-5 !flex-row items-center justify-between">
           <div className="space-y-1">
@@ -295,14 +297,14 @@ export default function ProductsPage() {
         <Card className="p-5 !flex-row items-center justify-between">
           <div className="space-y-1">
             <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
-              Page Number
+              Draft / Archived
             </p>
-            <p className="text-2xl font-extrabold text-sky-400 font-heading">
-              {pagination.page} / {pagination.totalPages}
+            <p className="text-2xl font-extrabold text-amber-400 font-heading">
+              {draftArchivedCount}
             </p>
           </div>
-          <div className="h-11 w-11 rounded-xl bg-sky-500/15 text-sky-400 flex items-center justify-center shrink-0 border border-sky-500/20">
-            <Tag className="h-5 w-5" />
+          <div className="h-11 w-11 rounded-xl bg-amber-500/15 text-amber-400 flex items-center justify-center shrink-0 border border-amber-500/20">
+            <FileText className="h-5 w-5" />
           </div>
         </Card>
       </div>
@@ -324,42 +326,22 @@ export default function ProductsPage() {
             />
           </div>
 
-          <div className="flex items-center gap-3">
-            <div className="flex items-center gap-2">
-              <Filter className="h-4 w-4 text-muted-foreground shrink-0" />
-              <span className="text-xs text-muted-foreground font-semibold">Status:</span>
-              <select
-                value={statusFilter}
-                onChange={(e) => {
-                  setStatusFilter(e.target.value);
-                  setPage(1);
-                }}
-                className="h-10 rounded-lg border border-border bg-card px-3 text-xs font-semibold text-foreground outline-none cursor-pointer focus:border-primary"
-              >
-                <option value="ALL">All Statuses</option>
-                <option value="ACTIVE">Active Only</option>
-                <option value="DRAFT">Draft Only</option>
-                <option value="ARCHIVED">Archived Only</option>
-              </select>
-            </div>
-
-            {/* Per Page limit selector */}
-            <div className="flex items-center gap-2">
-              <span className="text-xs text-muted-foreground font-semibold">Show:</span>
-              <select
-                value={limit}
-                onChange={(e) => {
-                  setLimit(Number(e.target.value));
-                  setPage(1);
-                }}
-                className="h-10 rounded-lg border border-border bg-card px-3 text-xs font-semibold text-foreground outline-none cursor-pointer focus:border-primary"
-              >
-                <option value={5}>5 / page</option>
-                <option value={10}>10 / page</option>
-                <option value={25}>25 / page</option>
-                <option value={50}>50 / page</option>
-              </select>
-            </div>
+          <div className="flex items-center gap-2">
+            <Filter className="h-4 w-4 text-muted-foreground shrink-0" />
+            <span className="text-xs text-muted-foreground font-semibold">Status:</span>
+            <select
+              value={statusFilter}
+              onChange={(e) => {
+                setStatusFilter(e.target.value);
+                setPage(1);
+              }}
+              className="h-10 rounded-lg border border-border bg-card px-3 text-xs font-semibold text-foreground outline-none cursor-pointer focus:border-primary"
+            >
+              <option value="ALL">All Statuses</option>
+              <option value="ACTIVE">Active Only</option>
+              <option value="DRAFT">Draft Only</option>
+              <option value="ARCHIVED">Archived Only</option>
+            </select>
           </div>
         </div>
       </Card>
@@ -510,13 +492,33 @@ export default function ProductsPage() {
           </TableBody>
         </Table>
 
-        {/* Pagination Bar */}
+        {/* Bottom Pagination Bar with Integrated Per-Page Selector */}
         {pagination.total > 0 && (
           <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between px-6 py-4 border-t border-border bg-card/40">
-            <div className="text-xs text-muted-foreground font-medium">
-              Showing <span className="font-bold text-foreground">{startItemIndex}</span> to{" "}
-              <span className="font-bold text-foreground">{endItemIndex}</span> of{" "}
-              <span className="font-bold text-foreground">{pagination.total}</span> products
+            <div className="flex items-center gap-4">
+              <div className="text-xs text-muted-foreground font-medium">
+                Showing <span className="font-bold text-foreground">{startItemIndex}</span> to{" "}
+                <span className="font-bold text-foreground">{endItemIndex}</span> of{" "}
+                <span className="font-bold text-foreground">{pagination.total}</span> products
+              </div>
+
+              {/* Rows Per Page selector in bottom pagination bar */}
+              <div className="flex items-center gap-2 border-l border-border pl-4">
+                <span className="text-xs text-muted-foreground font-semibold">Rows per page:</span>
+                <select
+                  value={limit}
+                  onChange={(e) => {
+                    setLimit(Number(e.target.value));
+                    setPage(1);
+                  }}
+                  className="h-8 rounded-md border border-border bg-card px-2.5 text-xs font-semibold text-foreground outline-none cursor-pointer focus:border-primary"
+                >
+                  <option value={5}>5</option>
+                  <option value={10}>10</option>
+                  <option value={25}>25</option>
+                  <option value={50}>50</option>
+                </select>
+              </div>
             </div>
 
             <div className="flex items-center gap-1.5">
@@ -525,7 +527,6 @@ export default function ProductsPage() {
                 size="xs"
                 onClick={() => setPage(1)}
                 disabled={page <= 1}
-                title="First Page"
               >
                 <ChevronsLeft className="h-3.5 w-3.5" />
               </Button>
@@ -555,7 +556,6 @@ export default function ProductsPage() {
                 size="xs"
                 onClick={() => setPage(pagination.totalPages)}
                 disabled={page >= pagination.totalPages}
-                title="Last Page"
               >
                 <ChevronsRight className="h-3.5 w-3.5" />
               </Button>

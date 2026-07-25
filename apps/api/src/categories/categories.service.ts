@@ -137,4 +137,99 @@ export class CategoriesService {
       {} as Record<string, number>,
     );
   }
+
+  async findAdminAll(page = 1, limit = 10, search?: string, status?: string) {
+    const where: any = {};
+
+    if (status && status !== 'ALL') {
+      where.isActive = status === 'ACTIVE';
+    }
+
+    if (search) {
+      where.OR = [
+        { name: { contains: search, mode: 'insensitive' } },
+        { slug: { contains: search, mode: 'insensitive' } },
+      ];
+    }
+
+    const [categories, total] = await Promise.all([
+      this.prisma.category.findMany({
+        where,
+        include: {
+          parent: { select: { name: true } },
+          _count: { select: { products: true, children: true } },
+        },
+        orderBy: { sortOrder: 'asc' },
+        skip: (page - 1) * limit,
+        take: limit,
+      }),
+      this.prisma.category.count({ where }),
+    ]);
+
+    return {
+      data: categories,
+      pagination: {
+        total,
+        page,
+        limit,
+        totalPages: Math.ceil(total / limit) || 1,
+      },
+    };
+  }
+
+  async create(dto: any) {
+    const slug = dto.slug || dto.name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)+/g, '');
+    const existing = await this.prisma.category.findFirst({
+      where: { OR: [{ slug }] },
+    });
+    if (existing) {
+      throw new Error('Category with this slug already exists');
+    }
+
+    return this.prisma.category.create({
+      data: {
+        name: dto.name,
+        slug,
+        description: dto.description || '',
+        parentId: dto.parentId || null,
+        image: dto.imageUrl || dto.image || null,
+        sortOrder: dto.sortOrder ?? 0,
+        isActive: dto.isActive ?? true,
+      },
+      include: {
+        parent: { select: { name: true } },
+      },
+    });
+  }
+
+  async update(id: string, dto: any) {
+    const category = await this.prisma.category.findUnique({ where: { id } });
+    if (!category) {
+      throw new NotFoundException('Category not found');
+    }
+
+    return this.prisma.category.update({
+      where: { id },
+      data: {
+        ...(dto.name && { name: dto.name }),
+        ...(dto.slug && { slug: dto.slug }),
+        ...(dto.description !== undefined && { description: dto.description }),
+        ...(dto.parentId !== undefined && { parentId: dto.parentId }),
+        ...((dto.imageUrl !== undefined || dto.image !== undefined) && { image: dto.imageUrl || dto.image }),
+        ...(dto.sortOrder !== undefined && { sortOrder: dto.sortOrder }),
+        ...(dto.isActive !== undefined && { isActive: dto.isActive }),
+      },
+      include: {
+        parent: { select: { name: true } },
+      },
+    });
+  }
+
+  async remove(id: string) {
+    const category = await this.prisma.category.findUnique({ where: { id } });
+    if (!category) {
+      throw new NotFoundException('Category not found');
+    }
+    return this.prisma.category.delete({ where: { id } });
+  }
 }

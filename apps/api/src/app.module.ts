@@ -23,6 +23,7 @@ import { CmsModule } from './cms/cms.module';
 import { AnalyticsModule } from './analytics/analytics.module';
 import { SettingsModule } from './settings/settings.module';
 import { AuditLogsModule } from './audit-logs/audit-logs.module';
+import { NewsletterModule } from './newsletter/newsletter.module';
 
 import { envSchema } from './config/env.validation';
 
@@ -53,6 +54,7 @@ import { envSchema } from './config/env.validation';
     AnalyticsModule,
     SettingsModule,
     AuditLogsModule,
+    NewsletterModule,
   ],
   controllers: [AppController],
   providers: [AppService],

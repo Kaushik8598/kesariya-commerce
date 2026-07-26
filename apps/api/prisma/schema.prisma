@@ -788,6 +788,18 @@ model AuditLog {
   @@map("audit_logs")
 }
 
+// ─── Newsletter Subscribers Module ──────────────────────────────────
+
+model NewsletterSubscriber {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  isActive  Boolean  @default(true) @map("is_active")
+  createdAt DateTime @default(now()) @map("created_at")
+
+  @@map("newsletter_subscribers")
+}
+
+
 
 
 

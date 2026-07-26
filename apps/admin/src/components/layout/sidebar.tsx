@@ -28,6 +28,8 @@ import {
   Store,
   ChevronLeft,
   ChevronRight,
+  MessageSquare,
+  Mail,
 } from "lucide-react";
 
 const navGroups = [
@@ -43,6 +45,7 @@ const navGroups = [
       { label: "Products", href: "/products", icon: Package },
       { label: "Categories", href: "/categories", icon: FolderTree },
       { label: "Brands", href: "/brands", icon: Tag },
+      { label: "Product Reviews", href: "/reviews", icon: MessageSquare },
       { label: "Inventory", href: "/inventory", icon: Warehouse },
       { label: "Barcode & SKU", href: "/barcode", icon: Barcode },
     ],
@@ -59,6 +62,7 @@ const navGroups = [
     items: [
       { label: "Coupons", href: "/coupons", icon: Ticket },
       { label: "CMS Pages", href: "/cms", icon: FileText },
+      { label: "Newsletter", href: "/newsletter", icon: Mail },
     ],
   },
   {

@@ -223,4 +223,14 @@ export class UsersService {
     }
     return this.prisma.user.delete({ where: { id } });
   }
+
+  async getUserMeasurements(userId: string) {
+    return this.prisma.measurementProfile.findMany({
+      where: { userId },
+      include: {
+        values: true,
+      },
+      orderBy: { createdAt: 'desc' },
+    });
+  }
 }

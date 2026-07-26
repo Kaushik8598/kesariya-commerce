@@ -48,6 +48,11 @@ export class AdminUsersController {
     return this.usersService.updateUserRole(id, roleId);
   }
 
+  @Get(':id/measurements')
+  getMeasurements(@Param('id') id: string) {
+    return this.usersService.getUserMeasurements(id);
+  }
+
   @Delete(':id')
   remove(@Param('id') id: string) {
     return this.usersService.removeAdminUser(id);

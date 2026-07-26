@@ -22,6 +22,7 @@ import {
   Mail,
   ShoppingBag,
   Shield,
+  Ruler,
 } from "lucide-react";
 import api from "@/lib/api";
 import { formatDate } from "@/lib/utils";
@@ -86,6 +87,17 @@ export default function UsersCustomersPage() {
 
   // Delete Target Modal State
   const [deleteTarget, setDeleteTarget] = useState<UserRecord | null>(null);
+  const [measurementTarget, setMeasurementTarget] = useState<UserRecord | null>(null);
+
+  const { data: userMeasurements = [], isLoading: isMeasurementsLoading } = useQuery<any[]>({
+    queryKey: ["userMeasurements", measurementTarget?.id],
+    queryFn: async () => {
+      if (!measurementTarget) return [];
+      const res = await api.get(`/admin/users/${measurementTarget.id}/measurements`);
+      return res.data || [];
+    },
+    enabled: Boolean(measurementTarget),
+  });
 
   // Fetch Users & Customers: GET /admin/users?page=1&limit=10&search=...&status=...&roleId=...
   const { data: responseData, isLoading } = useQuery<{
@@ -430,6 +442,17 @@ export default function UsersCustomersPage() {
                     <TableCell className="py-4 text-right pr-6">
                       <div className="flex items-center justify-end gap-1.5">
                         <Button
+                          variant="secondary"
+                          size="xs"
+                          onClick={() => setMeasurementTarget(user)}
+                          className="h-7 px-2.5 gap-1 text-[11px]"
+                          title="View Saved Fitting Measurements"
+                        >
+                          <Ruler className="h-3.5 w-3.5 text-sky-400" />
+                          <span>Fitting</span>
+                        </Button>
+
+                        <Button
                           variant={user.isActive ? "outline" : "secondary"}
                           size="xs"
                           onClick={() =>
@@ -583,6 +606,82 @@ export default function UsersCustomersPage() {
             disabled={deleteMutation.isPending}
           >
             {deleteMutation.isPending ? "Deleting..." : "Delete User Record"}
+          </Button>
+        </DialogFooter>
+      </Dialog>
+
+      {/* Customer Custom Fitting Measurements Modal */}
+      <Dialog
+        open={Boolean(measurementTarget)}
+        onOpenChange={(open) => !open && setMeasurementTarget(null)}
+      >
+        <DialogHeader>
+          <div className="flex items-center gap-3">
+            <div className="h-10 w-10 rounded-full bg-sky-500/15 text-sky-400 flex items-center justify-center shrink-0">
+              <Ruler className="h-5 w-5" />
+            </div>
+            <div>
+              <DialogTitle>
+                Fitting Measurements - {measurementTarget ? `${measurementTarget.firstName} ${measurementTarget.lastName || ""}`.trim() : ""}
+              </DialogTitle>
+              <DialogDescription>
+                Saved custom tailored size profiles for ethnic wear fitting
+              </DialogDescription>
+            </div>
+          </div>
+        </DialogHeader>
+
+        <div className="py-3 space-y-4 max-h-[60vh] overflow-y-auto pr-1">
+          {isMeasurementsLoading ? (
+            <div className="py-12 text-center text-muted-foreground">
+              <Loader2 className="h-7 w-7 animate-spin mx-auto mb-2 text-primary" />
+              <p className="text-xs font-semibold">Loading customer measurement profiles...</p>
+            </div>
+          ) : userMeasurements.length === 0 ? (
+            <div className="py-12 text-center text-muted-foreground border border-dashed border-border rounded-xl bg-card">
+              <Ruler className="h-8 w-8 opacity-40 mx-auto mb-2" />
+              <p className="text-xs font-bold text-foreground">No Saved Measurement Profiles</p>
+              <p className="text-[11px] text-muted-foreground mt-1">
+                This customer has not created any custom size fitting profiles yet.
+              </p>
+            </div>
+          ) : (
+            userMeasurements.map((profile: any) => (
+              <div key={profile.id} className="p-4 rounded-xl bg-card border border-border space-y-3">
+                <div className="flex items-center justify-between">
+                  <span className="text-xs font-bold text-foreground font-heading flex items-center gap-1.5">
+                    <Ruler className="h-3.5 w-3.5 text-primary" />
+                    {profile.name}
+                  </span>
+                  {profile.isDefault && (
+                    <Badge variant="success" className="text-[10px]">DEFAULT PROFILE</Badge>
+                  )}
+                </div>
+
+                <div className="grid grid-cols-3 gap-2.5 pt-1">
+                  {profile.values?.map((val: any) => (
+                    <div key={val.id} className="p-2 rounded bg-secondary/60 border border-border text-center">
+                      <span className="block text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">
+                        {val.type}
+                      </span>
+                      <span className="block text-sm font-extrabold text-foreground font-mono mt-0.5">
+                        {val.value}"
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            ))
+          )}
+        </div>
+
+        <DialogFooter>
+          <Button
+            type="button"
+            variant="outline"
+            onClick={() => setMeasurementTarget(null)}
+          >
+            Close Window
           </Button>
         </DialogFooter>
       </Dialog>

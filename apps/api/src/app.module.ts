@@ -21,6 +21,7 @@ import { LocationsModule } from './locations/locations.module';
 import { MeasurementsModule } from './measurements/measurements.module';
 import { CmsModule } from './cms/cms.module';
 import { AnalyticsModule } from './analytics/analytics.module';
+import { SettingsModule } from './settings/settings.module';
 
 import { envSchema } from './config/env.validation';
 
@@ -49,6 +50,7 @@ import { envSchema } from './config/env.validation';
     MeasurementsModule,
     CmsModule,
     AnalyticsModule,
+    SettingsModule,
   ],
   controllers: [AppController],
   providers: [AppService],

@@ -760,4 +760,17 @@ model CmsPage {
   @@map("cms_pages")
 }
 
+// ─── Store Settings Module ───────────────────────────────────────────
+
+model StoreSetting {
+  id        String   @id @default(cuid())
+  key       String   @unique
+  value     Json
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@map("store_settings")
+}
+
+
 

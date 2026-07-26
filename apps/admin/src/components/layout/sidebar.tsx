@@ -24,6 +24,7 @@ import {
   Truck,
   Receipt,
   ScrollText,
+  Settings,
   Store,
   ChevronLeft,
   ChevronRight,
@@ -64,11 +65,8 @@ const navGroups = [
     label: "Analytics & System",
     items: [
       { label: "Analytics", href: "/analytics", icon: BarChart3 },
-      { label: "SEO", href: "/seo", icon: Search },
-      { label: "Notifications", href: "/notifications", icon: Bell },
-      { label: "Shipping", href: "/shipping", icon: Truck },
-      { label: "GST & Tax", href: "/tax", icon: Receipt },
       { label: "Audit Logs", href: "/audit-logs", icon: ScrollText },
+      { label: "Settings", href: "/settings", icon: Settings },
     ],
   },
 ];

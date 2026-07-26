@@ -20,12 +20,8 @@ const pageTitles: Record<string, string> = {
   "/coupons": "Offer & Coupon Management",
   "/cms": "CMS Pages",
   "/analytics": "Analytics & Reports",
-  "/seo": "SEO Management",
-  "/notifications": "Notification Management",
-  "/shipping": "Shipping Management",
-  "/tax": "GST & Tax Management",
   "/audit-logs": "Audit Logs",
-  "/settings": "Settings",
+  "/settings": "Store Settings & Configurations",
 };
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {

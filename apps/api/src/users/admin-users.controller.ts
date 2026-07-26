@@ -27,8 +27,9 @@ export class AdminUsersController {
     @Query('limit', new DefaultValuePipe(10), ParseIntPipe) limit: number,
     @Query('search') search?: string,
     @Query('status') status?: string,
+    @Query('roleId') roleId?: string,
   ) {
-    return this.usersService.findAdminCustomers(page, limit, search, status);
+    return this.usersService.findAdminCustomers(page, limit, search, status, roleId);
   }
 
   @Patch(':id/status')
@@ -37,6 +38,14 @@ export class AdminUsersController {
     @Body('isActive') isActive: boolean,
   ) {
     return this.usersService.toggleUserStatus(id, isActive);
+  }
+
+  @Patch(':id/role')
+  updateRole(
+    @Param('id') id: string,
+    @Body('roleId') roleId: string,
+  ) {
+    return this.usersService.updateUserRole(id, roleId);
   }
 
   @Delete(':id')

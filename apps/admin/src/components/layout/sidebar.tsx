@@ -50,16 +50,12 @@ const navGroups = [
     label: "Operations",
     items: [
       { label: "Orders", href: "/orders", icon: ShoppingCart },
-      { label: "Customers", href: "/customers", icon: Users },
-      { label: "Staff & Roles", href: "/staff", icon: UserCog },
+      { label: "Users & Customers", href: "/customers", icon: Users },
     ],
   },
   {
     label: "Storefront",
     items: [
-      { label: "Theme", href: "/theme", icon: Palette },
-      { label: "Homepage", href: "/homepage", icon: Home },
-      { label: "Banners", href: "/banners", icon: ImageIcon },
       { label: "Coupons", href: "/coupons", icon: Ticket },
       { label: "CMS Pages", href: "/cms", icon: FileText },
     ],

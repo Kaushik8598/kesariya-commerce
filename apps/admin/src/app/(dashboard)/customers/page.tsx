@@ -21,6 +21,7 @@ import {
   Phone,
   Mail,
   ShoppingBag,
+  Shield,
 } from "lucide-react";
 import api from "@/lib/api";
 import { formatDate } from "@/lib/utils";
@@ -44,7 +45,13 @@ import {
 } from "@/components/ui/dialog";
 import { toast } from "sonner";
 
-interface UserCustomer {
+interface Role {
+  id: string;
+  name: string;
+  slug: string;
+}
+
+interface UserRecord {
   id: string;
   firstName: string;
   lastName?: string | null;
@@ -55,7 +62,8 @@ interface UserCustomer {
   isActive: boolean;
   isVerified: boolean;
   createdAt: string;
-  role?: { name: string; slug: string } | null;
+  roleId?: string;
+  role?: Role | null;
   _count?: { orders: number; addresses: number };
 }
 
@@ -66,25 +74,27 @@ interface PaginationMeta {
   totalPages: number;
 }
 
-export default function CustomersPage() {
+export default function UsersCustomersPage() {
   const queryClient = useQueryClient();
 
   // Search, Filter & Pagination State
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState("ALL");
+  const [roleFilter, setRoleFilter] = useState("ALL");
   const [page, setPage] = useState(1);
   const [limit, setLimit] = useState(10);
 
   // Delete Target Modal State
-  const [deleteTarget, setDeleteTarget] = useState<UserCustomer | null>(null);
+  const [deleteTarget, setDeleteTarget] = useState<UserRecord | null>(null);
 
-  // Fetch Customers: GET /admin/users?page=1&limit=10&search=...&status=...
+  // Fetch Users & Customers: GET /admin/users?page=1&limit=10&search=...&status=...&roleId=...
   const { data: responseData, isLoading } = useQuery<{
-    data: UserCustomer[];
+    data: UserRecord[];
+    roles: Role[];
     stats: { verifiedCount: number };
     pagination: PaginationMeta;
   }>({
-    queryKey: ["adminCustomers", page, limit, searchTerm, statusFilter],
+    queryKey: ["adminUsers", page, limit, searchTerm, statusFilter, roleFilter],
     queryFn: async () => {
       const res = await api.get("/admin/users", {
         params: {
@@ -92,12 +102,14 @@ export default function CustomersPage() {
           limit,
           search: searchTerm || undefined,
           status: statusFilter !== "ALL" ? statusFilter : undefined,
+          roleId: roleFilter !== "ALL" ? roleFilter : undefined,
         },
       });
       return res.data?.data && res.data?.pagination
         ? res.data
         : {
             data: Array.isArray(res.data) ? res.data : [],
+            roles: [],
             stats: { verifiedCount: 0 },
             pagination: {
               total: Array.isArray(res.data) ? res.data.length : 0,
@@ -109,7 +121,8 @@ export default function CustomersPage() {
     },
   });
 
-  const customersList: UserCustomer[] = responseData?.data || [];
+  const usersList: UserRecord[] = responseData?.data || [];
+  const rolesList: Role[] = responseData?.roles || [];
   const pagination: PaginationMeta = responseData?.pagination || {
     total: 0,
     page: 1,
@@ -125,31 +138,46 @@ export default function CustomersPage() {
       return res.data;
     },
     onSuccess: () => {
-      toast.success("Customer account status updated!");
-      queryClient.invalidateQueries({ queryKey: ["adminCustomers"] });
+      toast.success("User account status updated!");
+      queryClient.invalidateQueries({ queryKey: ["adminUsers"] });
     },
     onError: (err: any) => {
       toast.error(err?.response?.data?.message || "Failed to update account status");
     },
   });
 
-  // Delete Customer Record Mutation: DELETE /admin/users/:id
+  // Change Role Mutation: PATCH /admin/users/:id/role
+  const updateRoleMutation = useMutation({
+    mutationFn: async ({ id, roleId }: { id: string; roleId: string }) => {
+      const res = await api.patch(`/admin/users/${id}/role`, { roleId });
+      return res.data;
+    },
+    onSuccess: () => {
+      toast.success("User role updated successfully!");
+      queryClient.invalidateQueries({ queryKey: ["adminUsers"] });
+    },
+    onError: (err: any) => {
+      toast.error(err?.response?.data?.message || "Failed to update user role");
+    },
+  });
+
+  // Delete User Record Mutation: DELETE /admin/users/:id
   const deleteMutation = useMutation({
     mutationFn: async (id: string) => {
       const res = await api.delete(`/admin/users/${id}`);
       return res.data;
     },
     onSuccess: () => {
-      toast.success("Customer record deleted!");
-      queryClient.invalidateQueries({ queryKey: ["adminCustomers"] });
+      toast.success("User profile record deleted!");
+      queryClient.invalidateQueries({ queryKey: ["adminUsers"] });
       setDeleteTarget(null);
     },
     onError: (err: any) => {
-      toast.error(err?.response?.data?.message || "Failed to delete customer");
+      toast.error(err?.response?.data?.message || "Failed to delete user profile");
     },
   });
 
-  const activeCount = customersList.filter((c) => c.isActive).length;
+  const activeCount = usersList.filter((c) => c.isActive).length;
   const startItemIndex = (pagination.page - 1) * pagination.limit + 1;
   const endItemIndex = Math.min(pagination.page * pagination.limit, pagination.total);
 
@@ -159,10 +187,10 @@ export default function CustomersPage() {
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <h1 className="text-2xl font-extrabold tracking-tight text-foreground font-heading">
-            Customers Directory
+            Users & Customers Directory
           </h1>
           <p className="text-xs text-muted-foreground mt-1">
-            Manage registered store buyers, mobile verification statuses, and account access permissions.
+            Unified directory for all registered store buyers, staff members, and administrative user roles.
           </p>
         </div>
       </div>
@@ -172,7 +200,7 @@ export default function CustomersPage() {
         <Card className="p-5 !flex-row items-center justify-between">
           <div className="space-y-1">
             <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
-              Total Customers
+              Total Users
             </p>
             <p className="text-2xl font-extrabold text-foreground font-heading">
               {pagination.total}
@@ -203,7 +231,7 @@ export default function CustomersPage() {
               Disabled / Blocked
             </p>
             <p className="text-2xl font-extrabold text-amber-400 font-heading">
-              {customersList.length - activeCount}
+              {usersList.length - activeCount}
             </p>
           </div>
           <div className="h-11 w-11 rounded-xl bg-amber-500/15 text-amber-400 flex items-center justify-center shrink-0 border border-amber-500/20">
@@ -233,7 +261,7 @@ export default function CustomersPage() {
             <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
             <input
               type="text"
-              placeholder="Search customer by name, email or mobile..."
+              placeholder="Search user by name, email or mobile..."
               value={searchTerm}
               onChange={(e) => {
                 setSearchTerm(e.target.value);
@@ -243,21 +271,45 @@ export default function CustomersPage() {
             />
           </div>
 
-          <div className="flex items-center gap-2">
-            <Filter className="h-4 w-4 text-muted-foreground shrink-0" />
-            <span className="text-xs text-muted-foreground font-semibold">Status:</span>
-            <select
-              value={statusFilter}
-              onChange={(e) => {
-                setStatusFilter(e.target.value);
-                setPage(1);
-              }}
-              className="h-10 rounded-lg border border-border bg-card px-3 text-xs font-semibold text-foreground outline-none cursor-pointer focus:border-primary"
-            >
-              <option value="ALL">All Customers</option>
-              <option value="ACTIVE">Active Only</option>
-              <option value="INACTIVE">Disabled / Blocked</option>
-            </select>
+          <div className="flex items-center gap-3 flex-wrap sm:flex-nowrap">
+            {/* Role Filter */}
+            <div className="flex items-center gap-2">
+              <Shield className="h-4 w-4 text-muted-foreground shrink-0" />
+              <span className="text-xs text-muted-foreground font-semibold">Role:</span>
+              <select
+                value={roleFilter}
+                onChange={(e) => {
+                  setRoleFilter(e.target.value);
+                  setPage(1);
+                }}
+                className="h-10 rounded-lg border border-border bg-card px-3 text-xs font-semibold text-foreground outline-none cursor-pointer focus:border-primary"
+              >
+                <option value="ALL">All Roles</option>
+                {rolesList.map((r) => (
+                  <option key={r.id} value={r.id}>
+                    {r.name}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            {/* Status Filter */}
+            <div className="flex items-center gap-2">
+              <Filter className="h-4 w-4 text-muted-foreground shrink-0" />
+              <span className="text-xs text-muted-foreground font-semibold">Status:</span>
+              <select
+                value={statusFilter}
+                onChange={(e) => {
+                  setStatusFilter(e.target.value);
+                  setPage(1);
+                }}
+                className="h-10 rounded-lg border border-border bg-card px-3 text-xs font-semibold text-foreground outline-none cursor-pointer focus:border-primary"
+              >
+                <option value="ALL">All Statuses</option>
+                <option value="ACTIVE">Active Only</option>
+                <option value="INACTIVE">Disabled / Blocked</option>
+              </select>
+            </div>
           </div>
         </div>
       </Card>
@@ -267,10 +319,10 @@ export default function CustomersPage() {
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead className="py-3.5 pl-6">Customer Name</TableHead>
+              <TableHead className="py-3.5 pl-6">User / Customer Name</TableHead>
               <TableHead className="py-3.5">Contact Details</TableHead>
-              <TableHead className="py-3.5">Total Orders</TableHead>
-              <TableHead className="py-3.5">Verification</TableHead>
+              <TableHead className="py-3.5">Assigned Role</TableHead>
+              <TableHead className="py-3.5">Activity / Orders</TableHead>
               <TableHead className="py-3.5">Account Status</TableHead>
               <TableHead className="py-3.5 text-right pr-6">Actions</TableHead>
             </TableRow>
@@ -280,40 +332,40 @@ export default function CustomersPage() {
               <TableRow>
                 <TableCell colSpan={6} className="text-center py-14 text-muted-foreground">
                   <Loader2 className="h-7 w-7 animate-spin mx-auto mb-2 text-primary" />
-                  <p className="text-xs font-semibold">Loading registered customers from database...</p>
+                  <p className="text-xs font-semibold">Loading users directory from database...</p>
                 </TableCell>
               </TableRow>
-            ) : customersList.length === 0 ? (
+            ) : usersList.length === 0 ? (
               <TableRow>
                 <TableCell colSpan={6} className="text-center py-16 text-muted-foreground">
                   <div className="h-14 w-14 rounded-2xl bg-secondary border border-border flex items-center justify-center mx-auto mb-3">
                     <Users className="h-7 w-7 opacity-50 text-muted-foreground" />
                   </div>
-                  <h3 className="text-sm font-bold text-foreground">No Customers Found</h3>
+                  <h3 className="text-sm font-bold text-foreground">No Users Found</h3>
                   <p className="text-xs text-muted-foreground mt-1 max-w-sm mx-auto">
-                    {searchTerm || statusFilter !== "ALL"
-                      ? "No customer accounts matched your search or status filter."
-                      : "No customer accounts registered yet."}
+                    {searchTerm || statusFilter !== "ALL" || roleFilter !== "ALL"
+                      ? "No user accounts matched your search or filter options."
+                      : "No registered user accounts found in database."}
                   </p>
                 </TableCell>
               </TableRow>
             ) : (
-              customersList.map((customer) => {
-                const fullName = `${customer.firstName} ${customer.lastName || ""}`.trim();
+              usersList.map((user) => {
+                const fullName = `${user.firstName} ${user.lastName || ""}`.trim();
                 return (
-                  <TableRow key={customer.id}>
+                  <TableRow key={user.id}>
                     {/* Name + Joined Date */}
                     <TableCell className="py-4 pl-6">
                       <div className="flex items-center gap-3">
-                        <div className="h-9 w-9 rounded-full bg-primary/15 border border-primary/20 text-primary flex items-center justify-center font-bold text-xs">
-                          {customer.firstName.charAt(0).toUpperCase()}
+                        <div className="h-9 w-9 rounded-full bg-primary/15 border border-primary/20 text-primary flex items-center justify-center font-bold text-xs shrink-0">
+                          {user.firstName.charAt(0).toUpperCase()}
                         </div>
                         <div className="flex flex-col gap-0.5">
                           <span className="font-bold text-xs text-foreground">
                             {fullName}
                           </span>
                           <span className="text-[10px] text-muted-foreground">
-                            Joined {formatDate(customer.createdAt)}
+                            Joined {formatDate(user.createdAt)}
                           </span>
                         </div>
                       </div>
@@ -324,34 +376,53 @@ export default function CustomersPage() {
                       <div className="flex flex-col gap-0.5">
                         <span className="text-xs text-foreground flex items-center gap-1.5 font-medium">
                           <Mail className="h-3 w-3 text-muted-foreground shrink-0" />
-                          {customer.email || "No Email"}
+                          {user.email || "No Email"}
                         </span>
                         <span className="text-[11px] text-muted-foreground flex items-center gap-1.5 font-mono">
                           <Phone className="h-3 w-3 text-muted-foreground shrink-0" />
-                          {customer.countryCode} {customer.mobile}
+                          {user.countryCode} {user.mobile}
                         </span>
                       </div>
+                    </TableCell>
+
+                    {/* Role Dropdown / Selector */}
+                    <TableCell className="py-4">
+                      {rolesList.length > 0 ? (
+                        <select
+                          value={user.roleId || user.role?.id}
+                          onChange={(e) =>
+                            updateRoleMutation.mutate({
+                              id: user.id,
+                              roleId: e.target.value,
+                            })
+                          }
+                          className="h-8 rounded-md border border-border bg-card px-2 text-xs font-bold text-primary outline-none cursor-pointer focus:border-primary"
+                        >
+                          {rolesList.map((r) => (
+                            <option key={r.id} value={r.id}>
+                              {r.name}
+                            </option>
+                          ))}
+                        </select>
+                      ) : (
+                        <Badge variant="outline" className="font-semibold text-[11px]">
+                          {user.role?.name || "Customer"}
+                        </Badge>
+                      )}
                     </TableCell>
 
                     {/* Orders count */}
                     <TableCell className="py-4">
                       <div className="flex items-center gap-1.5 text-xs font-bold text-foreground">
                         <ShoppingBag className="h-3.5 w-3.5 text-primary" />
-                        {customer._count?.orders || 0} orders placed
+                        {user._count?.orders || 0} orders
                       </div>
-                    </TableCell>
-
-                    {/* Verification */}
-                    <TableCell className="py-4">
-                      <Badge variant={customer.isVerified ? "success" : "secondary"}>
-                        {customer.isVerified ? "VERIFIED" : "UNVERIFIED"}
-                      </Badge>
                     </TableCell>
 
                     {/* Account Status Badge */}
                     <TableCell className="py-4">
-                      <Badge variant={customer.isActive ? "success" : "danger"}>
-                        {customer.isActive ? "ACTIVE" : "BLOCKED"}
+                      <Badge variant={user.isActive ? "success" : "danger"}>
+                        {user.isActive ? "ACTIVE" : "BLOCKED"}
                       </Badge>
                     </TableCell>
 
@@ -359,18 +430,18 @@ export default function CustomersPage() {
                     <TableCell className="py-4 text-right pr-6">
                       <div className="flex items-center justify-end gap-1.5">
                         <Button
-                          variant={customer.isActive ? "outline" : "secondary"}
+                          variant={user.isActive ? "outline" : "secondary"}
                           size="xs"
                           onClick={() =>
                             toggleStatusMutation.mutate({
-                              id: customer.id,
-                              isActive: !customer.isActive,
+                              id: user.id,
+                              isActive: !user.isActive,
                             })
                           }
                           className="h-7 px-2.5 gap-1 text-[11px]"
-                          title={customer.isActive ? "Block Account" : "Activate Account"}
+                          title={user.isActive ? "Block Account" : "Activate Account"}
                         >
-                          {customer.isActive ? (
+                          {user.isActive ? (
                             <>
                               <UserX className="h-3.5 w-3.5 text-rose-400" />
                               <span>Block</span>
@@ -386,9 +457,9 @@ export default function CustomersPage() {
                         <Button
                           variant="destructive"
                           size="xs"
-                          onClick={() => setDeleteTarget(customer)}
+                          onClick={() => setDeleteTarget(user)}
                           className="h-7 px-2"
-                          title="Delete Customer Profile"
+                          title="Delete User Record"
                         >
                           <Trash2 className="h-3.5 w-3.5" />
                         </Button>
@@ -408,7 +479,7 @@ export default function CustomersPage() {
               <div className="text-xs text-muted-foreground font-medium">
                 Showing <span className="font-bold text-foreground">{startItemIndex}</span> to{" "}
                 <span className="font-bold text-foreground">{endItemIndex}</span> of{" "}
-                <span className="font-bold text-foreground">{pagination.total}</span> customers
+                <span className="font-bold text-foreground">{pagination.total}</span> users
               </div>
 
               {/* Rows Per Page selector */}
@@ -484,16 +555,16 @@ export default function CustomersPage() {
               <AlertTriangle className="h-5 w-5" />
             </div>
             <div>
-              <DialogTitle>Confirm Customer Profile Deletion</DialogTitle>
+              <DialogTitle>Confirm User Profile Deletion</DialogTitle>
               <DialogDescription>
-                Are you sure you want to delete customer "{deleteTarget ? `${deleteTarget.firstName} ${deleteTarget.lastName || ""}`.trim() : ""}"?
+                Are you sure you want to delete user "{deleteTarget ? `${deleteTarget.firstName} ${deleteTarget.lastName || ""}`.trim() : ""}"?
               </DialogDescription>
             </div>
           </div>
         </DialogHeader>
 
         <div className="py-3 text-xs text-muted-foreground">
-          This action will permanently delete profile <span className="text-foreground font-bold font-heading">"{deleteTarget ? `${deleteTarget.firstName} ${deleteTarget.lastName || ""}`.trim() : ""}"</span> ({deleteTarget?.email || deleteTarget?.mobile}) from Neon PostgreSQL database.
+          This action will permanently delete user profile <span className="text-foreground font-bold font-heading">"{deleteTarget ? `${deleteTarget.firstName} ${deleteTarget.lastName || ""}`.trim() : ""}"</span> ({deleteTarget?.email || deleteTarget?.mobile}) from Neon PostgreSQL database.
         </div>
 
         <DialogFooter>
@@ -511,7 +582,7 @@ export default function CustomersPage() {
             onClick={() => deleteTarget && deleteMutation.mutate(deleteTarget.id)}
             disabled={deleteMutation.isPending}
           >
-            {deleteMutation.isPending ? "Deleting..." : "Delete Customer"}
+            {deleteMutation.isPending ? "Deleting..." : "Delete User Record"}
           </Button>
         </DialogFooter>
       </Dialog>

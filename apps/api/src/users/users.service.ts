@@ -116,11 +116,15 @@ export class UsersService {
     return { success: true, message: 'Notification preferences updated successfully' };
   }
 
-  async findAdminCustomers(page = 1, limit = 10, search?: string, status?: string) {
+  async findAdminCustomers(page = 1, limit = 10, search?: string, status?: string, roleId?: string) {
     const where: any = {};
 
     if (status && status !== 'ALL') {
       where.isActive = status === 'ACTIVE';
+    }
+
+    if (roleId && roleId !== 'ALL') {
+      where.roleId = roleId;
     }
 
     if (search) {
@@ -132,7 +136,7 @@ export class UsersService {
       ];
     }
 
-    const [users, total, verifiedCount] = await Promise.all([
+    const [users, total, verifiedCount, rolesList] = await Promise.all([
       this.prisma.user.findMany({
         where,
         select: {
@@ -146,7 +150,8 @@ export class UsersService {
           isActive: true,
           isVerified: true,
           createdAt: true,
-          role: { select: { name: true, slug: true } },
+          roleId: true,
+          role: { select: { id: true, name: true, slug: true } },
           _count: { select: { orders: true, addresses: true } },
         },
         orderBy: { createdAt: 'desc' },
@@ -155,10 +160,12 @@ export class UsersService {
       }),
       this.prisma.user.count({ where }),
       this.prisma.user.count({ where: { ...where, isVerified: true } }),
+      this.prisma.role.findMany({ select: { id: true, name: true, slug: true } }),
     ]);
 
     return {
       data: users,
+      roles: rolesList,
       stats: {
         verifiedCount,
       },
@@ -169,6 +176,25 @@ export class UsersService {
         totalPages: Math.ceil(total / limit) || 1,
       },
     };
+  }
+
+  async updateUserRole(id: string, roleId: string) {
+    const user = await this.prisma.user.findUnique({ where: { id } });
+    if (!user) {
+      throw new NotFoundException('User not found');
+    }
+
+    return this.prisma.user.update({
+      where: { id },
+      data: { roleId },
+      select: {
+        id: true,
+        firstName: true,
+        lastName: true,
+        email: true,
+        role: { select: { id: true, name: true, slug: true } },
+      },
+    });
   }
 
   async toggleUserStatus(id: string, isActive: boolean) {

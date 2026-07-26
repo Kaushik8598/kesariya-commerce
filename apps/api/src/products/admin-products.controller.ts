@@ -34,6 +34,16 @@ export class AdminProductsController {
     return this.productsService.findAdminAll(page, limit, search, status);
   }
 
+  @Get('inventory')
+  findInventory(
+    @Query('page', new DefaultValuePipe(1), ParseIntPipe) page: number,
+    @Query('limit', new DefaultValuePipe(10), ParseIntPipe) limit: number,
+    @Query('search') search?: string,
+    @Query('stockFilter') stockFilter?: string,
+  ) {
+    return this.productsService.findAdminInventory(page, limit, search, stockFilter);
+  }
+
   @Post()
   create(@Body() createProductDto: CreateProductDto) {
     return this.productsService.create(createProductDto);
@@ -45,6 +55,14 @@ export class AdminProductsController {
     @Body() updateProductDto: UpdateProductDto,
   ) {
     return this.productsService.update(id, updateProductDto);
+  }
+
+  @Patch(':id/stock')
+  updateStock(
+    @Param('id') id: string,
+    @Body('stock', ParseIntPipe) stock: number,
+  ) {
+    return this.productsService.updateStock(id, stock);
   }
 
   @Delete(':id')

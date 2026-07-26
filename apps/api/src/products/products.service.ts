@@ -428,4 +428,72 @@ export class ProductsService {
     }
     return this.prisma.product.delete({ where: { id } });
   }
+
+  async findAdminInventory(page = 1, limit = 10, search?: string, stockFilter?: string) {
+    const where: any = {};
+
+    if (search) {
+      where.OR = [
+        { name: { contains: search, mode: 'insensitive' } },
+        { sku: { contains: search, mode: 'insensitive' } },
+      ];
+    }
+
+    if (stockFilter === 'OUT') {
+      where.stock = 0;
+    } else if (stockFilter === 'LOW') {
+      where.stock = { gt: 0, lte: 10 };
+    } else if (stockFilter === 'IN_STOCK') {
+      where.stock = { gt: 10 };
+    }
+
+    const [products, total, inStockCount, lowStockCount, outOfStockCount] = await Promise.all([
+      this.prisma.product.findMany({
+        where,
+        include: {
+          category: { select: { name: true } },
+          brand: { select: { name: true } },
+          images: { where: { isPrimary: true }, take: 1 },
+          variants: { select: { id: true, sku: true, size: true, color: true, stock: true } },
+        },
+        orderBy: { updatedAt: 'desc' },
+        skip: (page - 1) * limit,
+        take: limit,
+      }),
+      this.prisma.product.count({ where }),
+      this.prisma.product.count({ where: { stock: { gt: 10 } } }),
+      this.prisma.product.count({ where: { stock: { gt: 0, lte: 10 } } }),
+      this.prisma.product.count({ where: { stock: 0 } }),
+    ]);
+
+    return {
+      data: products,
+      stats: {
+        inStockCount,
+        lowStockCount,
+        outOfStockCount,
+      },
+      pagination: {
+        total,
+        page,
+        limit,
+        totalPages: Math.ceil(total / limit) || 1,
+      },
+    };
+  }
+
+  async updateStock(id: string, stock: number) {
+    const product = await this.prisma.product.findUnique({ where: { id } });
+    if (!product) {
+      throw new NotFoundException('Product not found');
+    }
+
+    return this.prisma.product.update({
+      where: { id },
+      data: { stock: Math.max(0, stock) },
+      include: {
+        category: { select: { name: true } },
+      },
+    });
+  }
 }

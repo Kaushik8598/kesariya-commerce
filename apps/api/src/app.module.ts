@@ -19,6 +19,7 @@ import { CheckoutModule } from './checkout/checkout.module';
 import { OrdersModule } from './orders/orders.module';
 import { LocationsModule } from './locations/locations.module';
 import { MeasurementsModule } from './measurements/measurements.module';
+import { CmsModule } from './cms/cms.module';
 
 import { envSchema } from './config/env.validation';
 
@@ -45,6 +46,7 @@ import { envSchema } from './config/env.validation';
     OrdersModule,
     LocationsModule,
     MeasurementsModule,
+    CmsModule,
   ],
   controllers: [AppController],
   providers: [AppService],

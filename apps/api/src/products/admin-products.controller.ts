@@ -49,6 +49,11 @@ export class AdminProductsController {
     return this.productsService.create(createProductDto);
   }
 
+  @Get(':id')
+  findById(@Param('id') id: string) {
+    return this.productsService.findAdminById(id);
+  }
+
   @Patch(':id')
   update(
     @Param('id') id: string,

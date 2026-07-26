@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import {
   Plus,
@@ -11,7 +12,6 @@ import {
   CheckCircle2,
   XCircle,
   Image as ImageIcon,
-  Tag,
   Filter,
   Loader2,
   AlertTriangle,
@@ -54,6 +54,7 @@ interface Product {
   status: "ACTIVE" | "DRAFT" | "ARCHIVED";
   category?: { id?: string; name: string };
   brand?: { id?: string; name: string };
+  images?: Array<{ url: string }>;
 }
 
 interface PaginationMeta {
@@ -72,17 +73,7 @@ export default function ProductsPage() {
   const [page, setPage] = useState(1);
   const [limit, setLimit] = useState(10);
 
-  // Add / Edit Modal State
-  const [showAddEditModal, setShowAddEditModal] = useState(false);
-  const [editingProduct, setEditingProduct] = useState<Product | null>(null);
-  const [formData, setFormData] = useState({
-    name: "",
-    basePrice: "",
-    salePrice: "",
-    sku: "",
-    stock: "",
-    status: "ACTIVE" as "ACTIVE" | "DRAFT" | "ARCHIVED",
-  });
+  const router = useRouter();
 
   // Delete Confirmation Modal State
   const [deleteProductTarget, setDeleteProductTarget] = useState<Product | null>(null);
@@ -124,37 +115,7 @@ export default function ProductsPage() {
     totalPages: 1,
   };
 
-  // Create Product Mutation: POST /admin/products
-  const createMutation = useMutation({
-    mutationFn: async (payload: any) => {
-      const res = await api.post("/admin/products", payload);
-      return res.data;
-    },
-    onSuccess: () => {
-      toast.success("Product created successfully!");
-      queryClient.invalidateQueries({ queryKey: ["adminProducts"] });
-      closeFormModal();
-    },
-    onError: (err: any) => {
-      toast.error(err?.response?.data?.message || "Failed to create product");
-    },
-  });
 
-  // Edit Product Mutation: PATCH /admin/products/:id
-  const editMutation = useMutation({
-    mutationFn: async ({ id, payload }: { id: string; payload: any }) => {
-      const res = await api.patch(`/admin/products/${id}`, payload);
-      return res.data;
-    },
-    onSuccess: () => {
-      toast.success("Product updated successfully!");
-      queryClient.invalidateQueries({ queryKey: ["adminProducts"] });
-      closeFormModal();
-    },
-    onError: (err: any) => {
-      toast.error(err?.response?.data?.message || "Failed to update product");
-    },
-  });
 
   // Delete Product Mutation: DELETE /admin/products/:id
   const deleteMutation = useMutation({
@@ -172,59 +133,7 @@ export default function ProductsPage() {
     },
   });
 
-  const openAddModal = () => {
-    setEditingProduct(null);
-    setFormData({
-      name: "",
-      basePrice: "",
-      salePrice: "",
-      sku: "",
-      stock: "",
-      status: "ACTIVE",
-    });
-    setShowAddEditModal(true);
-  };
 
-  const openEditModal = (product: Product) => {
-    setEditingProduct(product);
-    setFormData({
-      name: product.name,
-      basePrice: String(product.basePrice),
-      salePrice: product.salePrice ? String(product.salePrice) : "",
-      sku: product.sku,
-      stock: String(product.stock),
-      status: product.status,
-    });
-    setShowAddEditModal(true);
-  };
-
-  const closeFormModal = () => {
-    setShowAddEditModal(false);
-    setEditingProduct(null);
-  };
-
-  const handleFormSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!formData.name || !formData.basePrice || !formData.sku) {
-      toast.error("Please fill in required fields (Name, Price, SKU)");
-      return;
-    }
-
-    const payload = {
-      name: formData.name,
-      basePrice: Number(formData.basePrice),
-      salePrice: formData.salePrice ? Number(formData.salePrice) : null,
-      sku: formData.sku,
-      stock: formData.stock ? Number(formData.stock) : 0,
-      status: formData.status,
-    };
-
-    if (editingProduct) {
-      editMutation.mutate({ id: editingProduct.id, payload });
-    } else {
-      createMutation.mutate(payload);
-    }
-  };
 
   const activeCount = productsList.filter((p) => p.status === "ACTIVE").length;
   const draftArchivedCount = productsList.filter((p) => p.status !== "ACTIVE").length;
@@ -245,7 +154,7 @@ export default function ProductsPage() {
             Manage your catalog items, pricing, inventory stock, and product status.
           </p>
         </div>
-        <Button onClick={openAddModal} className="gap-2 shrink-0">
+        <Button onClick={() => router.push("/products/new")} className="gap-2 shrink-0">
           <Plus className="h-4 w-4" /> Add New Product
         </Button>
       </div>
@@ -380,7 +289,9 @@ export default function ProductsPage() {
                       ? "No catalog items matched your filter criteria. Try adjusting your search query."
                       : "Your database catalog is empty. Click 'Add New Product' to create your first product."}
                   </p>
-                  <Button onClick={openAddModal} variant="outline" size="sm" className="mt-4 gap-2">
+                  <Button variant="outline" size="sm" className="mt-4 gap-2"
+                    onClick={() => router.push("/products/new")}
+                  >
                     <Plus className="h-4 w-4" /> Add Product Now
                   </Button>
                 </TableCell>
@@ -391,8 +302,20 @@ export default function ProductsPage() {
                   {/* Thumbnail Avatar + Info */}
                   <TableCell className="py-4 pl-6">
                     <div className="flex items-center gap-3.5">
-                      <div className="h-11 w-11 rounded-lg bg-secondary border border-border flex items-center justify-center shrink-0">
-                        <ImageIcon className="h-5 w-5 text-muted-foreground opacity-60" />
+                      <div className="h-11 w-11 rounded-lg bg-secondary border border-border flex items-center justify-center shrink-0 overflow-hidden relative">
+                        {product.images && product.images.length > 0 && product.images[0].url ? (
+                          /* eslint-disable-next-line @next/next/no-img-element */
+                          <img
+                            src={product.images[0].url}
+                            alt={product.name}
+                            className="h-full w-full object-cover"
+                            onError={(e) => {
+                              (e.target as HTMLElement).style.display = "none";
+                            }}
+                          />
+                        ) : (
+                          <ImageIcon className="h-5 w-5 text-muted-foreground opacity-60" />
+                        )}
                       </div>
                       <div className="flex flex-col gap-1 overflow-hidden">
                         <span className="font-bold text-xs text-foreground truncate">
@@ -469,7 +392,7 @@ export default function ProductsPage() {
                       <Button
                         variant="secondary"
                         size="xs"
-                        onClick={() => openEditModal(product)}
+                        onClick={() => router.push(`/products/edit/${product.id}`)}
                         className="h-7 px-2.5 gap-1"
                       >
                         <Edit2 className="h-3.5 w-3.5" />
@@ -564,129 +487,6 @@ export default function ProductsPage() {
         )}
       </Card>
 
-      {/* Add / Edit Product Modal */}
-      <Dialog open={showAddEditModal} onOpenChange={setShowAddEditModal}>
-        <form onSubmit={handleFormSubmit}>
-          <DialogHeader>
-            <DialogTitle>
-              {editingProduct ? "Edit Product" : "Add New Product"}
-            </DialogTitle>
-            <DialogDescription>
-              {editingProduct
-                ? `Update specifications and pricing for "${editingProduct.name}"`
-                : "Fill in product information to create a new item in catalog"}
-            </DialogDescription>
-          </DialogHeader>
-
-          <div className="space-y-4 py-4">
-            <div>
-              <label className="text-xs font-semibold text-foreground mb-1.5 block">
-                Product Name *
-              </label>
-              <input
-                type="text"
-                required
-                value={formData.name}
-                onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                placeholder="e.g. Royal Kesariya Silk Kurta"
-                className="h-10 w-full px-3.5 rounded-lg bg-secondary border border-border text-xs text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary"
-              />
-            </div>
-
-            <div className="grid grid-cols-2 gap-3">
-              <div>
-                <label className="text-xs font-semibold text-foreground mb-1.5 block">
-                  Base Price (₹) *
-                </label>
-                <input
-                  type="number"
-                  required
-                  value={formData.basePrice}
-                  onChange={(e) => setFormData({ ...formData, basePrice: e.target.value })}
-                  placeholder="4999"
-                  className="h-10 w-full px-3.5 rounded-lg bg-secondary border border-border text-xs text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary"
-                />
-              </div>
-              <div>
-                <label className="text-xs font-semibold text-foreground mb-1.5 block">
-                  Sale Price (₹)
-                </label>
-                <input
-                  type="number"
-                  value={formData.salePrice}
-                  onChange={(e) => setFormData({ ...formData, salePrice: e.target.value })}
-                  placeholder="3999"
-                  className="h-10 w-full px-3.5 rounded-lg bg-secondary border border-border text-xs text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary"
-                />
-              </div>
-            </div>
-
-            <div className="grid grid-cols-2 gap-3">
-              <div>
-                <label className="text-xs font-semibold text-foreground mb-1.5 block">
-                  SKU Code *
-                </label>
-                <input
-                  type="text"
-                  required
-                  value={formData.sku}
-                  onChange={(e) => setFormData({ ...formData, sku: e.target.value })}
-                  placeholder="KURTA-SILK-001"
-                  className="h-10 w-full px-3.5 rounded-lg bg-secondary border border-border text-xs text-foreground font-mono placeholder:text-muted-foreground focus:outline-none focus:border-primary"
-                />
-              </div>
-              <div>
-                <label className="text-xs font-semibold text-foreground mb-1.5 block">
-                  Stock Quantity *
-                </label>
-                <input
-                  type="number"
-                  value={formData.stock}
-                  onChange={(e) => setFormData({ ...formData, stock: e.target.value })}
-                  placeholder="50"
-                  className="h-10 w-full px-3.5 rounded-lg bg-secondary border border-border text-xs text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary"
-                />
-              </div>
-            </div>
-
-            <div>
-              <label className="text-xs font-semibold text-foreground mb-1.5 block">
-                Catalog Status *
-              </label>
-              <select
-                value={formData.status}
-                onChange={(e) =>
-                  setFormData({
-                    ...formData,
-                    status: e.target.value as "ACTIVE" | "DRAFT" | "ARCHIVED",
-                  })
-                }
-                className="h-10 w-full px-3.5 rounded-lg bg-secondary border border-border text-xs text-foreground outline-none focus:border-primary"
-              >
-                <option value="ACTIVE">ACTIVE (Visible on storefront)</option>
-                <option value="DRAFT">DRAFT (Hidden from storefront)</option>
-                <option value="ARCHIVED">ARCHIVED (Discontinued)</option>
-              </select>
-            </div>
-          </div>
-
-          <DialogFooter>
-            <Button type="button" variant="outline" onClick={closeFormModal}>
-              Cancel
-            </Button>
-            <Button
-              type="submit"
-              disabled={createMutation.isPending || editMutation.isPending}
-            >
-              {createMutation.isPending || editMutation.isPending
-                ? "Saving..."
-                : editingProduct
-                ? "Save Changes"
-                : "Create Product"}
-            </Button>
-          </DialogFooter>
-        </form>
-      </Dialog>
 
       {/* Shadcn Delete Confirmation Dialog Modal */}
       <Dialog

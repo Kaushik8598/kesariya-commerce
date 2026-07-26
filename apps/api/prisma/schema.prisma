@@ -419,6 +419,8 @@ model Product {
   weight           String?
   material         String?
   careInstructions String? @map("care_instructions") @db.Text
+  videoUrl         String? @map("video_url")
+  contentBlocks    Json?   @map("content_blocks")
 
   images   ProductImage[]
   variants ProductVariant[]

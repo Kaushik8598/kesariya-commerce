@@ -182,13 +182,35 @@ export default function AnalyticsPage() {
                 <p className="text-xs font-semibold">No category sales records found.</p>
               </div>
             ) : (
-              <ResponsiveContainer width="100%" height={280}>
-                <BarChart data={categorySales}>
-                  <CartesianGrid stroke="var(--border)" strokeDasharray="4 4" vertical={false} />
-                  <XAxis dataKey="name" tick={{ fill: "var(--foreground-muted)", fontSize: 12 }} axisLine={false} tickLine={false} />
-                  <YAxis tickFormatter={(v) => `₹${(v / 1000).toFixed(0)}K`} tick={{ fill: "var(--foreground-muted)", fontSize: 11 }} axisLine={false} tickLine={false} />
+              <ResponsiveContainer width="100%" height={290}>
+                <BarChart data={categorySales} margin={{ top: 10, right: 10, left: -10, bottom: 20 }}>
+                  <CartesianGrid stroke="#27272a" strokeDasharray="4 4" vertical={false} />
+                  <XAxis
+                    dataKey="name"
+                    tick={{ fill: "#e4e4e7", fontSize: 12, fontWeight: 600 }}
+                    axisLine={{ stroke: "#3f3f46" }}
+                    tickLine={false}
+                    interval={0}
+                    dy={8}
+                  />
+                  <YAxis
+                    tickFormatter={(v) => `₹${(v / 1000).toFixed(0)}K`}
+                    tick={{ fill: "#a1a1aa", fontSize: 11, fontWeight: 500 }}
+                    axisLine={false}
+                    tickLine={false}
+                  />
                   <Tooltip
-                    contentStyle={{ background: "var(--surface)", border: "1px solid var(--border)", borderRadius: 8, color: "var(--foreground)" }}
+                    contentStyle={{
+                      backgroundColor: "#18181b",
+                      borderColor: "#3f3f46",
+                      borderRadius: 10,
+                      color: "#ffffff",
+                      fontSize: 12,
+                      boxShadow: "0 12px 32px rgba(0,0,0,0.8)",
+                    }}
+                    itemStyle={{ color: "#f97316", fontWeight: 700 }}
+                    labelStyle={{ color: "#ffffff", fontWeight: 700, marginBottom: 4 }}
+                    cursor={{ fill: "rgba(249, 115, 22, 0.12)" }}
                     formatter={(v) => [formatCurrency(Number(v)), "Revenue"]}
                   />
                   <Bar dataKey="sales" fill="#f97316" radius={[6, 6, 0, 0]} />

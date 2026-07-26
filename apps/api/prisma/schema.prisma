@@ -772,5 +772,22 @@ model StoreSetting {
   @@map("store_settings")
 }
 
+// ─── Audit Logs Module ───────────────────────────────────────────────
+
+model AuditLog {
+  id        String   @id @default(cuid())
+  userName  String   @map("user_name")
+  userRole  String?  @map("user_role")
+  action    String
+  details   String   @db.Text
+  ipAddress String?  @map("ip_address")
+  createdAt DateTime @default(now()) @map("created_at")
+
+  @@index([action])
+  @@index([createdAt])
+  @@map("audit_logs")
+}
+
+
 
 

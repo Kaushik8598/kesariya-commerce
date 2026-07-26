@@ -22,6 +22,7 @@ import { MeasurementsModule } from './measurements/measurements.module';
 import { CmsModule } from './cms/cms.module';
 import { AnalyticsModule } from './analytics/analytics.module';
 import { SettingsModule } from './settings/settings.module';
+import { AuditLogsModule } from './audit-logs/audit-logs.module';
 
 import { envSchema } from './config/env.validation';
 
@@ -51,6 +52,7 @@ import { envSchema } from './config/env.validation';
     CmsModule,
     AnalyticsModule,
     SettingsModule,
+    AuditLogsModule,
   ],
   controllers: [AppController],
   providers: [AppService],

@@ -1,19 +1,23 @@
 "use client";
 
+import { useQuery } from "@tanstack/react-query";
 import {
   ShoppingCart,
   Users,
   Package,
-  TrendingUp,
-  TrendingDown,
+  DollarSign,
   ArrowRight,
   Clock,
+  Loader2,
+  BarChart3,
+  ShoppingBag,
 } from "lucide-react";
 import Link from "next/link";
+import api from "@/lib/api";
 import { formatCurrency, formatDate } from "@/lib/utils";
 import {
-  AreaChart,
-  Area,
+  BarChart,
+  Bar,
   XAxis,
   YAxis,
   CartesianGrid,
@@ -37,64 +41,27 @@ import {
   TableCell,
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
-import { Button, buttonVariants } from "@/components/ui/button";
+import { buttonVariants } from "@/components/ui/button";
 
-const revenueData = [
-  { month: "Jan", revenue: 420000 },
-  { month: "Feb", revenue: 380000 },
-  { month: "Mar", revenue: 510000 },
-  { month: "Apr", revenue: 460000 },
-  { month: "May", revenue: 620000 },
-  { month: "Jun", revenue: 580000 },
-  { month: "Jul", revenue: 710000 },
-];
+interface AnalyticsData {
+  stats: {
+    totalRevenue: number;
+    totalOrders: number;
+    totalCustomers: number;
+    totalProducts: number;
+    averageOrderValue: number;
+  };
+  categorySales: { name: string; sales: number }[];
+}
 
-const recentOrders = [
-  { id: "#ORD-001", customer: "Rahul Sharma", amount: 2499, status: "DELIVERED", date: new Date().toISOString() },
-  { id: "#ORD-002", customer: "Priya Patel", amount: 4999, status: "PROCESSING", date: new Date().toISOString() },
-  { id: "#ORD-003", customer: "Amit Verma", amount: 1299, status: "PENDING", date: new Date().toISOString() },
-  { id: "#ORD-004", customer: "Sneha Modi", amount: 3499, status: "SHIPPED", date: new Date().toISOString() },
-  { id: "#ORD-005", customer: "Raj Gupta", amount: 899, status: "CANCELLED", date: new Date().toISOString() },
-];
-
-const kpiCards = [
-  {
-    label: "Total Revenue",
-    value: formatCurrency(3120000),
-    change: "+12.5%",
-    positive: true,
-    icon: TrendingUp,
-    color: "var(--success)",
-    bg: "var(--success-muted)",
-  },
-  {
-    label: "Total Orders",
-    value: "1,842",
-    change: "+8.2%",
-    positive: true,
-    icon: ShoppingCart,
-    color: "var(--info)",
-    bg: "var(--info-muted)",
-  },
-  {
-    label: "Total Customers",
-    value: "5,621",
-    change: "+15.1%",
-    positive: true,
-    icon: Users,
-    color: "var(--primary)",
-    bg: "var(--accent-muted)",
-  },
-  {
-    label: "Active Products",
-    value: "342",
-    change: "-2.3%",
-    positive: false,
-    icon: Package,
-    color: "var(--warning)",
-    bg: "var(--warning-muted)",
-  },
-];
+interface OrderItem {
+  id: string;
+  orderNumber: string;
+  user?: { firstName: string; lastName: string };
+  total: number;
+  status: string;
+  createdAt: string;
+}
 
 type BadgeVariant = "warning" | "info" | "default" | "success" | "danger";
 
@@ -107,137 +74,225 @@ const statusBadges: Record<string, BadgeVariant> = {
 };
 
 export default function DashboardPage() {
+  // Real Analytics Query
+  const { data: analyticsData, isLoading: isAnalyticsLoading } = useQuery<AnalyticsData>({
+    queryKey: ["adminOverviewAnalytics"],
+    queryFn: async () => {
+      const res = await api.get("/admin/analytics");
+      return res.data;
+    },
+  });
+
+  // Real Recent Orders Query
+  const { data: ordersResponse, isLoading: isOrdersLoading } = useQuery<{ data: OrderItem[] }>({
+    queryKey: ["adminRecentOrdersOverview"],
+    queryFn: async () => {
+      const res = await api.get("/admin/orders", { params: { limit: 5 } });
+      return res.data;
+    },
+  });
+
+  const stats = analyticsData?.stats || {
+    totalRevenue: 0,
+    totalOrders: 0,
+    totalCustomers: 0,
+    totalProducts: 0,
+    averageOrderValue: 0,
+  };
+  const categorySales = analyticsData?.categorySales || [];
+  const recentOrders = ordersResponse?.data || [];
+
   return (
     <div className="flex flex-col gap-6">
       {/* Header */}
       <div>
-        <h1 className="text-2xl font-bold tracking-tight text-foreground">Dashboard</h1>
-        <p className="text-xs text-foreground-muted mt-1">
-          Welcome back! Here&apos;s what&apos;s happening in your store today.
+        <h1 className="text-2xl font-bold tracking-tight text-foreground font-heading">
+          Store Dashboard Overview
+        </h1>
+        <p className="text-xs text-muted-foreground mt-1">
+          Real-time performance summary, sales distribution, and latest customer orders.
         </p>
       </div>
 
-      {/* KPI Cards */}
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        {kpiCards.map((card) => {
-          const Icon = card.icon;
-          const Trend = card.positive ? TrendingUp : TrendingDown;
-          return (
-            <Card key={card.label} className="p-5">
-              <div className="flex items-center justify-between mb-3">
-                <div
-                  className="flex h-10 w-10 items-center justify-center rounded-lg"
-                  style={{ background: card.bg, color: card.color }}
-                >
-                  <Icon className="h-5 w-5" />
-                </div>
-                <Badge variant={card.positive ? "success" : "danger"}>
-                  <Trend className="h-3 w-3 mr-0.5" />
-                  {card.change}
-                </Badge>
-              </div>
-              <div className="text-2xl font-bold tracking-tight text-foreground">{card.value}</div>
-              <div className="text-xs text-foreground-muted mt-1">{card.label}</div>
-            </Card>
-          );
-        })}
+      {/* Real KPI Cards */}
+      <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
+        <Card className="p-5 !flex-row items-center justify-between">
+          <div className="space-y-1">
+            <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+              Total Revenue
+            </p>
+            <p className="text-2xl font-extrabold text-foreground font-heading">
+              {formatCurrency(stats.totalRevenue)}
+            </p>
+          </div>
+          <div className="h-11 w-11 rounded-xl bg-primary/15 text-primary flex items-center justify-center shrink-0 border border-primary/20">
+            <DollarSign className="h-5 w-5" />
+          </div>
+        </Card>
+
+        <Card className="p-5 !flex-row items-center justify-between">
+          <div className="space-y-1">
+            <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+              Total Orders
+            </p>
+            <p className="text-2xl font-extrabold text-emerald-400 font-heading">
+              {stats.totalOrders}
+            </p>
+          </div>
+          <div className="h-11 w-11 rounded-xl bg-emerald-500/15 text-emerald-400 flex items-center justify-center shrink-0 border border-emerald-500/20">
+            <ShoppingCart className="h-5 w-5" />
+          </div>
+        </Card>
+
+        <Card className="p-5 !flex-row items-center justify-between">
+          <div className="space-y-1">
+            <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+              Total Customers
+            </p>
+            <p className="text-2xl font-extrabold text-amber-400 font-heading">
+              {stats.totalCustomers}
+            </p>
+          </div>
+          <div className="h-11 w-11 rounded-xl bg-amber-500/15 text-amber-400 flex items-center justify-center shrink-0 border border-amber-500/20">
+            <Users className="h-5 w-5" />
+          </div>
+        </Card>
+
+        <Card className="p-5 !flex-row items-center justify-between">
+          <div className="space-y-1">
+            <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+              Active Catalog Items
+            </p>
+            <p className="text-2xl font-extrabold text-sky-400 font-heading">
+              {stats.totalProducts}
+            </p>
+          </div>
+          <div className="h-11 w-11 rounded-xl bg-sky-500/15 text-sky-400 flex items-center justify-center shrink-0 border border-sky-500/20">
+            <Package className="h-5 w-5" />
+          </div>
+        </Card>
       </div>
 
-      {/* Revenue Chart Card */}
+      {/* Real Category Revenue Breakdown Chart */}
       <Card>
         <CardHeader className="flex flex-row items-center justify-between pb-4">
           <div>
-            <CardTitle>Revenue Overview</CardTitle>
-            <CardDescription>Monthly revenue breakdown for 2025</CardDescription>
+            <CardTitle>Category Revenue Breakdown</CardTitle>
+            <CardDescription>Real sales revenue generated per category from database</CardDescription>
           </div>
-          <select className="h-8 rounded-md border border-border bg-surface px-2.5 text-xs text-foreground-muted outline-none cursor-pointer">
-            <option>Last 7 months</option>
-            <option>Last 12 months</option>
-          </select>
         </CardHeader>
         <CardContent>
-          <ResponsiveContainer width="100%" height={240}>
-            <AreaChart data={revenueData}>
-              <defs>
-                <linearGradient id="revenueGrad" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="5%" stopColor="#f97316" stopOpacity={0.25} />
-                  <stop offset="95%" stopColor="#f97316" stopOpacity={0} />
-                </linearGradient>
-              </defs>
-              <CartesianGrid stroke="var(--border)" strokeDasharray="4 4" vertical={false} />
-              <XAxis
-                dataKey="month"
-                tick={{ fill: "var(--foreground-muted)", fontSize: 12 }}
-                axisLine={false}
-                tickLine={false}
-              />
-              <YAxis
-                tickFormatter={(v) => `₹${(v / 1000).toFixed(0)}K`}
-                tick={{ fill: "var(--foreground-muted)", fontSize: 11 }}
-                axisLine={false}
-                tickLine={false}
-              />
-              <Tooltip
-                contentStyle={{
-                  background: "var(--surface)",
-                  border: "1px solid var(--border)",
-                  borderRadius: 8,
-                  color: "var(--foreground)",
-                  fontSize: 12,
-                }}
-                formatter={(v) => [formatCurrency(Number(v)), "Revenue"]}
-              />
-              <Area
-                type="monotone"
-                dataKey="revenue"
-                stroke="#f97316"
-                strokeWidth={2.5}
-                fill="url(#revenueGrad)"
-              />
-            </AreaChart>
-          </ResponsiveContainer>
+          {isAnalyticsLoading ? (
+            <div className="h-60 flex items-center justify-center text-muted-foreground">
+              <Loader2 className="h-7 w-7 animate-spin text-primary" />
+            </div>
+          ) : categorySales.length === 0 ? (
+            <div className="h-60 flex flex-col items-center justify-center text-muted-foreground">
+              <BarChart3 className="h-10 w-10 mb-2 opacity-40" />
+              <p className="text-xs font-semibold">No category sales records in database.</p>
+            </div>
+          ) : (
+            <ResponsiveContainer width="100%" height={250}>
+              <BarChart data={categorySales} margin={{ top: 10, right: 10, left: -10, bottom: 20 }}>
+                <CartesianGrid stroke="#27272a" strokeDasharray="4 4" vertical={false} />
+                <XAxis
+                  dataKey="name"
+                  tick={{ fill: "#e4e4e7", fontSize: 12, fontWeight: 600 }}
+                  axisLine={{ stroke: "#3f3f46" }}
+                  tickLine={false}
+                  interval={0}
+                  dy={8}
+                />
+                <YAxis
+                  tickFormatter={(v) => `₹${(v / 1000).toFixed(0)}K`}
+                  tick={{ fill: "#a1a1aa", fontSize: 11, fontWeight: 500 }}
+                  axisLine={false}
+                  tickLine={false}
+                />
+                <Tooltip
+                  contentStyle={{
+                    backgroundColor: "#18181b",
+                    borderColor: "#3f3f46",
+                    borderRadius: 10,
+                    color: "#ffffff",
+                    fontSize: 12,
+                    boxShadow: "0 12px 32px rgba(0,0,0,0.8)",
+                  }}
+                  itemStyle={{ color: "#f97316", fontWeight: 700 }}
+                  labelStyle={{ color: "#ffffff", fontWeight: 700, marginBottom: 4 }}
+                  cursor={{ fill: "rgba(249, 115, 22, 0.12)" }}
+                  formatter={(v) => [formatCurrency(Number(v)), "Revenue"]}
+                />
+                <Bar dataKey="sales" fill="#f97316" radius={[6, 6, 0, 0]} />
+              </BarChart>
+            </ResponsiveContainer>
+          )}
         </CardContent>
       </Card>
 
-      {/* Recent Orders Table Card */}
+      {/* Real Recent Orders Table */}
       <Card className="p-0 overflow-hidden">
         <div className="flex items-center justify-between p-5 border-b border-border">
           <div>
-            <CardTitle>Recent Orders</CardTitle>
-            <CardDescription className="mt-0.5">Latest transactions from your customers</CardDescription>
+            <CardTitle>Recent Customer Orders</CardTitle>
+            <CardDescription className="mt-0.5">Latest transactions recorded in database</CardDescription>
           </div>
           <Link href="/orders" className={buttonVariants({ variant: "ghost", size: "sm" }) + " text-primary hover:text-primary"}>
-            View All <ArrowRight className="ml-1 h-3.5 w-3.5" />
+            View All Orders <ArrowRight className="ml-1 h-3.5 w-3.5" />
           </Link>
         </div>
 
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead>Order ID</TableHead>
-              <TableHead>Customer</TableHead>
-              <TableHead>Amount</TableHead>
-              <TableHead>Status</TableHead>
-              <TableHead>Date</TableHead>
+              <TableHead className="py-3.5 pl-6">Order Number</TableHead>
+              <TableHead className="py-3.5">Customer Name</TableHead>
+              <TableHead className="py-3.5">Total Amount</TableHead>
+              <TableHead className="py-3.5">Status</TableHead>
+              <TableHead className="py-3.5 text-right pr-6">Date & Time</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
-            {recentOrders.map((order) => (
-              <TableRow key={order.id}>
-                <TableCell className="font-semibold text-primary">{order.id}</TableCell>
-                <TableCell>{order.customer}</TableCell>
-                <TableCell className="font-semibold">{formatCurrency(order.amount)}</TableCell>
-                <TableCell>
-                  <Badge variant={statusBadges[order.status] || "default"}>
-                    {order.status}
-                  </Badge>
-                </TableCell>
-                <TableCell className="text-foreground-muted flex items-center gap-1.5">
-                  <Clock className="h-3.5 w-3.5" />
-                  {formatDate(order.date)}
+            {isOrdersLoading ? (
+              <TableRow>
+                <TableCell colSpan={5} className="text-center py-12 text-muted-foreground">
+                  <Loader2 className="h-7 w-7 animate-spin mx-auto mb-2 text-primary" />
+                  <p className="text-xs font-semibold">Loading recent orders...</p>
                 </TableCell>
               </TableRow>
-            ))}
+            ) : recentOrders.length === 0 ? (
+              <TableRow>
+                <TableCell colSpan={5} className="text-center py-14 text-muted-foreground">
+                  <ShoppingBag className="h-8 w-8 opacity-40 mx-auto mb-2" />
+                  <p className="text-xs font-semibold">No recent customer orders found in database.</p>
+                </TableCell>
+              </TableRow>
+            ) : (
+              recentOrders.map((order) => (
+                <TableRow key={order.id}>
+                  <TableCell className="py-4 pl-6 font-bold text-xs text-primary font-mono">
+                    #{order.orderNumber}
+                  </TableCell>
+                  <TableCell className="py-4 font-semibold text-xs text-foreground">
+                    {order.user ? `${order.user.firstName} ${order.user.lastName}` : "Guest User"}
+                  </TableCell>
+                  <TableCell className="py-4 font-bold text-xs text-foreground">
+                    {formatCurrency(Number(order.total || 0))}
+                  </TableCell>
+                  <TableCell className="py-4">
+                    <Badge variant={statusBadges[order.status] || "default"}>
+                      {order.status}
+                    </Badge>
+                  </TableCell>
+                  <TableCell className="py-4 text-right pr-6 text-xs text-muted-foreground font-mono">
+                    <div className="flex items-center justify-end gap-1.5">
+                      <Clock className="h-3.5 w-3.5" />
+                      {formatDate(order.createdAt)}
+                    </div>
+                  </TableCell>
+                </TableRow>
+              ))
+            )}
           </TableBody>
         </Table>
       </Card>

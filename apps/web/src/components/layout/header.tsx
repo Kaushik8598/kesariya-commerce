@@ -5,6 +5,7 @@ import { usePathname } from "next/navigation";
 import { useState, useEffect } from "react";
 import { Search, ShoppingBag, User, LogOut, Menu, X, ChevronDown, Heart, Package } from "lucide-react";
 import { useAuth } from "@/providers/auth-provider";
+import { Logo } from "@/components/ui/logo";
 import { ThemeToggle } from "@/components/ui/theme-toggle";
 import { SearchOverlay } from "@/components/search/search-overlay";
 import { Button } from "@/components/ui/button";
@@ -52,11 +53,7 @@ export function Header() {
 
             {/* Site Brand / Logo */}
             <div className="flex-1 md:flex-initial flex items-center justify-center md:justify-start">
-              <Link href="/" className="flex items-center">
-                <span className="text-xl font-extrabold tracking-[0.25em] text-foreground hover:opacity-90 transition-opacity">
-                  KESARIYA
-                </span>
-              </Link>
+              <Logo size="md" showBadge />
             </div>
 
             {/* Desktop Navigation Links */}

@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import { Logo } from "@/components/ui/logo";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
@@ -39,9 +40,7 @@ export function Footer() {
 
           {/* Column 1: Brand Info */}
           <div className="space-y-4">
-            <span className="text-lg font-bold tracking-[0.25em] text-foreground font-heading">
-              KESARIYA
-            </span>
+            <Logo size="sm" showBadge />
             <p className="text-xs text-foreground/70 leading-relaxed font-medium">
               Earthy luxury, hand-crafted comfort, and timeless apparel. Elevate your wardrobe with our refined cotton and linen prints.
             </p>

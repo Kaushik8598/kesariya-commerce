@@ -3,11 +3,13 @@
 import Link from "next/link";
 import { useCart, useRemoveCartItem, useUpdateCartItem, useApplyCoupon, useRemoveCoupon } from "@/hooks/cart/use-cart";
 import { useAuth } from "@/providers/auth-provider";
+import { useStoreSettings } from "@/providers/store-settings-provider";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { EmptyState } from "@/components/ui/empty-state";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Trash2, Plus, Minus, Tag, X, ArrowRight, Loader2, ShoppingBag, Ruler } from "lucide-react";
+import { Price } from "@/components/ui/price";
+import { Trash2, Plus, Minus, Tag, X, ArrowRight, ShoppingBag, Ruler } from "lucide-react";
 import Image from "next/image";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
@@ -15,6 +17,7 @@ import { useRouter } from "next/navigation";
 export default function CartPage() {
   const { isAuthenticated } = useAuth();
   const { data: cart, isLoading } = useCart();
+  const { formatPrice, settings } = useStoreSettings();
   const { mutate: updateQuantity, isPending: isUpdating } = useUpdateCartItem();
   const { mutate: removeItem, isPending: isRemoving } = useRemoveCartItem();
   const { mutate: applyCoupon, isPending: isApplyingCoupon } = useApplyCoupon();
@@ -90,7 +93,7 @@ export default function CartPage() {
                       <Link href={`/products/${item.product.slug}`} className="font-bold text-sm md:text-base hover:text-primary transition-colors line-clamp-2">
                         {item.product.name}
                       </Link>
-                      <p className="font-bold whitespace-nowrap">₹{Number(item.price).toFixed(2)}</p>
+                      <Price basePrice={Number(item.price)} size="sm" showDiscountBadge={false} />
                     </div>
 
                     {item.variant && (
@@ -158,7 +161,7 @@ export default function CartPage() {
             <div className="space-y-4 mb-8 text-sm">
               <div className="flex justify-between">
                 <span className="text-foreground/70">Subtotal</span>
-                <span className="font-semibold">₹{Number(cart.summary.subtotal).toFixed(2)}</span>
+                <span className="font-semibold">{formatPrice(Number(cart.summary.subtotal))}</span>
               </div>
 
               {cart.coupon && (
@@ -167,25 +170,28 @@ export default function CartPage() {
                     <Tag className="h-3 w-3" />
                     Discount ({cart.coupon.code})
                   </span>
-                  <span>-₹{Number(cart.summary.discount).toFixed(2)}</span>
+                  <span>-{formatPrice(Number(cart.summary.discount))}</span>
                 </div>
               )}
 
               <div className="flex justify-between">
-                <span className="text-foreground/70">Estimated Tax</span>
-                <span className="font-semibold">₹{Number(cart.summary.tax).toFixed(2)}</span>
+                <span className="text-foreground/70">
+                  GST Tax ({cart.summary?.apparelGstRate ?? settings.tax?.apparelGstRate ?? 0}%
+                  {cart.summary?.pricesIncludeGst ?? settings.tax?.pricesIncludeGst ? " Incl." : ""})
+                </span>
+                <span className="font-semibold">{formatPrice(Number(cart.summary.tax))}</span>
               </div>
 
               <div className="flex justify-between">
-                <span className="text-foreground/70">Shipping</span>
+                <span className="text-foreground/70">Shipping Fee</span>
                 <span className="font-semibold">
-                  {cart.summary.shipping > 0 ? `₹${Number(cart.summary.shipping).toFixed(2)}` : 'FREE'}
+                  {cart.summary.shipping > 0 ? formatPrice(Number(cart.summary.shipping)) : 'FREE'}
                 </span>
               </div>
 
               <div className="border-t border-border pt-4 mt-4 flex justify-between">
                 <span className="font-bold text-base">Total</span>
-                <span className="font-black text-lg">₹{Number(cart.summary.total).toFixed(2)}</span>
+                <span className="font-black text-lg">{formatPrice(Number(cart.summary.total))}</span>
               </div>
             </div>
 
@@ -238,7 +244,9 @@ export default function CartPage() {
             </Button>
 
             <p className="text-[10px] text-center text-foreground/50 mt-4 uppercase tracking-widest">
-              Secure checkout. Free shipping over ₹1000.
+              {(settings.shipping?.freeShippingThreshold || 0) > 0
+                ? `Free shipping on orders over ${formatPrice(settings.shipping.freeShippingThreshold)}`
+                : "Fast & Secure Store Checkout"}
             </p>
           </div>
         </div>

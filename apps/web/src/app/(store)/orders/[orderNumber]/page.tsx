@@ -2,6 +2,7 @@
 
 import { useOrderDetails } from "@/hooks/order/use-order";
 import { useAuth } from "@/providers/auth-provider";
+import { useStoreSettings } from "@/providers/store-settings-provider";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Package, Truck, CheckCircle2, Clock, XCircle, CreditCard, MapPin, Download, Ruler, ArrowLeft } from "lucide-react";
@@ -14,6 +15,7 @@ import { use } from "react";
 export default function OrderDetailsPage({ params }: { params: Promise<{ orderNumber: string }> }) {
   const { orderNumber } = use(params);
   const { isAuthenticated } = useAuth();
+  const { formatPrice } = useStoreSettings();
   const { data: order, isLoading } = useOrderDetails(orderNumber);
 
   if (!isAuthenticated) {
@@ -109,7 +111,7 @@ export default function OrderDetailsPage({ params }: { params: Promise<{ orderNu
                         <Link href={`/products/${item.product.slug}`} className="font-bold text-sm md:text-base hover:text-primary transition-colors line-clamp-2">
                           {item.product.name}
                         </Link>
-                        <p className="font-bold whitespace-nowrap">₹{Number(item.price).toFixed(2)}</p>
+                        <p className="font-bold whitespace-nowrap">{formatPrice(Number(item.price))}</p>
                       </div>
 
                       <div className="mt-2 flex flex-col gap-1 text-xs text-foreground/60 uppercase tracking-widest">
@@ -141,31 +143,31 @@ export default function OrderDetailsPage({ params }: { params: Promise<{ orderNu
             <div className="p-6 space-y-4 text-sm">
               <div className="flex justify-between">
                 <span className="text-foreground/70">Subtotal</span>
-                <span className="font-semibold">₹{Number(order.subtotal).toFixed(2)}</span>
+                <span className="font-semibold">{formatPrice(Number(order.subtotal))}</span>
               </div>
 
               {Number(order.discount) > 0 && (
                 <div className="flex justify-between text-primary font-medium">
                   <span>Discount {order.coupon ? `(${order.coupon.code})` : ''}</span>
-                  <span>-₹{Number(order.discount).toFixed(2)}</span>
+                  <span>-{formatPrice(Number(order.discount))}</span>
                 </div>
               )}
 
               <div className="flex justify-between">
                 <span className="text-foreground/70">Tax</span>
-                <span className="font-semibold">₹{Number(order.tax).toFixed(2)}</span>
+                <span className="font-semibold">{formatPrice(Number(order.tax))}</span>
               </div>
 
               <div className="flex justify-between">
                 <span className="text-foreground/70">Shipping</span>
                 <span className="font-semibold">
-                  {Number(order.shipping) > 0 ? `₹${Number(order.shipping).toFixed(2)}` : 'FREE'}
+                  {Number(order.shipping) > 0 ? formatPrice(Number(order.shipping)) : 'FREE'}
                 </span>
               </div>
 
               <div className="border-t border-border pt-4 mt-4 flex justify-between">
                 <span className="font-bold text-base uppercase tracking-widest">Total</span>
-                <span className="font-black text-lg">₹{Number(order.total).toFixed(2)}</span>
+                <span className="font-black text-lg">{formatPrice(Number(order.total))}</span>
               </div>
             </div>
           </div>

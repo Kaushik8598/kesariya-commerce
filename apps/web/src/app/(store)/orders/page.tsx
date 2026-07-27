@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useUserOrders } from "@/hooks/order/use-order";
 import { useAuth } from "@/providers/auth-provider";
+import { useStoreSettings } from "@/providers/store-settings-provider";
 import { useProfile } from "@/hooks/profile/use-profile";
 import { EmptyState } from "@/components/ui/empty-state";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -17,6 +18,7 @@ import { useRouter } from "next/navigation";
 
 export default function OrdersPage() {
   const { isAuthenticated, logout } = useAuth();
+  const { formatPrice } = useStoreSettings();
   const { data: profile } = useProfile();
   const router = useRouter();
 
@@ -197,7 +199,7 @@ export default function OrdersPage() {
                         </div>
                         <div>
                           <p className="text-xs font-bold uppercase tracking-widest text-foreground/50 mb-1">Total Amount</p>
-                          <p className="font-medium">₹{order.total}</p>
+                          <p className="font-medium">{formatPrice(Number(order.total))}</p>
                         </div>
                       </div>
 

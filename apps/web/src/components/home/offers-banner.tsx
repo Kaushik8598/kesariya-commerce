@@ -7,10 +7,12 @@ import { Button } from "@/components/ui/button";
 
 import { CountdownTimer } from "@/components/ui/countdown-timer";
 import { usePublicCoupons } from "@/hooks/coupons/use-public-coupons";
+import { useStoreSettings } from "@/providers/store-settings-provider";
 
 export function OffersBanner() {
   const [copiedCode, setCopiedCode] = useState<string | null>(null);
   const { coupons, loading } = usePublicCoupons();
+  const { formatPrice } = useStoreSettings();
 
   const copyCode = (code: string) => {
     navigator.clipboard.writeText(code);
@@ -42,10 +44,10 @@ export function OffersBanner() {
       <div className={`mt-12 grid gap-6 ${coupons.length === 1 ? "max-w-2xl mx-auto" : "md:grid-cols-2"}`}>
         {coupons.map((coupon, index) => {
           const discountStr =
-            coupon.type === "PERCENTAGE" ? `${coupon.value}%` : `₹${coupon.value}`;
+            coupon.type === "PERCENTAGE" ? `${coupon.value}%` : `${formatPrice(coupon.value)}`;
           const titleStr = coupon.description || `${coupon.code} Exclusive Offer`;
           const subTitleStr = coupon.minOrderAmount
-            ? `Valid on orders above ₹${coupon.minOrderAmount}`
+            ? `Valid on orders above ${formatPrice(coupon.minOrderAmount)}`
             : "Valid on all men's shirt collections";
           const endsAt = coupon.endDate ? new Date(coupon.endDate).toISOString() : defaultEndsAt;
 

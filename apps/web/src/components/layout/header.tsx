@@ -11,12 +11,14 @@ import { SearchOverlay } from "@/components/search/search-overlay";
 import { Button } from "@/components/ui/button";
 import { useCart } from "@/hooks/cart/use-cart";
 import { usePublicCoupons } from "@/hooks/coupons/use-public-coupons";
+import { useStoreSettings } from "@/providers/store-settings-provider";
 
 export function Header() {
   const pathname = usePathname();
   const { isAuthenticated, user, logout } = useAuth();
   const { data: cart } = useCart();
   const { coupons } = usePublicCoupons();
+  const { formatPrice } = useStoreSettings();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [userDropdownOpen, setUserDropdownOpen] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
@@ -50,7 +52,7 @@ export function Header() {
         {/* Dynamic Top Announcement Banner (Hidden if no active coupons in Admin) */}
         {activeCoupon && (
           <div className="bg-foreground text-background py-1.5 px-4 text-center text-xs font-semibold tracking-widest uppercase">
-            SALE IS LIVE! {activeCoupon.type === "PERCENTAGE" ? `${activeCoupon.value}% OFF` : `₹${activeCoupon.value} OFF`} - USE CODE {activeCoupon.code}
+            SALE IS LIVE! {activeCoupon.type === "PERCENTAGE" ? `${activeCoupon.value}% OFF` : `${formatPrice(activeCoupon.value)} OFF`} - USE CODE {activeCoupon.code}
           </div>
         )}
 

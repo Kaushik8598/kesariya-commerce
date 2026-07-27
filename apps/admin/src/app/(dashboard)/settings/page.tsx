@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import {
   Store,
@@ -10,8 +10,14 @@ import {
   CreditCard,
   Save,
   Loader2,
+  Upload,
+  X,
+  Share2,
+  PhoneCall,
+  Globe,
 } from "lucide-react";
 import api from "@/lib/api";
+import { uploadToCloudinary } from "@/lib/cloudinary";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -19,7 +25,11 @@ import { toast } from "sonner";
 
 export default function SettingsPage() {
   const queryClient = useQueryClient();
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const [activeTab, setActiveTab] = useState<"general" | "shipping" | "tax" | "notifications" | "payments">("general");
+
+  const [isUploadingLogo, setIsUploadingLogo] = useState(false);
+  const [uploadProgress, setUploadProgress] = useState(0);
 
   // Fetch Settings: GET /admin/settings
   const { data: allSettings, isLoading, isError } = useQuery<Record<string, any>>({
@@ -30,14 +40,23 @@ export default function SettingsPage() {
     },
   });
 
-  // Blank Form States (No static dummy data)
+  // Form States
   const [generalForm, setGeneralForm] = useState({
     storeName: "",
+    storeLogo: "",
     supportEmail: "",
     supportPhone: "",
     storeAddress: "",
-    currency: "INR (₹)",
+    storeDescription: "",
+    currency: "₹ (INR)",
     maintenanceMode: false,
+    socialLinks: {
+      instagram: "",
+      facebook: "",
+      twitter: "",
+      whatsapp: "",
+      youtube: "",
+    },
   });
 
   const [shippingForm, setShippingForm] = useState({
@@ -74,7 +93,14 @@ export default function SettingsPage() {
   useEffect(() => {
     if (allSettings) {
       if (allSettings.general && Object.keys(allSettings.general).length > 0) {
-        setGeneralForm((prev) => ({ ...prev, ...allSettings.general }));
+        setGeneralForm((prev) => ({
+          ...prev,
+          ...allSettings.general,
+          socialLinks: {
+            ...prev.socialLinks,
+            ...(allSettings.general.socialLinks || {}),
+          },
+        }));
       }
       if (allSettings.shipping && Object.keys(allSettings.shipping).length > 0) {
         setShippingForm((prev) => ({ ...prev, ...allSettings.shipping }));
@@ -90,6 +116,46 @@ export default function SettingsPage() {
       }
     }
   }, [allSettings]);
+
+  // Direct Logo Upload
+  const handleLogoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (!file.type.startsWith("image/")) {
+      toast.error("Please select a valid image file for logo");
+      return;
+    }
+
+    setIsUploadingLogo(true);
+    setUploadProgress(0);
+
+    try {
+      const result = await uploadToCloudinary(file, {
+        folder: "kesariya/store",
+        onProgress: (pct) => setUploadProgress(pct),
+      });
+      setGeneralForm((prev) => ({
+        ...prev,
+        storeLogo: result.secureUrl || result.url,
+      }));
+      toast.success("Store Logo uploaded successfully!");
+    } catch (err: any) {
+      console.warn("Cloudinary upload fallback:", err);
+      const reader = new FileReader();
+      reader.onload = () => {
+        setGeneralForm((prev) => ({
+          ...prev,
+          storeLogo: reader.result as string,
+        }));
+        toast.success("Logo attached!");
+      };
+      reader.readAsDataURL(file);
+    } finally {
+      setIsUploadingLogo(false);
+      if (fileInputRef.current) fileInputRef.current.value = "";
+    }
+  };
 
   // Update Settings Mutation: PATCH /admin/settings/:key
   const updateSettingMutation = useMutation({
@@ -118,7 +184,7 @@ export default function SettingsPage() {
           Store Settings & Configuration Hub
         </h1>
         <p className="text-xs text-muted-foreground mt-1">
-          Manage store settings, shipping rates, GST tax rules, SMS notifications, and payment gateways.
+          Manage general store details, logos, social links, maintenance mode, shipping rates, GST tax rules, and payments.
         </p>
       </div>
 
@@ -201,112 +267,311 @@ export default function SettingsPage() {
         <>
           {/* TAB 1: GENERAL STORE INFO */}
           {activeTab === "general" && (
-            <Card className="p-6 space-y-6 max-w-3xl">
+            <Card className="p-6 space-y-6 max-w-4xl">
               <div className="flex items-center justify-between border-b border-border pb-3">
                 <div>
                   <h2 className="text-base font-bold text-foreground font-heading">
                     General Store Information
                   </h2>
                   <p className="text-xs text-muted-foreground mt-0.5">
-                    Basic details displayed on customer invoices, emails, and storefront footers.
+                    Basic details displayed dynamically across storefront header, footer, invoices, and maintenance mode.
                   </p>
                 </div>
                 <Badge variant={generalForm.maintenanceMode ? "warning" : "success"}>
-                  {generalForm.maintenanceMode ? "Maintenance" : "Live Store"}
+                  {generalForm.maintenanceMode ? "Maintenance Mode ON" : "Store Live"}
                 </Badge>
               </div>
 
-              <div className="space-y-4">
+              <div className="space-y-6">
+                {/* Store Logo Upload & Preview */}
                 <div>
-                  <label className="text-xs font-semibold text-foreground mb-1 block">
-                    Store Name
+                  <label className="text-xs font-semibold text-foreground mb-1.5 block">
+                    Store Main Brand Logo
                   </label>
-                  <input
-                    type="text"
-                    value={generalForm.storeName}
-                    onChange={(e) => setGeneralForm({ ...generalForm, storeName: e.target.value })}
-                    placeholder="Enter store name..."
-                    className="h-10 w-full px-3.5 rounded-lg bg-secondary border border-border text-xs text-foreground font-semibold outline-none focus:border-primary"
-                  />
+                  <div className="space-y-2">
+                    <input
+                      type="file"
+                      ref={fileInputRef}
+                      accept="image/*"
+                      onChange={handleLogoUpload}
+                      className="hidden"
+                    />
+                    <div className="flex gap-2">
+                      <input
+                        type="text"
+                        value={generalForm.storeLogo}
+                        onChange={(e) =>
+                          setGeneralForm({ ...generalForm, storeLogo: e.target.value })
+                        }
+                        placeholder="Paste logo image URL or click upload →"
+                        className="h-10 flex-1 px-3.5 rounded-lg bg-secondary border border-border text-xs text-foreground font-mono placeholder:text-muted-foreground focus:outline-none focus:border-primary"
+                      />
+                      <Button
+                        type="button"
+                        variant="outline"
+                        onClick={() => fileInputRef.current?.click()}
+                        disabled={isUploadingLogo}
+                        className="h-10 gap-1.5 shrink-0"
+                      >
+                        {isUploadingLogo ? (
+                          <Loader2 className="h-4 w-4 animate-spin text-primary" />
+                        ) : (
+                          <Upload className="h-4 w-4" />
+                        )}
+                        <span>{isUploadingLogo ? `${uploadProgress}%` : "Upload Logo"}</span>
+                      </Button>
+                    </div>
+
+                    {generalForm.storeLogo && (
+                      <div className="relative mt-2 h-20 w-52 rounded-xl border border-border bg-secondary p-2 flex items-center justify-center overflow-hidden group shadow-sm">
+                        {/* eslint-disable-next-line @next/next/no-img-element */}
+                        <img
+                          src={generalForm.storeLogo}
+                          alt="Store Logo Preview"
+                          className="h-full w-full object-contain"
+                        />
+                        <button
+                          type="button"
+                          onClick={() => setGeneralForm({ ...generalForm, storeLogo: "" })}
+                          className="absolute top-1.5 right-1.5 h-6 w-6 rounded-full bg-black/70 text-white flex items-center justify-center hover:bg-rose-600 transition-colors"
+                          title="Remove logo"
+                        >
+                          <X className="h-3.5 w-3.5" />
+                        </button>
+                      </div>
+                    )}
+                  </div>
                 </div>
 
-                <div className="grid grid-cols-2 gap-4">
+                {/* Store Name, Email, Phone */}
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                   <div>
                     <label className="text-xs font-semibold text-foreground mb-1 block">
-                      Customer Support Email
+                      Store Name *
+                    </label>
+                    <input
+                      type="text"
+                      required
+                      value={generalForm.storeName}
+                      onChange={(e) =>
+                        setGeneralForm({ ...generalForm, storeName: e.target.value })
+                      }
+                      placeholder="e.g. Kesariya Studio"
+                      className="h-10 w-full px-3.5 rounded-lg bg-secondary border border-border text-xs text-foreground font-semibold outline-none focus:border-primary"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="text-xs font-semibold text-foreground mb-1 block">
+                      Support Email *
                     </label>
                     <input
                       type="email"
+                      required
                       value={generalForm.supportEmail}
-                      onChange={(e) => setGeneralForm({ ...generalForm, supportEmail: e.target.value })}
-                      placeholder="support@example.com"
+                      onChange={(e) =>
+                        setGeneralForm({ ...generalForm, supportEmail: e.target.value })
+                      }
+                      placeholder="support@kesariya.com"
                       className="h-10 w-full px-3.5 rounded-lg bg-secondary border border-border text-xs text-foreground outline-none focus:border-primary"
                     />
                   </div>
 
                   <div>
                     <label className="text-xs font-semibold text-foreground mb-1 block">
-                      Support Phone / WhatsApp
+                      Support Phone / Mobile Number *
                     </label>
                     <input
                       type="text"
+                      required
                       value={generalForm.supportPhone}
-                      onChange={(e) => setGeneralForm({ ...generalForm, supportPhone: e.target.value })}
-                      placeholder="+91 9876543210"
+                      onChange={(e) =>
+                        setGeneralForm({ ...generalForm, supportPhone: e.target.value })
+                      }
+                      placeholder="+91 9106958429"
                       className="h-10 w-full px-3.5 rounded-lg bg-secondary border border-border text-xs text-foreground outline-none focus:border-primary font-mono"
                     />
                   </div>
                 </div>
 
-                <div>
-                  <label className="text-xs font-semibold text-foreground mb-1 block">
-                    Physical Store Address
-                  </label>
-                  <textarea
-                    rows={3}
-                    value={generalForm.storeAddress}
-                    onChange={(e) => setGeneralForm({ ...generalForm, storeAddress: e.target.value })}
-                    placeholder="Enter store address..."
-                    className="w-full p-3 rounded-lg bg-secondary border border-border text-xs text-foreground outline-none focus:border-primary"
-                  />
-                </div>
-
-                <div className="grid grid-cols-2 gap-4 pt-2">
+                {/* Description & Address */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
                     <label className="text-xs font-semibold text-foreground mb-1 block">
-                      Default Store Currency
+                      Store Description (Displayed in Footer & About)
                     </label>
-                    <input
-                      type="text"
-                      value={generalForm.currency}
-                      readOnly
-                      className="h-10 w-full px-3.5 rounded-lg bg-secondary/60 border border-border text-xs text-muted-foreground font-bold outline-none cursor-not-allowed"
+                    <textarea
+                      rows={3}
+                      value={generalForm.storeDescription}
+                      onChange={(e) =>
+                        setGeneralForm({ ...generalForm, storeDescription: e.target.value })
+                      }
+                      placeholder="Premium handcrafted Indian ethnic wear studio..."
+                      className="w-full p-3 rounded-lg bg-secondary border border-border text-xs text-foreground outline-none focus:border-primary resize-none"
                     />
                   </div>
 
                   <div>
                     <label className="text-xs font-semibold text-foreground mb-1 block">
-                      Maintenance Mode
+                      Physical Store Address (Displayed in Footer & Contact)
+                    </label>
+                    <textarea
+                      rows={3}
+                      value={generalForm.storeAddress}
+                      onChange={(e) =>
+                        setGeneralForm({ ...generalForm, storeAddress: e.target.value })
+                      }
+                      placeholder="Surat, Gujarat, India..."
+                      className="w-full p-3 rounded-lg bg-secondary border border-border text-xs text-foreground outline-none focus:border-primary resize-none"
+                    />
+                  </div>
+                </div>
+
+                {/* Currency & Maintenance Mode */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-2">
+                  <div>
+                    <label className="text-xs font-semibold text-foreground mb-1 block">
+                      Default Currency Symbol & Code *
+                    </label>
+                    <select
+                      value={generalForm.currency}
+                      onChange={(e) => setGeneralForm({ ...generalForm, currency: e.target.value })}
+                      className="h-10 w-full px-3.5 rounded-lg bg-secondary border border-border text-xs text-foreground font-bold outline-none focus:border-primary"
+                    >
+                      <option value="₹ (INR)">₹ (INR - Indian Rupee)</option>
+                      <option value="$ (USD)">$ (USD - US Dollar)</option>
+                      <option value="€ (EUR)">€ (EUR - Euro)</option>
+                      <option value="£ (GBP)">£ (GBP - British Pound)</option>
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className="text-xs font-semibold text-foreground mb-1 block">
+                      Maintenance Mode *
                     </label>
                     <select
                       value={generalForm.maintenanceMode ? "true" : "false"}
-                      onChange={(e) => setGeneralForm({ ...generalForm, maintenanceMode: e.target.value === "true" })}
+                      onChange={(e) =>
+                        setGeneralForm({ ...generalForm, maintenanceMode: e.target.value === "true" })
+                      }
                       className="h-10 w-full px-3.5 rounded-lg bg-secondary border border-border text-xs text-foreground outline-none focus:border-primary"
                     >
-                      <option value="false">OFF (Store Online)</option>
-                      <option value="true">ON (Store Under Maintenance)</option>
+                      <option value="false">OFF (Store Online & Active)</option>
+                      <option value="true">ON (Show Maintenance Screen on Storefront)</option>
                     </select>
+                  </div>
+                </div>
+
+                {/* Social Media Links Section */}
+                <div className="space-y-3 pt-4 border-t border-border">
+                  <div className="flex items-center gap-2">
+                    <Share2 className="h-4 w-4 text-primary" />
+                    <span className="text-xs font-bold text-foreground uppercase tracking-wider">
+                      Dynamic Storefront Social Media Links
+                    </span>
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                    <div>
+                      <label className="text-xs font-semibold text-foreground mb-1 flex items-center gap-1.5">
+                        <Globe className="h-3.5 w-3.5 text-rose-400" /> Instagram Link
+                      </label>
+                      <input
+                        type="text"
+                        value={generalForm.socialLinks?.instagram || ""}
+                        onChange={(e) =>
+                          setGeneralForm({
+                            ...generalForm,
+                            socialLinks: { ...generalForm.socialLinks, instagram: e.target.value },
+                          })
+                        }
+                        placeholder="https://instagram.com/kesariyastudio"
+                        className="h-9 w-full px-3 rounded-lg bg-secondary border border-border text-xs text-foreground font-mono outline-none focus:border-primary"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="text-xs font-semibold text-foreground mb-1 flex items-center gap-1.5">
+                        <Globe className="h-3.5 w-3.5 text-blue-400" /> Facebook Link
+                      </label>
+                      <input
+                        type="text"
+                        value={generalForm.socialLinks?.facebook || ""}
+                        onChange={(e) =>
+                          setGeneralForm({
+                            ...generalForm,
+                            socialLinks: { ...generalForm.socialLinks, facebook: e.target.value },
+                          })
+                        }
+                        placeholder="https://facebook.com/kesariyastudio"
+                        className="h-9 w-full px-3 rounded-lg bg-secondary border border-border text-xs text-foreground font-mono outline-none focus:border-primary"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="text-xs font-semibold text-foreground mb-1 flex items-center gap-1.5">
+                        <PhoneCall className="h-3.5 w-3.5 text-emerald-400" /> WhatsApp Link / Number
+                      </label>
+                      <input
+                        type="text"
+                        value={generalForm.socialLinks?.whatsapp || ""}
+                        onChange={(e) =>
+                          setGeneralForm({
+                            ...generalForm,
+                            socialLinks: { ...generalForm.socialLinks, whatsapp: e.target.value },
+                          })
+                        }
+                        placeholder="https://wa.me/919106958429"
+                        className="h-9 w-full px-3 rounded-lg bg-secondary border border-border text-xs text-foreground font-mono outline-none focus:border-primary"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="text-xs font-semibold text-foreground mb-1 flex items-center gap-1.5">
+                        <Globe className="h-3.5 w-3.5 text-sky-400" /> Twitter / X Link
+                      </label>
+                      <input
+                        type="text"
+                        value={generalForm.socialLinks?.twitter || ""}
+                        onChange={(e) =>
+                          setGeneralForm({
+                            ...generalForm,
+                            socialLinks: { ...generalForm.socialLinks, twitter: e.target.value },
+                          })
+                        }
+                        placeholder="https://x.com/kesariyastudio"
+                        className="h-9 w-full px-3 rounded-lg bg-secondary border border-border text-xs text-foreground font-mono outline-none focus:border-primary"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="text-xs font-semibold text-foreground mb-1 flex items-center gap-1.5">
+                        <Globe className="h-3.5 w-3.5 text-rose-500" /> YouTube Channel Link
+                      </label>
+                      <input
+                        type="text"
+                        value={generalForm.socialLinks?.youtube || ""}
+                        onChange={(e) =>
+                          setGeneralForm({
+                            ...generalForm,
+                            socialLinks: { ...generalForm.socialLinks, youtube: e.target.value },
+                          })
+                        }
+                        placeholder="https://youtube.com/@kesariyastudio"
+                        className="h-9 w-full px-3 rounded-lg bg-secondary border border-border text-xs text-foreground font-mono outline-none focus:border-primary"
+                      />
+                    </div>
                   </div>
                 </div>
 
                 <div className="pt-4 border-t border-border flex justify-end">
                   <Button
                     onClick={() => handleSaveGroup("general", generalForm)}
-                    disabled={updateSettingMutation.isPending}
-                    className="gap-2"
+                    disabled={updateSettingMutation.isPending || isUploadingLogo}
+                    className="gap-2 px-6"
                   >
                     <Save className="h-4 w-4" />
-                    <span>{updateSettingMutation.isPending ? "Saving..." : "Save General Settings"}</span>
+                    <span>{updateSettingMutation.isPending ? "Saving..." : "Save General Info Settings"}</span>
                   </Button>
                 </div>
               </div>

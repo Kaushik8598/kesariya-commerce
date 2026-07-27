@@ -5,20 +5,20 @@ import { FeaturesStrip } from "@/components/home/features-strip";
 import { CategoriesGrid } from "@/components/home/categories-grid";
 import { FeaturedProducts } from "@/components/home/featured-products";
 import { NewArrivals } from "@/components/home/new-arrivals";
+import { MiddleBannerCarousel } from "@/components/home/middle-banner-carousel";
 import { OffersBanner } from "@/components/home/offers-banner";
 import { Testimonials } from "@/components/home/testimonials";
-// import { NewsletterSection } from "@/components/home/newsletter-section";
 
 export const metadata: Metadata = {
-  title: "Kesariya — Premium Indian Fashion | Handcrafted Clothing",
+  title: "Kesariya — Premium Men's Linen & Handcrafted Shirts",
   description:
-    "Discover premium handcrafted fashion at Kesariya. Shop our collection of shirts, kurtas, ethnic wear and more. Heritage woven into every thread.",
+    "Discover premium handcrafted men's shirts at Kesariya. Shop our collection of pure linen, cotton block prints, and refined apparel.",
   keywords: [
-    "Indian fashion",
+    "Men's shirts",
+    "linen shirts",
     "handcrafted clothing",
-    "premium shirts",
-    "kurtas",
-    "ethnic wear",
+    "block print shirts",
+    "ethnic menswear",
     "Kesariya",
   ],
 };
@@ -31,9 +31,9 @@ export default function HomePage() {
       <CategoriesGrid />
       <FeaturedProducts />
       <NewArrivals />
+      <MiddleBannerCarousel />
       <OffersBanner />
       <Testimonials />
-      {/* <NewsletterSection /> */}
     </>
   );
 }

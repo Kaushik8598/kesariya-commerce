@@ -17,6 +17,7 @@ import {
   Home,
   Image as ImageIcon,
   Ticket,
+  MessageSquareQuote,
   FileText,
   BarChart3,
   Search,
@@ -61,6 +62,7 @@ const navGroups = [
     label: "Storefront",
     items: [
       { label: "Coupons", href: "/coupons", icon: Ticket },
+      { label: "Testimonials", href: "/testimonials", icon: MessageSquareQuote },
       { label: "CMS Pages", href: "/cms", icon: FileText },
       { label: "Newsletter", href: "/newsletter", icon: Mail },
     ],

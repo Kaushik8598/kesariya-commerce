@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useCart, useCheckout } from "@/hooks/cart/use-cart";
 import { useAuth } from "@/providers/auth-provider";
+import { useStoreSettings } from "@/providers/store-settings-provider";
 import { Button } from "@/components/ui/button";
 import { Loader2, ArrowLeft, Ruler, MapPin, Plus } from "lucide-react";
 import Image from "next/image";
@@ -16,6 +17,7 @@ import { useAddresses } from "@/hooks/profile/use-profile";
 export default function CheckoutPage() {
   const router = useRouter();
   const { isAuthenticated } = useAuth();
+  const { formatPrice, settings } = useStoreSettings();
   const { data: cart, isLoading } = useCart();
   const { mutate: processCheckout, isPending: isCheckingOut } = useCheckout();
   const { data: addresses, isLoading: isLoadingAddresses } = useAddresses();
@@ -230,7 +232,7 @@ export default function CheckoutPage() {
                         <span>Fit: {item.measurementProfile.name}</span>
                       </div>
                     )}
-                    <p className="font-bold text-sm mt-1">₹{Number(item.price).toFixed(2)}</p>
+                    <p className="font-bold text-sm mt-1">{formatPrice(Number(item.price))}</p>
                   </div>
                 </div>
               ))}
@@ -239,31 +241,34 @@ export default function CheckoutPage() {
             <div className="border-t border-border pt-6 space-y-4 text-sm">
               <div className="flex justify-between">
                 <span className="text-foreground/70">Subtotal</span>
-                <span className="font-semibold">₹{Number(cart.summary.subtotal).toFixed(2)}</span>
+                <span className="font-semibold">{formatPrice(Number(cart.summary.subtotal))}</span>
               </div>
 
               {cart.coupon && (
                 <div className="flex justify-between text-primary font-medium">
                   <span>Discount ({cart.coupon.code})</span>
-                  <span>-₹{Number(cart.summary.discount).toFixed(2)}</span>
+                  <span>-{formatPrice(Number(cart.summary.discount))}</span>
                 </div>
               )}
 
               <div className="flex justify-between">
-                <span className="text-foreground/70">Taxes</span>
-                <span className="font-semibold">₹{Number(cart.summary.tax).toFixed(2)}</span>
+                <span className="text-foreground/70">
+                  GST Tax ({cart.summary?.apparelGstRate ?? settings.tax?.apparelGstRate ?? 0}%
+                  {cart.summary?.pricesIncludeGst ?? settings.tax?.pricesIncludeGst ? " Incl." : ""})
+                </span>
+                <span className="font-semibold">{formatPrice(Number(cart.summary.tax))}</span>
               </div>
 
               <div className="flex justify-between">
-                <span className="text-foreground/70">Shipping</span>
+                <span className="text-foreground/70">Shipping Fee</span>
                 <span className="font-semibold">
-                  {cart.summary.shipping > 0 ? `₹${Number(cart.summary.shipping).toFixed(2)}` : 'FREE'}
+                  {cart.summary.shipping > 0 ? formatPrice(Number(cart.summary.shipping)) : 'FREE'}
                 </span>
               </div>
 
               <div className="border-t border-border pt-4 flex justify-between">
                 <span className="font-bold text-base uppercase tracking-widest">Total to Pay</span>
-                <span className="font-black text-xl">₹{Number(cart.summary.total).toFixed(2)}</span>
+                <span className="font-black text-xl">{formatPrice(Number(cart.summary.total))}</span>
               </div>
             </div>
           </div>

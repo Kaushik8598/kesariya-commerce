@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import {
   Plus,
@@ -18,12 +18,16 @@ import {
   ChevronRight,
   ChevronsLeft,
   ChevronsRight,
-  Layers,
+  Upload,
+  X,
+  Lock,
 } from "lucide-react";
 import api from "@/lib/api";
+import { uploadToCloudinary } from "@/lib/cloudinary";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
+import { DataTablePagination } from "@/components/ui/data-table-pagination";
 import {
   Table,
   TableHeader,
@@ -58,8 +62,17 @@ interface PaginationMeta {
   totalPages: number;
 }
 
+const generateSlug = (str: string) => {
+  return str
+    .toLowerCase()
+    .trim()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/(^-|-$)+/g, "");
+};
+
 export default function BrandsPage() {
   const queryClient = useQueryClient();
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Search, Filter & Pagination State
   const [searchTerm, setSearchTerm] = useState("");
@@ -70,10 +83,14 @@ export default function BrandsPage() {
   // Add / Edit Modal State
   const [showAddEditModal, setShowAddEditModal] = useState(false);
   const [editingBrand, setEditingBrand] = useState<Brand | null>(null);
+  const [isUploading, setIsUploading] = useState(false);
+  const [uploadProgress, setUploadProgress] = useState(0);
+
   const [formData, setFormData] = useState({
     name: "",
     slug: "",
     description: "",
+    logo: "",
     isActive: true,
   });
 
@@ -115,6 +132,41 @@ export default function BrandsPage() {
     page: 1,
     limit: 10,
     totalPages: 1,
+  };
+
+  // Handle direct logo file upload
+  const handleLogoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (!file.type.startsWith("image/")) {
+      toast.error("Please select a valid image file");
+      return;
+    }
+
+    setIsUploading(true);
+    setUploadProgress(0);
+
+    try {
+      const result = await uploadToCloudinary(file, {
+        folder: "kesariya/brands",
+        onProgress: (pct) => setUploadProgress(pct),
+      });
+      setFormData((prev) => ({ ...prev, logo: result.secureUrl || result.url }));
+      toast.success("Brand logo uploaded!");
+    } catch (err: any) {
+      console.warn("Cloudinary upload fallback:", err);
+      // Fallback to Data URL if Cloudinary unsigned preset is missing
+      const reader = new FileReader();
+      reader.onload = () => {
+        setFormData((prev) => ({ ...prev, logo: reader.result as string }));
+        toast.success("Logo attached!");
+      };
+      reader.readAsDataURL(file);
+    } finally {
+      setIsUploading(false);
+      if (fileInputRef.current) fileInputRef.current.value = "";
+    }
   };
 
   // Create Brand Mutation: POST /admin/brands
@@ -167,7 +219,7 @@ export default function BrandsPage() {
 
   const openAddModal = () => {
     setEditingBrand(null);
-    setFormData({ name: "", slug: "", description: "", isActive: true });
+    setFormData({ name: "", slug: "", description: "", logo: "", isActive: true });
     setShowAddEditModal(true);
   };
 
@@ -177,6 +229,7 @@ export default function BrandsPage() {
       name: brand.name,
       slug: brand.slug,
       description: brand.description || "",
+      logo: brand.logo || "",
       isActive: brand.isActive,
     });
     setShowAddEditModal(true);
@@ -185,6 +238,15 @@ export default function BrandsPage() {
   const closeFormModal = () => {
     setShowAddEditModal(false);
     setEditingBrand(null);
+  };
+
+  const handleNameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const newName = e.target.value;
+    setFormData((prev) => ({
+      ...prev,
+      name: newName,
+      slug: generateSlug(newName),
+    }));
   };
 
   const handleFormSubmit = (e: React.FormEvent) => {
@@ -196,8 +258,9 @@ export default function BrandsPage() {
 
     const payload = {
       name: formData.name,
-      slug: formData.slug || undefined,
+      slug: formData.slug || generateSlug(formData.name),
       description: formData.description,
+      logo: formData.logo || undefined,
       isActive: formData.isActive,
     };
 
@@ -222,7 +285,7 @@ export default function BrandsPage() {
             Brands Management
           </h1>
           <p className="text-xs text-muted-foreground mt-1">
-            Manage manufacturer labels, designer brands, and store partner listings.
+            Manage manufacturer labels, brand logos, designer partners, and active listings.
           </p>
         </div>
         <Button onClick={openAddModal} className="gap-2 shrink-0">
@@ -230,7 +293,7 @@ export default function BrandsPage() {
         </Button>
       </div>
 
-      {/* Overview Stat Cards (No Page Number Card) */}
+      {/* Overview Stat Cards */}
       <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
         <Card className="p-5 !flex-row items-center justify-between">
           <div className="space-y-1">
@@ -330,7 +393,7 @@ export default function BrandsPage() {
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead className="py-3.5 pl-6">Brand Name</TableHead>
+              <TableHead className="py-3.5 pl-6">Brand</TableHead>
               <TableHead className="py-3.5">Slug</TableHead>
               <TableHead className="py-3.5">Total Products</TableHead>
               <TableHead className="py-3.5">Status</TableHead>
@@ -366,7 +429,21 @@ export default function BrandsPage() {
               brandsList.map((brand) => (
                 <TableRow key={brand.id}>
                   <TableCell className="py-4 pl-6 font-bold text-xs text-foreground">
-                    {brand.name}
+                    <div className="flex items-center gap-3">
+                      <div className="h-12 w-12 aspect-square rounded-xl border border-border bg-secondary flex items-center justify-center overflow-hidden shrink-0 shadow-sm p-1">
+                        {brand.logo ? (
+                          /* eslint-disable-next-line @next/next/no-img-element */
+                          <img
+                            src={brand.logo}
+                            alt={brand.name}
+                            className="h-full w-full object-contain aspect-square"
+                          />
+                        ) : (
+                          <Award className="h-5 w-5 text-muted-foreground/60" />
+                        )}
+                      </div>
+                      <span>{brand.name}</span>
+                    </div>
                   </TableCell>
                   <TableCell className="py-4 font-mono text-[11px] text-muted-foreground">
                     {brand.slug}
@@ -407,76 +484,16 @@ export default function BrandsPage() {
           </TableBody>
         </Table>
 
-        {/* Bottom Pagination Bar with Integrated Per-Page Selector */}
-        {pagination.total > 0 && (
-          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between px-6 py-4 border-t border-border bg-card/40">
-            <div className="flex items-center gap-4">
-              <div className="text-xs text-muted-foreground font-medium">
-                Showing <span className="font-bold text-foreground">{startItemIndex}</span> to{" "}
-                <span className="font-bold text-foreground">{endItemIndex}</span> of{" "}
-                <span className="font-bold text-foreground">{pagination.total}</span> brands
-              </div>
-
-              {/* Rows Per Page selector in bottom pagination bar */}
-              <div className="flex items-center gap-2 border-l border-border pl-4">
-                <span className="text-xs text-muted-foreground font-semibold">Rows per page:</span>
-                <select
-                  value={limit}
-                  onChange={(e) => {
-                    setLimit(Number(e.target.value));
-                    setPage(1);
-                  }}
-                  className="h-8 rounded-md border border-border bg-card px-2.5 text-xs font-semibold text-foreground outline-none cursor-pointer focus:border-primary"
-                >
-                  <option value={5}>5</option>
-                  <option value={10}>10</option>
-                  <option value={25}>25</option>
-                  <option value={50}>50</option>
-                </select>
-              </div>
-            </div>
-
-            <div className="flex items-center gap-1.5">
-              <Button
-                variant="outline"
-                size="xs"
-                onClick={() => setPage(1)}
-                disabled={page <= 1}
-              >
-                <ChevronsLeft className="h-3.5 w-3.5" />
-              </Button>
-              <Button
-                variant="outline"
-                size="xs"
-                onClick={() => setPage((p) => Math.max(1, p - 1))}
-                disabled={page <= 1}
-              >
-                <ChevronLeft className="h-3.5 w-3.5 mr-1" /> Prev
-              </Button>
-
-              <span className="px-3 text-xs font-bold text-foreground">
-                {page} / {pagination.totalPages}
-              </span>
-
-              <Button
-                variant="outline"
-                size="xs"
-                onClick={() => setPage((p) => Math.min(pagination.totalPages, p + 1))}
-                disabled={page >= pagination.totalPages}
-              >
-                Next <ChevronRight className="h-3.5 w-3.5 ml-1" />
-              </Button>
-              <Button
-                variant="outline"
-                size="xs"
-                onClick={() => setPage(pagination.totalPages)}
-                disabled={page >= pagination.totalPages}
-              >
-                <ChevronsRight className="h-3.5 w-3.5" />
-              </Button>
-            </div>
-          </div>
-        )}
+        {/* Bottom Pagination Bar */}
+        <DataTablePagination
+          page={page}
+          limit={limit}
+          total={pagination.total}
+          totalPages={pagination.totalPages}
+          onPageChange={setPage}
+          onLimitChange={setLimit}
+          entityName="brands"
+        />
       </Card>
 
       {/* Add / Edit Brand Modal */}
@@ -488,7 +505,7 @@ export default function BrandsPage() {
             </DialogTitle>
             <DialogDescription>
               {editingBrand
-                ? `Update details and status for "${editingBrand.name}"`
+                ? `Update details, logo image, and status for "${editingBrand.name}"`
                 : "Fill details to add a new designer or supplier brand"}
             </DialogDescription>
           </DialogHeader>
@@ -502,23 +519,86 @@ export default function BrandsPage() {
                 type="text"
                 required
                 value={formData.name}
-                onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                onChange={handleNameChange}
                 placeholder="e.g. Kesariya Studio"
                 className="h-10 w-full px-3.5 rounded-lg bg-secondary border border-border text-xs text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary"
               />
             </div>
 
             <div>
-              <label className="text-xs font-semibold text-foreground mb-1.5 block">
-                Slug (URL Identifier)
-              </label>
+              <div className="flex items-center justify-between mb-1.5">
+                <label className="text-xs font-semibold text-foreground">
+                  Slug (Auto-generated from Name)
+                </label>
+                <span className="text-[10px] text-muted-foreground flex items-center gap-1">
+                  <Lock className="h-3 w-3" /> Auto-Generated
+                </span>
+              </div>
               <input
                 type="text"
+                disabled
                 value={formData.slug}
-                onChange={(e) => setFormData({ ...formData, slug: e.target.value })}
                 placeholder="kesariya-studio"
-                className="h-10 w-full px-3.5 rounded-lg bg-secondary border border-border text-xs text-foreground font-mono placeholder:text-muted-foreground focus:outline-none focus:border-primary"
+                className="h-10 w-full px-3.5 rounded-lg bg-muted/60 border border-border text-xs text-foreground font-mono cursor-not-allowed opacity-75"
               />
+            </div>
+
+            {/* Brand Logo Upload & Preview */}
+            <div>
+              <label className="text-xs font-semibold text-foreground mb-1.5 block">
+                Brand Logo / Image (Square View)
+              </label>
+              <div className="space-y-2">
+                <input
+                  type="file"
+                  ref={fileInputRef}
+                  accept="image/*"
+                  onChange={handleLogoUpload}
+                  className="hidden"
+                />
+                <div className="flex gap-2">
+                  <input
+                    type="text"
+                    value={formData.logo}
+                    onChange={(e) => setFormData({ ...formData, logo: e.target.value })}
+                    placeholder="Paste logo URL or click upload →"
+                    className="h-10 flex-1 px-3.5 rounded-lg bg-secondary border border-border text-xs text-foreground font-mono placeholder:text-muted-foreground focus:outline-none focus:border-primary"
+                  />
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={() => fileInputRef.current?.click()}
+                    disabled={isUploading}
+                    className="h-10 gap-1.5 shrink-0"
+                  >
+                    {isUploading ? (
+                      <Loader2 className="h-4 w-4 animate-spin text-primary" />
+                    ) : (
+                      <Upload className="h-4 w-4" />
+                    )}
+                    <span>{isUploading ? `${uploadProgress}%` : "Upload Logo"}</span>
+                  </Button>
+                </div>
+
+                {formData.logo && (
+                  <div className="relative mt-2 h-28 w-28 aspect-square rounded-xl border border-border bg-secondary p-2 flex items-center justify-center overflow-hidden group shadow-sm">
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img
+                      src={formData.logo}
+                      alt="Brand Logo Preview"
+                      className="h-full w-full object-contain aspect-square"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setFormData({ ...formData, logo: "" })}
+                      className="absolute top-1.5 right-1.5 h-6 w-6 rounded-full bg-black/70 text-white flex items-center justify-center hover:bg-rose-600 transition-colors"
+                      title="Remove logo"
+                    >
+                      <X className="h-3.5 w-3.5" />
+                    </button>
+                  </div>
+                )}
+              </div>
             </div>
 
             <div>
@@ -557,7 +637,7 @@ export default function BrandsPage() {
             </Button>
             <Button
               type="submit"
-              disabled={createMutation.isPending || editMutation.isPending}
+              disabled={createMutation.isPending || editMutation.isPending || isUploading}
             >
               {createMutation.isPending || editMutation.isPending
                 ? "Saving..."

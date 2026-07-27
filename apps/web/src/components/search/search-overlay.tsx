@@ -23,7 +23,8 @@ export function SearchOverlay({ isOpen, onClose }: SearchOverlayProps) {
   const inputRef = useRef<HTMLInputElement>(null);
 
   const { data, loading } = useProducts(
-    debouncedQuery.trim() ? { q: debouncedQuery.trim(), limit: 5 } : undefined
+    { q: debouncedQuery.trim(), limit: 5 },
+    { enabled: isOpen && Boolean(debouncedQuery.trim()) }
   );
 
   const products = data?.products || [];

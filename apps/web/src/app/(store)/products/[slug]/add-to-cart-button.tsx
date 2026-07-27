@@ -4,6 +4,7 @@ import { useState, useMemo } from "react";
 import { ShoppingBag, Loader2 } from "lucide-react";
 import { VariantSelector } from "@/components/products/variant-selector";
 import { Button } from "@/components/ui/button";
+import { Price } from "@/components/ui/price";
 import { WishlistButton } from "@/components/wishlist/wishlist-button";
 import type { Product } from "@/types/product";
 import { useAddToCart } from "@/hooks/cart/use-cart";
@@ -117,8 +118,33 @@ export function AddToCartButton({ product }: AddToCartButtonProps) {
     });
   };
 
+  // Active price: selected variant price -> first variant price -> basePrice
+  const activePrice = useMemo(() => {
+    if (selectedVariant && selectedVariant.price !== undefined && selectedVariant.price !== null) {
+      return Number(selectedVariant.price);
+    }
+    if (hasVariants && product.variants && product.variants.length > 0 && product.variants[0].price !== undefined && product.variants[0].price !== null) {
+      return Number(product.variants[0].price);
+    }
+    return Number(product.basePrice);
+  }, [selectedVariant, hasVariants, product.variants, product.basePrice]);
+
   return (
     <div className="space-y-8">
+      {/* Dynamic Price Display */}
+      <div className="flex items-center gap-4">
+        <Price
+          basePrice={activePrice}
+          salePrice={product.salePrice ? Number(product.salePrice) : null}
+          className="text-3xl font-extrabold text-foreground"
+        />
+        {selectedVariant && (
+          <span className="text-xs font-semibold text-muted-foreground font-mono bg-secondary px-2.5 py-1 rounded-md">
+            SKU: {selectedVariant.sku}
+          </span>
+        )}
+      </div>
+
       {hasVariants && (
         <VariantSelector
           variants={product.variants}

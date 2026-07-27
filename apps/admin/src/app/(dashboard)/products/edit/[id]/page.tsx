@@ -12,9 +12,5 @@ export const metadata = {
 export default async function EditProductPage({ params }: PageProps) {
   const { id } = await params;
 
-  return (
-    <div style={{ padding: "32px 40px", minHeight: "100vh" }}>
-      <ProductForm productId={id} />
-    </div>
-  );
+  return <ProductForm productId={id} />;
 }

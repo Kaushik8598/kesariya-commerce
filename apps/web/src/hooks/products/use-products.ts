@@ -2,12 +2,22 @@ import { useState, useEffect } from "react";
 import { productService } from "@/services/product.service";
 import type { Product, ProductQueryParams, ProductListResponse } from "@/types/product";
 
-export function useProducts(params?: ProductQueryParams) {
+export function useProducts(
+  params?: ProductQueryParams,
+  options?: { enabled?: boolean }
+) {
   const [data, setData] = useState<ProductListResponse | null>(null);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
   const [error, setError] = useState<Error | null>(null);
 
+  const enabled = options?.enabled !== false;
+
   useEffect(() => {
+    if (!enabled) {
+      setLoading(false);
+      return;
+    }
+
     let mounted = true;
 
     const fetchProducts = async () => {
@@ -34,7 +44,7 @@ export function useProducts(params?: ProductQueryParams) {
     return () => {
       mounted = false;
     };
-  }, [JSON.stringify(params)]);
+  }, [JSON.stringify(params), enabled]);
 
   return { data, loading, error };
 }

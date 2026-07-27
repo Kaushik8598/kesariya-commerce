@@ -6,9 +6,5 @@ export const metadata = {
 };
 
 export default function NewProductPage() {
-  return (
-    <div style={{ padding: "32px 40px", minHeight: "100vh" }}>
-      <ProductForm />
-    </div>
-  );
+  return <ProductForm />;
 }

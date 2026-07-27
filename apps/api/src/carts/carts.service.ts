@@ -3,7 +3,7 @@ import { PrismaService } from '../prisma/prisma.service';
 
 @Injectable()
 export class CartsService {
-  constructor(private readonly prisma: PrismaService) { }
+  constructor(private readonly prisma: PrismaService) {}
 
   async getCart(userId: string) {
     let cart = await this.prisma.cart.findUnique({
@@ -28,14 +28,29 @@ export class CartsService {
     if (!cart) {
       cart = await this.prisma.cart.create({
         data: { userId },
-        include: { items: { include: { product: { include: { images: true } }, variant: true, measurementProfile: { include: { values: true } } } }, coupon: true },
+        include: {
+          items: {
+            include: {
+              product: { include: { images: true } },
+              variant: true,
+              measurementProfile: { include: { values: true } },
+            },
+          },
+          coupon: true,
+        },
       });
     }
 
-    return this.calculateCartTotals(cart);
+    return await this.calculateCartTotals(cart);
   }
 
-  async addItem(userId: string, productId: string, variantId?: string, quantity: number = 1, measurementProfileId?: string) {
+  async addItem(
+    userId: string,
+    productId: string,
+    variantId?: string,
+    quantity: number = 1,
+    measurementProfileId?: string,
+  ) {
     let cart = await this.prisma.cart.findUnique({ where: { userId } });
     if (!cart) {
       cart = await this.prisma.cart.create({ data: { userId } });
@@ -64,10 +79,7 @@ export class CartsService {
     });
 
     if (existingItem) {
-      // Check total stock before adding
       const newQuantity = existingItem.quantity + quantity;
-
-      // Update quantity
       await this.prisma.cartItem.update({
         where: { id: existingItem.id },
         data: { quantity: newQuantity },
@@ -134,8 +146,10 @@ export class CartsService {
 
     // Validate dates
     const now = new Date();
-    if (coupon.startDate && coupon.startDate > now) throw new BadRequestException('Coupon is not active yet');
-    if (coupon.endDate && coupon.endDate < now) throw new BadRequestException('Coupon has expired');
+    if (coupon.startDate && coupon.startDate > now)
+      throw new BadRequestException('Coupon is not active yet');
+    if (coupon.endDate && coupon.endDate < now)
+      throw new BadRequestException('Coupon has expired');
 
     // Validate usage limit
     if (coupon.usageLimit && coupon.usedCount >= coupon.usageLimit) {
@@ -172,8 +186,8 @@ export class CartsService {
     return { success: true };
   }
 
-  // Calculate totals helper
-  private calculateCartTotals(cart: any) {
+  // Calculate totals dynamically using DB settings
+  private async calculateCartTotals(cart: any) {
     let subtotal = 0;
 
     const items = cart.items.map((item: any) => {
@@ -193,12 +207,17 @@ export class CartsService {
 
     let discount = 0;
     if (cart.coupon) {
-      if (Number(cart.coupon.minOrderAmount) > 0 && subtotal < Number(cart.coupon.minOrderAmount)) {
-        // Minimum order amount not met, ignore coupon visually but it's attached
+      if (
+        Number(cart.coupon.minOrderAmount) > 0 &&
+        subtotal < Number(cart.coupon.minOrderAmount)
+      ) {
         discount = 0;
       } else if (cart.coupon.type === 'PERCENTAGE') {
         discount = subtotal * (Number(cart.coupon.value) / 100);
-        if (Number(cart.coupon.maxDiscount) > 0 && discount > Number(cart.coupon.maxDiscount)) {
+        if (
+          Number(cart.coupon.maxDiscount) > 0 &&
+          discount > Number(cart.coupon.maxDiscount)
+        ) {
           discount = Number(cart.coupon.maxDiscount);
         }
       } else {
@@ -206,14 +225,52 @@ export class CartsService {
       }
     }
 
-    // Ensure discount isn't more than subtotal
     if (discount > subtotal) discount = subtotal;
 
-    const tax = (subtotal - discount) * 0.18; // 18% GST (Example)
-    const shipping = subtotal > 1000 ? 0 : 50; // Free shipping over 1000, else 50
+    // Fetch dynamic store settings for shipping & tax from StoreSetting table
+    const settings = await this.prisma.storeSetting.findMany({
+      where: { key: { in: ['shipping', 'tax'] } },
+    });
 
-    // Sometimes taxes are included in price, let's assume they are not for this calculation
-    const total = subtotal - discount + tax + shipping;
+    const shippingSetting =
+      (settings.find((s) => s.key === 'shipping')?.value as any) || {};
+    const taxSetting = (settings.find((s) => s.key === 'tax')?.value as any) || {};
+
+    // 1. DYNAMIC SHIPPING CHARGES
+    const flatShippingFee = Number(shippingSetting.flatShippingFee) || 0;
+    const freeShippingThreshold = Number(shippingSetting.freeShippingThreshold) || 0;
+
+    let shipping = flatShippingFee;
+    if (freeShippingThreshold > 0 && subtotal >= freeShippingThreshold) {
+      shipping = 0; // FREE SHIPPING THRESHOLD MET
+    }
+
+    // 2. DYNAMIC GST & TAX SLAB RATE
+    const apparelGstRate = Number(taxSetting.apparelGstRate) || 0;
+    const pricesIncludeGst = Boolean(taxSetting.pricesIncludeGst);
+
+    const netSubtotal = subtotal - discount;
+    let tax = 0;
+
+    if (apparelGstRate > 0) {
+      if (pricesIncludeGst) {
+        // GST is included inside price: tax = netSubtotal - (netSubtotal / (1 + rate/100))
+        tax = netSubtotal - netSubtotal / (1 + apparelGstRate / 100);
+      } else {
+        // GST is added on top: tax = (netSubtotal * rate) / 100
+        tax = (netSubtotal * apparelGstRate) / 100;
+      }
+    }
+
+    // Standardize decimal values
+    tax = Number(tax.toFixed(2));
+    shipping = Number(shipping.toFixed(2));
+    discount = Number(discount.toFixed(2));
+    subtotal = Number(subtotal.toFixed(2));
+
+    const total = pricesIncludeGst
+      ? Number((netSubtotal + shipping).toFixed(2))
+      : Number((netSubtotal + tax + shipping).toFixed(2));
 
     return {
       id: cart.id,
@@ -226,6 +283,10 @@ export class CartsService {
         tax,
         shipping,
         total,
+        pricesIncludeGst,
+        apparelGstRate,
+        freeShippingThreshold,
+        flatShippingFee,
       },
     };
   }

@@ -11,6 +11,8 @@ export const profileService = {
     return api.delete(`/users/addresses/${id}`);
   },
 
+  getMyReviews: () => api.get('/reviews/me'),
+
   // Location APIs
   getCountries: () => {
     return api.get("/locations/countries");

@@ -118,7 +118,7 @@ export default function CmsInfoDynamicPage({
           /* Main CMS Page Card */
           <article className="space-y-8">
             {/* Title & Metadata Banner */}
-            <div className="border-b border-border pb-6 space-y-3">
+            {/* <div className="border-b border-border pb-6 space-y-3">
               <div className="flex items-center gap-2">
                 <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider bg-primary/10 text-primary border border-primary/20 flex items-center gap-1">
                   <ShieldCheck className="h-3 w-3" /> Official Policy
@@ -131,10 +131,13 @@ export default function CmsInfoDynamicPage({
               <h1 className="text-3xl sm:text-4xl font-extrabold tracking-tight text-foreground font-heading">
                 {pageData.title}
               </h1>
-            </div>
+            </div> */}
 
             {/* Rendered HTML Content Body */}
             <div className="bg-card border border-border rounded-2xl p-6 sm:p-10 shadow-sm">
+              <span className="text-sm text-muted-foreground flex items-center gap-1 italic">
+                <Clock className="h-3 w-3" /> Last Updated: {formatDate(pageData.updatedAt)}
+              </span>
               <div
                 dangerouslySetInnerHTML={{ __html: pageData.content }}
                 className="space-y-4 text-xs sm:text-sm leading-relaxed text-foreground/90 font-sans [&_h2]:text-lg [&_h2]:sm:text-xl [&_h2]:font-extrabold [&_h2]:text-foreground [&_h2]:mt-8 [&_h2]:mb-3 [&_h2]:font-heading [&_h2]:border-b [&_h2]:border-border [&_h2]:pb-2 [&_h3]:text-base [&_h3]:font-bold [&_h3]:text-foreground [&_h3]:mt-6 [&_h3]:mb-2 [&_p]:leading-relaxed [&_p]:text-foreground/80 [&_ul]:list-disc [&_ul]:pl-6 [&_ul]:space-y-1.5 [&_ol]:list-decimal [&_ol]:pl-6 [&_ol]:space-y-1.5 [&_li]:text-foreground/80 [&_blockquote]:border-l-4 [&_blockquote]:border-primary [&_blockquote]:bg-secondary/50 [&_blockquote]:p-4 [&_blockquote]:rounded-r-xl [&_blockquote]:italic [&_blockquote]:text-foreground [&_a]:text-primary [&_a]:underline [&_a]:font-semibold hover:[&_a]:text-primary/80 transition-colors"

@@ -11,6 +11,10 @@ import {
 import { Type } from 'class-transformer';
 
 export class ProductImageDto {
+  @IsOptional()
+  @IsString()
+  id?: string;
+
   @IsString()
   url: string;
 
@@ -21,6 +25,21 @@ export class ProductImageDto {
   @IsOptional()
   @IsString()
   alt?: string;
+
+  @IsOptional()
+  @IsString()
+  color?: string;
+
+  @IsOptional()
+  @IsString()
+  type?: string;
+
+  @IsOptional()
+  @IsString()
+  productId?: string;
+
+  @IsOptional()
+  createdAt?: any;
 
   @IsOptional()
   @IsBoolean()

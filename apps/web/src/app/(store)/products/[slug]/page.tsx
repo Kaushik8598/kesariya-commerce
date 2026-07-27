@@ -56,7 +56,7 @@ export default async function ProductDetailsPage({
           {/* Left Column: Images */}
           <div className="w-full">
             <Suspense fallback={<div className="aspect-[3/4] w-full rounded-2xl bg-secondary animate-pulse" />}>
-              <ProductGallery images={product.images} productName={product.name} />
+              <ProductGallery images={product.images} videoUrl={product.videoUrl} productName={product.name} />
             </Suspense>
           </div>
 

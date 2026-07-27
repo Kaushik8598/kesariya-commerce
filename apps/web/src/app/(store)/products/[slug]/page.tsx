@@ -38,7 +38,7 @@ export default async function ProductDetailsPage({
   params: Promise<{ slug: string }>;
 }) {
   const { slug } = await params;
-  
+
   let product;
   try {
     const res = await productService.getProduct(slug);
@@ -72,20 +72,17 @@ export default async function ProductDetailsPage({
               <h1 className="text-3xl sm:text-4xl font-extrabold tracking-tight text-foreground mb-4">
                 {product.name}
               </h1>
-              
+
               <div className="flex items-center gap-4 mb-6">
-                <Price 
-                  basePrice={product.basePrice} 
-                  salePrice={product.salePrice}
-                  className="text-2xl" 
-                />
-                <div className="h-4 w-px bg-border" />
-                <div className="flex items-center gap-2">
-                  <RatingStars rating={product.avgRating} count={0} />
-                  <span className="text-xs font-medium text-muted-foreground underline underline-offset-4 cursor-pointer hover:text-primary">
-                    {product._count?.reviews || 0} Reviews
+                <a
+                  href="#reviews-section"
+                  className="flex items-center gap-2 group cursor-pointer"
+                >
+                  <RatingStars rating={product.avgRating} count={product._count?.reviews || 0} />
+                  <span className="text-xs font-medium text-muted-foreground underline underline-offset-4 group-hover:text-primary transition-colors">
+                    ({product.avgRating ? product.avgRating.toFixed(1) : "0.0"}) Reviews
                   </span>
-                </div>
+                </a>
               </div>
 
               {product.shortDescription && (
@@ -104,7 +101,7 @@ export default async function ProductDetailsPage({
 
             {/* Product Information Accordion */}
             <ProductInfo product={product} />
-            
+
             {/* Reviews Section */}
             <ProductReviews slug={product.slug} />
           </div>

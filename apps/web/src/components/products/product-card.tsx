@@ -83,8 +83,12 @@ export function ProductCard({ product, className }: ProductCardProps) {
           {product.name}
         </h3>
         <Price
-          basePrice={product.basePrice}
-          salePrice={product.salePrice}
+          basePrice={
+            product.variants && product.variants.length > 0 && product.variants[0].price !== undefined && product.variants[0].price !== null
+              ? Number(product.variants[0].price)
+              : Number(product.basePrice)
+          }
+          salePrice={product.salePrice ? Number(product.salePrice) : null}
         />
         <RatingStars rating={product.avgRating || 0} count={product._count?.reviews || 0} />
       </div>

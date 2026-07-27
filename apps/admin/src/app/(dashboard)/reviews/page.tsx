@@ -25,6 +25,7 @@ import { formatDate } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
+import { DataTablePagination } from "@/components/ui/data-table-pagination";
 import {
   Table,
   TableHeader,
@@ -384,70 +385,15 @@ export default function ReviewsAdminPage() {
         </Table>
 
         {/* Bottom Pagination Bar */}
-        {pagination.total > 0 && (
-          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between p-4 border-t border-border bg-card">
-            <div className="flex items-center gap-3 text-xs text-muted-foreground">
-              <span>
-                Showing <strong className="text-foreground">{startItemIndex}</strong> to{" "}
-                <strong className="text-foreground">{endItemIndex}</strong> of{" "}
-                <strong className="text-foreground">{pagination.total}</strong> reviews
-              </span>
-              <div className="flex items-center gap-1.5 pl-3 border-l border-border">
-                <span className="text-[11px]">Rows per page:</span>
-                <select
-                  value={limit}
-                  onChange={(e) => {
-                    setLimit(Number(e.target.value));
-                    setPage(1);
-                  }}
-                  className="h-7 rounded border border-border bg-surface px-1.5 text-xs text-foreground outline-none cursor-pointer focus:border-primary"
-                >
-                  <option value={10}>10</option>
-                  <option value={20}>20</option>
-                  <option value={50}>50</option>
-                </select>
-              </div>
-            </div>
-
-            <div className="flex items-center gap-1 self-end sm:self-auto">
-              <Button
-                variant="outline"
-                size="xs"
-                onClick={() => setPage(1)}
-                disabled={page === 1}
-              >
-                <ChevronsLeft className="h-3.5 w-3.5" />
-              </Button>
-              <Button
-                variant="outline"
-                size="xs"
-                onClick={() => setPage((p) => Math.max(1, p - 1))}
-                disabled={page === 1}
-              >
-                <ChevronLeft className="h-3.5 w-3.5" />
-              </Button>
-              <span className="px-2 text-xs font-bold text-foreground font-mono">
-                {page} / {pagination.totalPages}
-              </span>
-              <Button
-                variant="outline"
-                size="xs"
-                onClick={() => setPage((p) => Math.min(pagination.totalPages, p + 1))}
-                disabled={page >= pagination.totalPages}
-              >
-                <ChevronRight className="h-3.5 w-3.5" />
-              </Button>
-              <Button
-                variant="outline"
-                size="xs"
-                onClick={() => setPage(pagination.totalPages)}
-                disabled={page >= pagination.totalPages}
-              >
-                <ChevronsRight className="h-3.5 w-3.5" />
-              </Button>
-            </div>
-          </div>
-        )}
+        <DataTablePagination
+          page={page}
+          limit={limit}
+          total={pagination.total}
+          totalPages={pagination.totalPages}
+          onPageChange={setPage}
+          onLimitChange={setLimit}
+          entityName="reviews"
+        />
       </Card>
 
       {/* Delete Confirmation Modal */}

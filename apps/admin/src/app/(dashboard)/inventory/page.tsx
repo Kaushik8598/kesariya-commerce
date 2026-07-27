@@ -23,6 +23,7 @@ import api from "@/lib/api";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
+import { DataTablePagination } from "@/components/ui/data-table-pagination";
 import {
   Table,
   TableHeader,
@@ -389,76 +390,16 @@ export default function InventoryPage() {
           </TableBody>
         </Table>
 
-        {/* Bottom Pagination Bar with Integrated Per-Page Selector */}
-        {pagination.total > 0 && (
-          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between px-6 py-4 border-t border-border bg-card/40">
-            <div className="flex items-center gap-4">
-              <div className="text-xs text-muted-foreground font-medium">
-                Showing <span className="font-bold text-foreground">{startItemIndex}</span> to{" "}
-                <span className="font-bold text-foreground">{endItemIndex}</span> of{" "}
-                <span className="font-bold text-foreground">{pagination.total}</span> catalog items
-              </div>
-
-              {/* Rows Per Page selector */}
-              <div className="flex items-center gap-2 border-l border-border pl-4">
-                <span className="text-xs text-muted-foreground font-semibold">Rows per page:</span>
-                <select
-                  value={limit}
-                  onChange={(e) => {
-                    setLimit(Number(e.target.value));
-                    setPage(1);
-                  }}
-                  className="h-8 rounded-md border border-border bg-card px-2.5 text-xs font-semibold text-foreground outline-none cursor-pointer focus:border-primary"
-                >
-                  <option value={5}>5</option>
-                  <option value={10}>10</option>
-                  <option value={25}>25</option>
-                  <option value={50}>50</option>
-                </select>
-              </div>
-            </div>
-
-            <div className="flex items-center gap-1.5">
-              <Button
-                variant="outline"
-                size="xs"
-                onClick={() => setPage(1)}
-                disabled={page <= 1}
-              >
-                <ChevronsLeft className="h-3.5 w-3.5" />
-              </Button>
-              <Button
-                variant="outline"
-                size="xs"
-                onClick={() => setPage((p) => Math.max(1, p - 1))}
-                disabled={page <= 1}
-              >
-                <ChevronLeft className="h-3.5 w-3.5 mr-1" /> Prev
-              </Button>
-
-              <span className="px-3 text-xs font-bold text-foreground">
-                {page} / {pagination.totalPages}
-              </span>
-
-              <Button
-                variant="outline"
-                size="xs"
-                onClick={() => setPage((p) => Math.min(pagination.totalPages, p + 1))}
-                disabled={page >= pagination.totalPages}
-              >
-                Next <ChevronRight className="h-3.5 w-3.5 ml-1" />
-              </Button>
-              <Button
-                variant="outline"
-                size="xs"
-                onClick={() => setPage(pagination.totalPages)}
-                disabled={page >= pagination.totalPages}
-              >
-                <ChevronsRight className="h-3.5 w-3.5" />
-              </Button>
-            </div>
-          </div>
-        )}
+        {/* Bottom Pagination Bar */}
+        <DataTablePagination
+          page={page}
+          limit={limit}
+          total={pagination.total}
+          totalPages={pagination.totalPages}
+          onPageChange={setPage}
+          onLimitChange={setLimit}
+          entityName="inventory items"
+        />
       </Card>
     </div>
   );

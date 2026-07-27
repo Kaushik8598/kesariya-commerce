@@ -157,3 +157,16 @@ export function useUpdateNotifications() {
     },
   });
 }
+
+export function useMyReviews() {
+  const { isAuthenticated } = useAuth();
+
+  return useQuery({
+    queryKey: ["my-reviews"],
+    queryFn: async () => {
+      const res = await profileService.getMyReviews();
+      return res.data;
+    },
+    enabled: isAuthenticated,
+  });
+}

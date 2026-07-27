@@ -12,6 +12,38 @@ import { UpdateReviewDto } from './dto/update-review.dto';
 export class ReviewsService {
   constructor(private readonly prisma: PrismaService) {}
 
+  async findMyReviews(userId: string, page = 1, limit = 10) {
+    const [reviews, total] = await Promise.all([
+      this.prisma.review.findMany({
+        where: { userId },
+        include: {
+          product: {
+            select: {
+              id: true,
+              name: true,
+              slug: true,
+              images: { where: { isPrimary: true }, take: 1 },
+            },
+          },
+        },
+        orderBy: { createdAt: 'desc' },
+        skip: (page - 1) * limit,
+        take: limit,
+      }),
+      this.prisma.review.count({ where: { userId } }),
+    ]);
+
+    return {
+      data: reviews,
+      pagination: {
+        total,
+        page,
+        limit,
+        totalPages: Math.ceil(total / limit) || 1,
+      },
+    };
+  }
+
   async findByProductSlug(slug: string, page = 1, limit = 10) {
     const product = await this.prisma.product.findUnique({
       where: { slug },

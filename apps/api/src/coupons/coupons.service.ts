@@ -7,6 +7,41 @@ import { UpdateCouponDto } from './dto/update-coupon.dto';
 export class CouponsService {
   constructor(private readonly prisma: PrismaService) {}
 
+  async findActivePublicCoupons() {
+    const now = new Date();
+    return this.prisma.coupon.findMany({
+      where: {
+        isActive: true,
+        AND: [
+          {
+            OR: [
+              { startDate: null },
+              { startDate: { lte: now } },
+            ],
+          },
+          {
+            OR: [
+              { endDate: null },
+              { endDate: { gte: now } },
+            ],
+          },
+        ],
+      },
+      orderBy: { createdAt: 'desc' },
+      select: {
+        id: true,
+        code: true,
+        description: true,
+        type: true,
+        value: true,
+        minOrderAmount: true,
+        maxDiscount: true,
+        startDate: true,
+        endDate: true,
+      },
+    });
+  }
+
   async findAdminAll(page = 1, limit = 10, search?: string, status?: string) {
     const where: any = {};
 

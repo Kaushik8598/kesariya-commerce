@@ -10,14 +10,18 @@ import { ThemeToggle } from "@/components/ui/theme-toggle";
 import { SearchOverlay } from "@/components/search/search-overlay";
 import { Button } from "@/components/ui/button";
 import { useCart } from "@/hooks/cart/use-cart";
+import { usePublicCoupons } from "@/hooks/coupons/use-public-coupons";
 
 export function Header() {
   const pathname = usePathname();
   const { isAuthenticated, user, logout } = useAuth();
   const { data: cart } = useCart();
+  const { coupons } = usePublicCoupons();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [userDropdownOpen, setUserDropdownOpen] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
+
+  const activeCoupon = coupons && coupons.length > 0 ? coupons[0] : null;
 
   const cartItemCount = cart?.items?.reduce((acc: number, item: any) => acc + item.quantity, 0) || 0;
 
@@ -43,10 +47,12 @@ export function Header() {
   return (
     <>
       <header className="sticky top-0 z-40 w-full border-b border-border bg-background/80 backdrop-blur-md">
-        {/* Top Banner */}
-        <div className="bg-foreground text-background py-1.5 px-4 text-center text-xs font-semibold tracking-widest uppercase">
-          SALE IS LIVE! 60% OFF - USE CODE KESARIYA
-        </div>
+        {/* Dynamic Top Announcement Banner (Hidden if no active coupons in Admin) */}
+        {activeCoupon && (
+          <div className="bg-foreground text-background py-1.5 px-4 text-center text-xs font-semibold tracking-widest uppercase">
+            SALE IS LIVE! {activeCoupon.type === "PERCENTAGE" ? `${activeCoupon.value}% OFF` : `₹${activeCoupon.value} OFF`} - USE CODE {activeCoupon.code}
+          </div>
+        )}
 
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <div className="flex h-16 items-center justify-between gap-4">

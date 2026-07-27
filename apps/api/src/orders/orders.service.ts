@@ -65,4 +65,88 @@ export class OrdersService {
 
     return order;
   }
+
+  async findAdminAll(page = 1, limit = 10, search?: string, status?: string, paymentStatus?: string) {
+    const where: any = {};
+
+    if (status && status !== 'ALL') {
+      where.status = status;
+    }
+
+    if (paymentStatus && paymentStatus !== 'ALL') {
+      where.paymentStatus = paymentStatus;
+    }
+
+    if (search) {
+      where.OR = [
+        { orderNumber: { contains: search, mode: 'insensitive' } },
+        { user: { firstName: { contains: search, mode: 'insensitive' } } },
+        { user: { lastName: { contains: search, mode: 'insensitive' } } },
+        { user: { email: { contains: search, mode: 'insensitive' } } },
+      ];
+    }
+
+    const [orders, total, totalRevenueAgg] = await Promise.all([
+      this.prisma.order.findMany({
+        where,
+        include: {
+          user: { select: { id: true, firstName: true, lastName: true, email: true, mobile: true } },
+          items: {
+            include: {
+              product: { select: { id: true, name: true, sku: true, slug: true } },
+              variant: { select: { id: true, sku: true, size: true, color: true } },
+              measurementProfile: { include: { values: true } },
+            },
+          },
+          shippingAddress: true,
+        },
+        orderBy: { createdAt: 'desc' },
+        skip: (page - 1) * limit,
+        take: limit,
+      }),
+      this.prisma.order.count({ where }),
+      this.prisma.order.aggregate({
+        _sum: { total: true },
+      }),
+    ]);
+
+    return {
+      data: orders,
+      stats: {
+        totalRevenue: Number(totalRevenueAgg._sum.total || 0),
+      },
+      pagination: {
+        total,
+        page,
+        limit,
+        totalPages: Math.ceil(total / limit) || 1,
+      },
+    };
+  }
+
+  async updateOrderStatus(id: string, dto: { status?: string; paymentStatus?: string }) {
+    const order = await this.prisma.order.findUnique({ where: { id } });
+    if (!order) {
+      throw new NotFoundException('Order not found');
+    }
+
+    return this.prisma.order.update({
+      where: { id },
+      data: {
+        ...(dto.status && { status: dto.status as any }),
+        ...(dto.paymentStatus && { paymentStatus: dto.paymentStatus as any }),
+      },
+      include: {
+        user: { select: { firstName: true, lastName: true, email: true } },
+      },
+    });
+  }
+
+  async removeAdminOrder(id: string) {
+    const order = await this.prisma.order.findUnique({ where: { id } });
+    if (!order) {
+      throw new NotFoundException('Order not found');
+    }
+    return this.prisma.order.delete({ where: { id } });
+  }
 }

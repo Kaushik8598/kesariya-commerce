@@ -120,8 +120,8 @@ export const features = [
   },
   {
     icon: "RotateCcw",
-    title: "Easy Returns",
-    description: "7-day return policy",
+    title: "Easy Exchange",
+    description: "7-day exchange available",
   },
   {
     icon: "Shield",

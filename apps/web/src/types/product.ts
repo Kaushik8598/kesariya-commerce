@@ -35,6 +35,7 @@ export interface ProductImage {
   url: string;
   publicId: string | null;
   alt: string | null;
+  color?: string | null;
   sortOrder: number;
   isPrimary: boolean;
 }
@@ -93,6 +94,8 @@ export interface Product {
   weight: string | null;
   material: string | null;
   careInstructions: string | null;
+  videoUrl?: string | null;
+  contentBlocks?: any[] | null;
   images: ProductImage[];
   variants: ProductVariant[];
   reviews?: Review[];

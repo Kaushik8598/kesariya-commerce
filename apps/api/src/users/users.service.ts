@@ -27,7 +27,7 @@ export class UsersService {
     return user;
   }
 
-  async updateProfile(userId: string, data: { firstName?: string; lastName?: string; email?: string }) {
+  async updateProfile(userId: string, data: { firstName?: string; lastName?: string; email?: string; avatar?: string | null }) {
     return this.prisma.user.update({
       where: { id: userId },
       data,
@@ -39,6 +39,7 @@ export class UsersService {
         countryCode: true,
         mobile: true,
         avatar: true,
+        role: { select: { slug: true, name: true } },
       },
     });
   }

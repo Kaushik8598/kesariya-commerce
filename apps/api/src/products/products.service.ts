@@ -75,6 +75,7 @@ export class ProductsService {
             where: { isPrimary: true },
             take: 1,
           },
+          variants: { orderBy: { sortOrder: 'asc' } },
           category: { select: { name: true, slug: true } },
           brand: { select: { name: true, slug: true } },
           _count: { select: { reviews: { where: { isApproved: true } } } },
@@ -119,6 +120,7 @@ export class ProductsService {
       where: { status: 'ACTIVE', isFeatured: true },
       include: {
         images: { where: { isPrimary: true }, take: 1 },
+        variants: { orderBy: { sortOrder: 'asc' } },
         category: { select: { name: true, slug: true } },
         brand: { select: { name: true, slug: true } },
         _count: { select: { reviews: { where: { isApproved: true } } } },
@@ -136,6 +138,7 @@ export class ProductsService {
       where: { status: 'ACTIVE', isNewArrival: true },
       include: {
         images: { where: { isPrimary: true }, take: 1 },
+        variants: { orderBy: { sortOrder: 'asc' } },
         category: { select: { name: true, slug: true } },
         brand: { select: { name: true, slug: true } },
         _count: { select: { reviews: { where: { isApproved: true } } } },

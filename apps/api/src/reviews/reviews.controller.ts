@@ -21,6 +21,16 @@ import { CurrentUser } from '../auth/decorators/current-user.decorator';
 export class ReviewsController {
   constructor(private readonly reviewsService: ReviewsService) {}
 
+  @Get('reviews/me')
+  @UseGuards(JwtAuthGuard)
+  findMyReviews(
+    @CurrentUser('id') userId: string,
+    @Query('page', new DefaultValuePipe(1), ParseIntPipe) page: number,
+    @Query('limit', new DefaultValuePipe(10), ParseIntPipe) limit: number,
+  ) {
+    return this.reviewsService.findMyReviews(userId, page, limit);
+  }
+
   @Get('products/:slug/reviews')
   findByProductSlug(
     @Param('slug') slug: string,

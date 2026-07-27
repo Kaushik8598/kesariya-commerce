@@ -7,20 +7,20 @@ export class OrdersService {
 
   async getUserOrders(userId: string, filters?: { status?: string; paymentStatus?: string; search?: string }) {
     const where: any = { userId };
-    
+
     if (filters?.status) {
       where.status = filters.status;
     }
-    
+
     if (filters?.paymentStatus) {
       where.paymentStatus = filters.paymentStatus;
     }
-    
+
     if (filters?.search) {
       where.orderNumber = { contains: filters.search };
     }
 
-    return this.prisma.order.findMany({
+    const orders = await this.prisma.order.findMany({
       where,
       include: {
         items: {
@@ -34,9 +34,18 @@ export class OrdersService {
             measurementProfile: { include: { values: true } },
           },
         },
+        shippingAddress: {
+          include: {
+            city: { select: { id: true, name: true } },
+            state: { select: { id: true, name: true } },
+            country: { select: { id: true, name: true } },
+          },
+        },
       },
       orderBy: { createdAt: 'desc' },
     });
+
+    return orders.map((order) => this.formatOrderResponse(order));
   }
 
   async getOrderDetails(userId: string, orderNumber: string) {
@@ -54,7 +63,13 @@ export class OrdersService {
             measurementProfile: { include: { values: true } },
           },
         },
-        shippingAddress: true,
+        shippingAddress: {
+          include: {
+            city: { select: { id: true, name: true } },
+            state: { select: { id: true, name: true } },
+            country: { select: { id: true, name: true } },
+          },
+        },
         coupon: true,
       },
     });
@@ -63,7 +78,7 @@ export class OrdersService {
       throw new NotFoundException('Order not found');
     }
 
-    return order;
+    return this.formatOrderResponse(order);
   }
 
   async findAdminAll(page = 1, limit = 10, search?: string, status?: string, paymentStatus?: string) {
@@ -98,7 +113,13 @@ export class OrdersService {
               measurementProfile: { include: { values: true } },
             },
           },
-          shippingAddress: true,
+          shippingAddress: {
+            include: {
+              city: { select: { id: true, name: true } },
+              state: { select: { id: true, name: true } },
+              country: { select: { id: true, name: true } },
+            },
+          },
         },
         orderBy: { createdAt: 'desc' },
         skip: (page - 1) * limit,
@@ -111,7 +132,7 @@ export class OrdersService {
     ]);
 
     return {
-      data: orders,
+      data: orders.map((o) => this.formatOrderResponse(o)),
       stats: {
         totalRevenue: Number(totalRevenueAgg._sum.total || 0),
       },
@@ -148,5 +169,33 @@ export class OrdersService {
       throw new NotFoundException('Order not found');
     }
     return this.prisma.order.delete({ where: { id } });
+  }
+
+  // Format order response to clean up shipping address & eliminate unneeded raw IDs
+  private formatOrderResponse(order: any) {
+    let formattedAddress: any = null;
+    if (order.shippingAddress) {
+      const addr = order.shippingAddress;
+      formattedAddress = {
+        id: addr.id,
+        fullName: addr.fullName,
+        phone: addr.mobile || addr.phone || '',
+        mobile: addr.mobile || addr.phone || '',
+        addressLine1: addr.addressLine1,
+        addressLine2: addr.addressLine2 || '',
+        landmark: addr.landmark || '',
+        postalCode: addr.postalCode,
+        city: addr.city?.name || (typeof addr.city === 'string' ? addr.city : ''),
+        state: addr.state?.name || (typeof addr.state === 'string' ? addr.state : ''),
+        country: addr.country?.name || (typeof addr.country === 'string' ? addr.country : ''),
+        label: addr.label || '',
+        type: addr.type || 'HOME',
+      };
+    }
+
+    return {
+      ...order,
+      shippingAddress: formattedAddress,
+    };
   }
 }

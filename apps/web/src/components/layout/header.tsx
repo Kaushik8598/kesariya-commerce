@@ -1,22 +1,32 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
 import { usePathname } from "next/navigation";
 import { useState, useEffect } from "react";
 import { Search, ShoppingBag, User, LogOut, Menu, X, ChevronDown, Heart, Package } from "lucide-react";
 import { useAuth } from "@/providers/auth-provider";
+import { Logo } from "@/components/ui/logo";
 import { ThemeToggle } from "@/components/ui/theme-toggle";
 import { SearchOverlay } from "@/components/search/search-overlay";
 import { Button } from "@/components/ui/button";
 import { useCart } from "@/hooks/cart/use-cart";
+import { usePublicCoupons } from "@/hooks/coupons/use-public-coupons";
+import { useStoreSettings } from "@/providers/store-settings-provider";
+import { useProfile } from "@/hooks/profile/use-profile";
 
 export function Header() {
   const pathname = usePathname();
   const { isAuthenticated, user, logout } = useAuth();
+  const { data: profile } = useProfile();
   const { data: cart } = useCart();
+  const { coupons } = usePublicCoupons();
+  const { formatPrice } = useStoreSettings();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [userDropdownOpen, setUserDropdownOpen] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
+
+  const activeCoupon = coupons && coupons.length > 0 ? coupons[0] : null;
 
   const cartItemCount = cart?.items?.reduce((acc: number, item: any) => acc + item.quantity, 0) || 0;
 
@@ -41,22 +51,20 @@ export function Header() {
 
   return (
     <>
-      <header className="sticky top-0 z-40 w-full border-b border-border bg-background/80 backdrop-blur-md">
-        {/* Top Banner */}
-        <div className="bg-foreground text-background py-1.5 px-4 text-center text-xs font-semibold tracking-widest uppercase">
-          SALE IS LIVE! 60% OFF - USE CODE KESARIYA
-        </div>
+      <header className="sticky top-0 z-40 w-full border-b border-border bg-background/95 backdrop-blur-md transition-all">
+        {/* Dynamic Top Announcement Banner (Hidden if no active coupons in Admin) */}
+        {activeCoupon && (
+          <div className="bg-primary text-primary-foreground text-[11px] font-bold tracking-wider py-1.5 px-4 text-center uppercase flex items-center justify-center gap-2">
+            <span>Use code <strong className="underline">{activeCoupon.code}</strong> for {activeCoupon.type === "PERCENTAGE" ? `${activeCoupon.value}% OFF` : `${formatPrice(activeCoupon.value)} OFF`}!</span>
+          </div>
+        )}
 
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <div className="flex h-16 items-center justify-between gap-4">
 
             {/* Site Brand / Logo */}
             <div className="flex-1 md:flex-initial flex items-center justify-center md:justify-start">
-              <Link href="/" className="flex items-center">
-                <span className="text-xl font-extrabold tracking-[0.25em] text-foreground hover:opacity-90 transition-opacity">
-                  KESARIYA
-                </span>
-              </Link>
+              <Logo size="md" showBadge />
             </div>
 
             {/* Desktop Navigation Links */}
@@ -125,24 +133,39 @@ export function Header() {
                 {isAuthenticated ? (
                   <>
                     <Button
-                      variant="ghost"
-                      onClick={() => setUserDropdownOpen(!userDropdownOpen)}
-                      className="flex items-center gap-1 p-1.5 h-auto text-foreground/77 hover:text-primary rounded-full hover:bg-secondary cursor-pointer"
-                    >
+                    variant="ghost"
+                    onClick={() => setUserDropdownOpen(!userDropdownOpen)}
+                    className="flex items-center gap-1.5 p-1 h-auto text-foreground/77 hover:text-primary rounded-full hover:bg-secondary cursor-pointer"
+                  >
+                    {profile?.avatar ? (
+                      <div className="relative h-7 w-7 rounded-full overflow-hidden border border-primary/30">
+                        <Image src={profile.avatar} alt="User Avatar" fill className="object-cover" />
+                      </div>
+                    ) : (
                       <User className="h-5 w-5" />
-                      <ChevronDown className="h-3 w-3 opacity-60" />
-                    </Button>
+                    )}
+                    <ChevronDown className="h-3 w-3 opacity-60" />
+                  </Button>
 
-                    {userDropdownOpen && (
-                      <div className="absolute right-0 mt-2.5 w-56 rounded-md border border-border bg-card p-1 shadow-lg ring-1 ring-black/5 focus:outline-hidden animate-in fade-in slide-in-from-top-1 duration-200 z-50">
-                        <div className="px-3 py-2 border-b border-border">
-                          <p className="text-xs font-semibold text-foreground truncate">
-                            {user ? `${user.firstName} ${user.lastName}` : "My Account"}
+                  {userDropdownOpen && (
+                    <div className="absolute right-0 mt-2.5 w-56 rounded-md border border-border bg-card p-1 shadow-lg ring-1 ring-black/5 focus:outline-hidden animate-in fade-in slide-in-from-top-1 duration-200 z-50">
+                      <div className="px-3 py-2 border-b border-border flex items-center gap-2.5">
+                        <div className="relative h-8 w-8 rounded-full overflow-hidden border border-border bg-secondary shrink-0 flex items-center justify-center">
+                          {profile?.avatar ? (
+                            <Image src={profile.avatar} alt="Avatar" fill className="object-cover" />
+                          ) : (
+                            <User className="h-4 w-4 text-muted-foreground" />
+                          )}
+                        </div>
+                        <div className="truncate">
+                          <p className="text-xs font-bold text-foreground truncate">
+                            {profile ? `${profile.firstName || ""} ${profile.lastName || ""}`.trim() || "My Account" : user ? `${user.firstName} ${user.lastName}` : "My Account"}
                           </p>
-                          <p className="text-[10px] text-foreground/60 uppercase tracking-widest font-bold mt-0.5">
-                            {user?.role?.slug || "customer"}
+                          <p className="text-[10px] text-muted-foreground uppercase tracking-wider font-bold mt-0.5">
+                            {profile?.role?.name || user?.role?.slug || "customer"}
                           </p>
                         </div>
+                      </div>
 
                         <Link
                           href="/profile"

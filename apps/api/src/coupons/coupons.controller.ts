@@ -1,11 +1,11 @@
 import { Controller, Get } from '@nestjs/common';
 import { CouponsService } from './coupons.service';
 
-@Controller('coupons')
+@Controller('public/coupons')
 export class CouponsController {
   constructor(private readonly couponsService: CouponsService) {}
 
-  @Get('public')
+  @Get()
   findActivePublic() {
     return this.couponsService.findActivePublicCoupons();
   }

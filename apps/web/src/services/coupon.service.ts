@@ -12,5 +12,5 @@ export interface PublicCoupon {
 }
 
 export const couponService = {
-  getPublicCoupons: () => api.get<PublicCoupon[]>("/coupons/public"),
+  getPublicCoupons: () => api.get<PublicCoupon[]>("/public/coupons"),
 };

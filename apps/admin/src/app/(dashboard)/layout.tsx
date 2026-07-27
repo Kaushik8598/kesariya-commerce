@@ -18,6 +18,7 @@ const pageTitles: Record<string, string> = {
   "/orders": "Orders Management",
   "/customers": "Users & Customers Management",
   "/coupons": "Offer & Coupon Management",
+  "/testimonials": "Customer Testimonials Management",
   "/cms": "CMS Pages",
   "/analytics": "Analytics & Reports",
   "/audit-logs": "Audit Logs",

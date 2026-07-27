@@ -1,10 +1,8 @@
 "use client";
 
 import { Quote } from "lucide-react";
-
-import { useInView } from "@/hooks/use-in-view";
 import { RatingStars } from "@/components/ui/rating-stars";
-import { testimonials } from "@/constants/mock-data";
+import { usePublicTestimonials } from "@/hooks/testimonials/use-testimonials";
 import {
   Carousel,
   CarouselContent,
@@ -12,16 +10,17 @@ import {
   CarouselNext,
   CarouselPrevious,
 } from "@/components/ui/carousel";
-import Autoplay from "embla-carousel-autoplay"
+import Autoplay from "embla-carousel-autoplay";
 
 export function Testimonials() {
-  const { ref, isInView } = useInView({ threshold: 0.1 });
+  const { testimonials, loading } = usePublicTestimonials();
+
+  if (loading || !testimonials || testimonials.length === 0) {
+    return null;
+  }
 
   return (
-    <section
-      ref={ref}
-      className="relative overflow-hidden bg-secondary/50 py-20"
-    >
+    <section className="relative overflow-hidden bg-secondary/50 py-20">
       {/* Background Decoration */}
       <div className="pointer-events-none absolute inset-0">
         <div className="absolute -left-20 top-10 size-60 rounded-full bg-primary/[0.03] blur-3xl" />
@@ -34,24 +33,20 @@ export function Testimonials() {
             align: "start",
             loop: true,
           }}
-          plugins={
-            [
-              Autoplay({
-                delay: 3000,
-              }),
-            ]}
+          plugins={[
+            Autoplay({
+              delay: 3500,
+            }),
+          ]}
           className="w-full"
         >
           {/* Section Header */}
-          <div
-            className={`flex flex-col items-center justify-between gap-4 sm:flex-row transition-all duration-700 ${isInView ? "translate-y-0 opacity-100" : "translate-y-8 opacity-0"
-              }`}
-          >
+          <div className="flex flex-col items-center justify-between gap-4 sm:flex-row">
             <div>
-              <p className="text-[10px] font-bold uppercase tracking-[0.3em] text-primary">
-                What People Say
+              <p className="text-[10px] font-bold uppercase tracking-[0.3em] text-primary font-mono">
+                Customer Testimonials
               </p>
-              <h2 className="mt-2 text-3xl font-extrabold tracking-tight text-foreground sm:text-4xl">
+              <h2 className="mt-2 text-3xl font-extrabold tracking-tight text-foreground sm:text-4xl font-heading">
                 Customer Stories
               </h2>
             </div>
@@ -64,56 +59,61 @@ export function Testimonials() {
           </div>
 
           {/* Testimonials Carousel */}
-          <div
-            className={`mt-12 transition-all duration-700 ${isInView ? "translate-y-0 opacity-100" : "translate-y-12 opacity-0"
-              }`}
-            style={{ transitionDelay: isInView ? "200ms" : "0ms" }}
-          >
+          <div className="mt-12">
             <CarouselContent className="-ml-5">
-              {testimonials.map((testimonial) => (
-                <CarouselItem
-                  key={testimonial.id}
-                  className="pl-5 basis-auto"
-                >
-                  <div className="w-[340px] sm:w-[380px] h-full">
-                    <div className="group flex h-full flex-col rounded-2xl border border-border bg-card p-6 transition-all duration-300 hover:border-primary/20 hover:shadow-lg hover:shadow-primary/5 sm:p-8">
-                      {/* Quote Icon */}
-                      <Quote className="size-8 text-primary/20" />
+              {testimonials.map((testimonial) => {
+                const nameParts = testimonial.name.trim().split(" ");
+                const initials = (
+                  (nameParts[0]?.[0] || "") + (nameParts[1]?.[0] || "")
+                ).toUpperCase() || "K";
 
-                      {/* Comment */}
-                      <p className="mt-4 flex-1 text-sm leading-relaxed text-foreground/70">
-                        &ldquo;{testimonial.comment}&rdquo;
-                      </p>
+                return (
+                  <CarouselItem
+                    key={testimonial.id}
+                    className="pl-5 basis-auto"
+                  >
+                    <div className="w-[340px] sm:w-[380px] h-full">
+                      <div className="group flex h-full flex-col rounded-2xl border border-border bg-card p-6 transition-all duration-300 hover:border-primary/30 hover:shadow-xl hover:shadow-primary/5 sm:p-8">
+                        {/* Quote Icon */}
+                        <Quote className="size-8 text-primary/25" />
 
-                      {/* Product Bought */}
-                      <p className="mt-4 text-[10px] font-bold uppercase tracking-widest text-primary/60">
-                        Purchased: {testimonial.product}
-                      </p>
+                        {/* Comment */}
+                        <p className="mt-4 flex-1 text-sm leading-relaxed text-foreground/80 font-medium italic">
+                          &ldquo;{testimonial.comment}&rdquo;
+                        </p>
 
-                      {/* Rating */}
-                      <div className="mt-3">
-                        <RatingStars rating={testimonial.rating} size="md" />
-                      </div>
+                        {/* Product Purchased */}
+                        {testimonial.product && (
+                          <p className="mt-4 text-[10px] font-bold uppercase tracking-widest text-primary font-mono">
+                            Purchased: {testimonial.product}
+                          </p>
+                        )}
 
-                      {/* Author */}
-                      <div className="mt-5 flex items-center gap-3 border-t border-border pt-5">
-                        {/* Avatar */}
-                        <div className="flex size-10 items-center justify-center rounded-full bg-primary/10 text-xs font-extrabold text-primary">
-                          {testimonial.initials}
+                        {/* Rating */}
+                        <div className="mt-3">
+                          <RatingStars rating={testimonial.rating} size="md" />
                         </div>
-                        <div>
-                          <p className="text-sm font-semibold text-foreground">
-                            {testimonial.name}
-                          </p>
-                          <p className="text-[10px] font-medium text-muted-foreground">
-                            {testimonial.location}
-                          </p>
+
+                        {/* Author Info */}
+                        <div className="mt-5 flex items-center gap-3 border-t border-border/60 pt-5">
+                          {/* Avatar / Initials */}
+                          <div className="flex size-10 items-center justify-center rounded-full bg-primary/10 text-xs font-extrabold text-primary font-mono">
+                            {initials}
+                          </div>
+                          <div>
+                            <p className="text-sm font-bold text-foreground font-heading">
+                              {testimonial.name}
+                            </p>
+                            <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
+                              {testimonial.location || testimonial.role || "Verified Customer"}
+                            </p>
+                          </div>
                         </div>
                       </div>
                     </div>
-                  </div>
-                </CarouselItem>
-              ))}
+                  </CarouselItem>
+                );
+              })}
             </CarouselContent>
           </div>
         </Carousel>

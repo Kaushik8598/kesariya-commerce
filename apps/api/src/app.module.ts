@@ -12,6 +12,7 @@ import { CategoriesModule } from './categories/categories.module';
 import { BrandsModule } from './brands/brands.module';
 import { ProductsModule } from './products/products.module';
 import { ReviewsModule } from './reviews/reviews.module';
+import { TestimonialsModule } from './testimonials/testimonials.module';
 import { WishlistsModule } from './wishlists/wishlists.module';
 import { CartsModule } from './carts/carts.module';
 import { CouponsModule } from './coupons/coupons.module';
@@ -43,6 +44,7 @@ import { envSchema } from './config/env.validation';
     BrandsModule,
     ProductsModule,
     ReviewsModule,
+    TestimonialsModule,
     WishlistsModule,
     CartsModule,
     CouponsModule,

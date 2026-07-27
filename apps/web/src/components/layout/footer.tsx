@@ -1,10 +1,37 @@
 "use client";
 
+import { useState } from "react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { toast } from "sonner";
+import { newsletterService } from "@/services/newsletter.service";
+import { Loader2 } from "lucide-react";
 
 export function Footer() {
+  const [email, setEmail] = useState("");
+  const [loading, setLoading] = useState(false);
+
+  const handleSubscribe = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!email || !email.includes("@")) {
+      toast.error("Please enter a valid email address.");
+      return;
+    }
+
+    setLoading(true);
+    try {
+      const res = await newsletterService.subscribe(email);
+      toast.success(res.data?.message || "Thank you for subscribing to our newsletter!");
+      setEmail("");
+    } catch (err: any) {
+      const msg = err.response?.data?.message;
+      toast.error(Array.isArray(msg) ? msg[0] : msg || "Subscription failed");
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
     <footer className="border-t border-border bg-card text-foreground">
       <div className="mx-auto max-w-7xl px-4 py-16 sm:px-6 lg:px-8">
@@ -12,7 +39,7 @@ export function Footer() {
 
           {/* Column 1: Brand Info */}
           <div className="space-y-4">
-            <span className="text-lg font-bold tracking-[0.25em] text-foreground">
+            <span className="text-lg font-bold tracking-[0.25em] text-foreground font-heading">
               KESARIYA
             </span>
             <p className="text-xs text-foreground/70 leading-relaxed font-medium">
@@ -46,17 +73,17 @@ export function Footer() {
             </h3>
             <ul className="space-y-2.5">
               <li>
-                <Link href="/collection/shirts" className="text-xs font-semibold text-foreground/70 hover:text-primary transition-colors">
-                  All Shirts
+                <Link href="/products" className="text-xs font-semibold text-foreground/70 hover:text-primary transition-colors">
+                  All Products
                 </Link>
               </li>
               <li>
-                <Link href="/collection/new-arrivals" className="text-xs font-semibold text-foreground/70 hover:text-primary transition-colors">
+                <Link href="/products" className="text-xs font-semibold text-foreground/70 hover:text-primary transition-colors">
                   New Arrivals
                 </Link>
               </li>
               <li>
-                <Link href="/collection/best-sellers" className="text-xs font-semibold text-foreground/70 hover:text-primary transition-colors">
+                <Link href="/products" className="text-xs font-semibold text-foreground/70 hover:text-primary transition-colors">
                   Best Sellers
                 </Link>
               </li>
@@ -95,18 +122,28 @@ export function Footer() {
             <p className="text-xs text-foreground/70 leading-relaxed font-medium">
               Join the club to get updates on new arrivals, exclusive discounts, and style tips.
             </p>
-            <form className="flex max-w-sm flex-col sm:flex-row gap-2" onSubmit={(e) => e.preventDefault()}>
+            <form className="flex max-w-sm flex-col sm:flex-row gap-2" onSubmit={handleSubscribe}>
               <Input
                 type="email"
                 placeholder="YOUR EMAIL"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
                 className="w-full rounded-md border border-border bg-background px-3 py-2 text-xs font-semibold uppercase tracking-wider placeholder-foreground/30 focus-visible:border-primary focus-visible:outline-none"
                 required
               />
               <Button
                 type="submit"
-                className="w-full sm:w-auto rounded-md bg-foreground px-4 py-2 text-xs font-bold tracking-widest text-background hover:bg-primary hover:text-primary-foreground transition-all duration-300 uppercase cursor-pointer"
+                disabled={loading}
+                className="w-full sm:w-auto rounded-md bg-foreground px-4 py-2 text-xs font-bold tracking-widest text-background hover:bg-primary hover:text-primary-foreground transition-all duration-300 uppercase cursor-pointer flex items-center justify-center gap-1.5"
               >
-                JOIN
+                {loading ? (
+                  <>
+                    <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                    <span>...</span>
+                  </>
+                ) : (
+                  "JOIN"
+                )}
               </Button>
             </form>
           </div>

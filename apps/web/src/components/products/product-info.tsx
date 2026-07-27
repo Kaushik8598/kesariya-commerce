@@ -11,34 +11,45 @@ interface ProductInfoProps {
 }
 
 export function ProductInfo({ product }: ProductInfoProps) {
-  const [openSection, setOpenSection] = useState<string>("description");
+  const [openSection, setOpenSection] = useState<string>("block-0");
 
-  const sections = [
-    {
-      id: "description",
-      title: "Description",
-      content: product.description,
-    },
-    {
-      id: "details",
-      title: "Details & Material",
-      content: (
-        <ul className="space-y-2 list-inside list-disc">
-          {product.material && <li><strong>Material:</strong> {product.material}</li>}
-          {product.weight && <li><strong>Weight:</strong> {product.weight}</li>}
-          <li><strong>SKU:</strong> {product.sku}</li>
-          {product.tags.length > 0 && (
-            <li><strong>Tags:</strong> {product.tags.join(", ")}</li>
-          )}
-        </ul>
-      ),
-    },
-    {
-      id: "care",
-      title: "Care Instructions",
-      content: product.careInstructions,
-    },
-  ].filter((s) => s.content);
+  // Determine sections from product.contentBlocks or fallback to standard fields
+  const hasBlocks = Array.isArray(product.contentBlocks) && product.contentBlocks.length > 0;
+
+  const sections = hasBlocks
+    ? (product.contentBlocks as any[])
+        .map((b, i) => ({
+          id: `block-${i}`,
+          title: b.title || `Section ${i + 1}`,
+          content: b.content || "",
+        }))
+        .filter((s) => s.content && String(s.content).trim() !== "")
+    : [
+        {
+          id: "description",
+          title: "Description",
+          content: product.description || product.shortDescription || "",
+        },
+        {
+          id: "details",
+          title: "Details & Material",
+          content: (
+            <ul className="space-y-2 list-inside list-disc">
+              {product.material && <li><strong>Material:</strong> {product.material}</li>}
+              {product.weight && <li><strong>Weight:</strong> {product.weight}</li>}
+              <li><strong>SKU:</strong> {product.sku}</li>
+              {product.tags && product.tags.length > 0 && (
+                <li><strong>Tags:</strong> {product.tags.join(", ")}</li>
+              )}
+            </ul>
+          ),
+        },
+        {
+          id: "care",
+          title: "Care Instructions",
+          content: product.careInstructions || "",
+        },
+      ].filter((s) => Boolean(s.content));
 
   if (sections.length === 0) return null;
 
@@ -46,7 +57,8 @@ export function ProductInfo({ product }: ProductInfoProps) {
     <div className="space-y-1">
       {sections.map((section, index) => {
         const isOpen = openSection === section.id;
-        
+        const isHtml = typeof section.content === "string";
+
         return (
           <div
             key={section.id}
@@ -73,12 +85,19 @@ export function ProductInfo({ product }: ProductInfoProps) {
             <div
               className={cn(
                 "overflow-hidden transition-all duration-300",
-                isOpen ? "max-h-96 pb-5 opacity-100" : "max-h-0 opacity-0"
+                isOpen ? "max-h-[1000px] pb-5 opacity-100" : "max-h-0 opacity-0"
               )}
             >
-              <div className="text-sm text-muted-foreground leading-relaxed prose prose-sm dark:prose-invert">
-                {section.content}
-              </div>
+              {isHtml ? (
+                <div
+                  className="text-sm text-muted-foreground leading-relaxed prose prose-sm dark:prose-invert max-w-none [&_p]:mb-2.5 [&_ul]:list-disc [&_ul]:pl-5 [&_ul]:mb-2 [&_ol]:list-decimal [&_ol]:pl-5 [&_ol]:mb-2 [&_strong]:font-semibold [&_strong]:text-foreground [&_h1]:text-lg [&_h1]:font-bold [&_h2]:text-base [&_h2]:font-bold [&_h3]:text-sm [&_h3]:font-semibold"
+                  dangerouslySetInnerHTML={{ __html: section.content as string }}
+                />
+              ) : (
+                <div className="text-sm text-muted-foreground leading-relaxed">
+                  {section.content}
+                </div>
+              )}
             </div>
           </div>
         );

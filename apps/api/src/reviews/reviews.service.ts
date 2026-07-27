@@ -166,4 +166,71 @@ export class ReviewsService {
     await this.prisma.review.delete({ where: { id } });
     return { message: 'Review deleted successfully' };
   }
+
+  async findAdminReviews(page = 1, limit = 10, search?: string, status?: string) {
+    const skip = (page - 1) * limit;
+    const where: any = {};
+
+    if (status === 'APPROVED') where.isApproved = true;
+    if (status === 'PENDING') where.isApproved = false;
+
+    if (search) {
+      where.OR = [
+        { comment: { contains: search, mode: 'insensitive' } },
+        { title: { contains: search, mode: 'insensitive' } },
+        { product: { name: { contains: search, mode: 'insensitive' } } },
+        { user: { firstName: { contains: search, mode: 'insensitive' } } },
+        { user: { lastName: { contains: search, mode: 'insensitive' } } },
+      ];
+    }
+
+    const [total, approvedCount, pendingCount, avgRatingResult, data] = await Promise.all([
+      this.prisma.review.count({ where }),
+      this.prisma.review.count({ where: { isApproved: true } }),
+      this.prisma.review.count({ where: { isApproved: false } }),
+      this.prisma.review.aggregate({ _avg: { rating: true } }),
+      this.prisma.review.findMany({
+        where,
+        skip,
+        take: limit,
+        orderBy: { createdAt: 'desc' },
+        include: {
+          product: { select: { id: true, name: true, slug: true } },
+          user: { select: { id: true, firstName: true, lastName: true, email: true, avatar: true } },
+        },
+      }),
+    ]);
+
+    return {
+      stats: {
+        totalReviews: total,
+        approvedReviews: approvedCount,
+        pendingReviews: pendingCount,
+        averageRating: Number(avgRatingResult._avg.rating || 0).toFixed(1),
+      },
+      data,
+      meta: {
+        total,
+        page,
+        limit,
+        totalPages: Math.ceil(total / limit) || 1,
+      },
+    };
+  }
+
+  async toggleApproval(id: string) {
+    const review = await this.prisma.review.findUnique({ where: { id } });
+    if (!review) throw new NotFoundException('Review not found');
+
+    return this.prisma.review.update({
+      where: { id },
+      data: { isApproved: !review.isApproved },
+    });
+  }
+
+  async removeAdminReview(id: string) {
+    const review = await this.prisma.review.findUnique({ where: { id } });
+    if (!review) throw new NotFoundException('Review not found');
+    return this.prisma.review.delete({ where: { id } });
+  }
 }

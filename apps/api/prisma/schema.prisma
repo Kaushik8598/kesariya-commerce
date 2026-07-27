@@ -419,6 +419,8 @@ model Product {
   weight           String?
   material         String?
   careInstructions String? @map("care_instructions") @db.Text
+  videoUrl         String? @map("video_url")
+  contentBlocks    Json?   @map("content_blocks")
 
   images   ProductImage[]
   variants ProductVariant[]
@@ -448,6 +450,7 @@ model ProductImage {
   url      String
   publicId String? @map("public_id")
   alt      String?
+  color    String?
 
   sortOrder Int     @default(0) @map("sort_order")
   isPrimary Boolean @default(false) @map("is_primary")
@@ -743,4 +746,62 @@ model MeasurementValue {
   @@index([profileId])
   @@map("measurement_values")
 }
+
+// ─── CMS Pages Module ────────────────────────────────────────────────
+
+model CmsPage {
+  id          String   @id @default(cuid())
+  title       String
+  slug        String   @unique
+  content     String   @db.Text
+  isPublished Boolean  @default(true) @map("is_published")
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@map("cms_pages")
+}
+
+// ─── Store Settings Module ───────────────────────────────────────────
+
+model StoreSetting {
+  id        String   @id @default(cuid())
+  key       String   @unique
+  value     Json
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@map("store_settings")
+}
+
+// ─── Audit Logs Module ───────────────────────────────────────────────
+
+model AuditLog {
+  id        String   @id @default(cuid())
+  userName  String   @map("user_name")
+  userRole  String?  @map("user_role")
+  action    String
+  details   String   @db.Text
+  ipAddress String?  @map("ip_address")
+  createdAt DateTime @default(now()) @map("created_at")
+
+  @@index([action])
+  @@index([createdAt])
+  @@map("audit_logs")
+}
+
+// ─── Newsletter Subscribers Module ──────────────────────────────────
+
+model NewsletterSubscriber {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  isActive  Boolean  @default(true) @map("is_active")
+  createdAt DateTime @default(now()) @map("created_at")
+
+  @@map("newsletter_subscribers")
+}
+
+
+
+
 

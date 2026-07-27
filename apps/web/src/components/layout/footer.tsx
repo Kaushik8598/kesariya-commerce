@@ -96,17 +96,17 @@ export function Footer() {
             </h3>
             <ul className="space-y-2.5">
               <li>
-                <Link href="/faq" className="text-xs font-semibold text-foreground/70 hover:text-primary transition-colors">
+                <Link href="/info/faq" className="text-xs font-semibold text-foreground/70 hover:text-primary transition-colors">
                   FAQs & Support
                 </Link>
               </li>
               <li>
-                <Link href="/shipping" className="text-xs font-semibold text-foreground/70 hover:text-primary transition-colors">
+                <Link href="/info/shipping" className="text-xs font-semibold text-foreground/70 hover:text-primary transition-colors">
                   Shipping & Delivery
                 </Link>
               </li>
               <li>
-                <Link href="/returns" className="text-xs font-semibold text-foreground/70 hover:text-primary transition-colors">
+                <Link href="/info/returns" className="text-xs font-semibold text-foreground/70 hover:text-primary transition-colors">
                   Returns & Refunds
                 </Link>
               </li>
@@ -155,10 +155,10 @@ export function Footer() {
             &copy; {new Date().getFullYear()} KESARIYA COMMERCE. ALL RIGHTS RESERVED.
           </p>
           <div className="flex gap-6 text-[10px] font-bold tracking-wider text-foreground/50 uppercase">
-            <Link href="/privacy" className="hover:text-primary transition-colors">
+            <Link href="/info/privacy" className="hover:text-primary transition-colors">
               PRIVACY POLICY
             </Link>
-            <Link href="/terms" className="hover:text-primary transition-colors">
+            <Link href="/info/terms" className="hover:text-primary transition-colors">
               TERMS OF SERVICE
             </Link>
           </div>

@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import {
   Search,
@@ -12,18 +13,15 @@ import {
   Globe,
   Loader2,
   AlertTriangle,
-  ChevronLeft,
-  ChevronRight,
-  ChevronsLeft,
-  ChevronsRight,
-  ExternalLink,
   Eye,
+  ExternalLink,
 } from "lucide-react";
 import api from "@/lib/api";
 import { formatDate } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
+import { DataTablePagination } from "@/components/ui/data-table-pagination";
 import {
   Table,
   TableHeader,
@@ -59,6 +57,7 @@ interface PaginationMeta {
 }
 
 export default function CMSPage() {
+  const router = useRouter();
   const queryClient = useQueryClient();
 
   // Search & Pagination State
@@ -66,15 +65,8 @@ export default function CMSPage() {
   const [page, setPage] = useState(1);
   const [limit, setLimit] = useState(10);
 
-  // Form Modal State
-  const [isFormOpen, setIsFormOpen] = useState(false);
-  const [editingPage, setEditingPage] = useState<CmsPageRecord | null>(null);
-  const [formData, setFormData] = useState({
-    title: "",
-    slug: "",
-    content: "",
-    isPublished: true,
-  });
+  // Standalone Full Preview Modal State
+  const [previewTarget, setPreviewTarget] = useState<CmsPageRecord | null>(null);
 
   // Delete Target Modal State
   const [deleteTarget, setDeleteTarget] = useState<CmsPageRecord | null>(null);
@@ -112,67 +104,8 @@ export default function CMSPage() {
     limit: 10,
     totalPages: 1,
   };
-  const publishedCount = responseData?.stats?.publishedCount || pagesList.filter((p) => p.isPublished).length;
-
-  // Open Form Modals
-  const openCreateModal = () => {
-    setEditingPage(null);
-    setFormData({
-      title: "",
-      slug: "",
-      content: "",
-      isPublished: true,
-    });
-    setIsFormOpen(true);
-  };
-
-  const openEditModal = (cmsPage: CmsPageRecord) => {
-    setEditingPage(cmsPage);
-    setFormData({
-      title: cmsPage.title,
-      slug: cmsPage.slug,
-      content: cmsPage.content,
-      isPublished: cmsPage.isPublished,
-    });
-    setIsFormOpen(true);
-  };
-
-  const closeFormModal = () => {
-    setIsFormOpen(false);
-    setEditingPage(null);
-  };
-
-  // Create CMS Page Mutation: POST /admin/cms
-  const createMutation = useMutation({
-    mutationFn: async (payload: any) => {
-      const res = await api.post("/admin/cms", payload);
-      return res.data;
-    },
-    onSuccess: () => {
-      toast.success("New CMS Page created!");
-      queryClient.invalidateQueries({ queryKey: ["adminCmsPages"] });
-      closeFormModal();
-    },
-    onError: (err: any) => {
-      toast.error(err?.response?.data?.message || "Failed to create CMS page");
-    },
-  });
-
-  // Edit CMS Page Mutation: PATCH /admin/cms/:id
-  const editMutation = useMutation({
-    mutationFn: async ({ id, payload }: { id: string; payload: any }) => {
-      const res = await api.patch(`/admin/cms/${id}`, payload);
-      return res.data;
-    },
-    onSuccess: () => {
-      toast.success("CMS Page updated!");
-      queryClient.invalidateQueries({ queryKey: ["adminCmsPages"] });
-      closeFormModal();
-    },
-    onError: (err: any) => {
-      toast.error(err?.response?.data?.message || "Failed to update CMS page");
-    },
-  });
+  const publishedCount =
+    responseData?.stats?.publishedCount || pagesList.filter((p) => p.isPublished).length;
 
   // Delete CMS Page Mutation: DELETE /admin/cms/:id
   const deleteMutation = useMutation({
@@ -190,34 +123,6 @@ export default function CMSPage() {
     },
   });
 
-  const handleFormSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!formData.title.trim()) {
-      toast.error("Page title is required");
-      return;
-    }
-    if (!formData.content.trim()) {
-      toast.error("Page content body is required");
-      return;
-    }
-
-    const payload = {
-      title: formData.title.trim(),
-      slug: formData.slug.trim() || undefined,
-      content: formData.content.trim(),
-      isPublished: formData.isPublished,
-    };
-
-    if (editingPage) {
-      editMutation.mutate({ id: editingPage.id, payload });
-    } else {
-      createMutation.mutate(payload);
-    }
-  };
-
-  const startItemIndex = (pagination.page - 1) * pagination.limit + 1;
-  const endItemIndex = Math.min(pagination.page * pagination.limit, pagination.total);
-
   return (
     <div className="space-y-6">
       {/* Header */}
@@ -230,13 +135,13 @@ export default function CMSPage() {
             Manage static storefront content pages like About Us, Terms & Conditions, and Privacy Policy.
           </p>
         </div>
-        <Button onClick={openCreateModal} className="gap-2 self-start sm:self-auto">
+        <Button onClick={() => router.push("/cms/create")} className="gap-2 self-start sm:self-auto">
           <Plus className="h-4 w-4" />
           <span>Create New Page</span>
         </Button>
       </div>
 
-      {/* Overview Stat Cards (No Page Number Card) */}
+      {/* Overview Stat Cards */}
       <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
         <Card className="p-5 !flex-row items-center justify-between">
           <div className="space-y-1">
@@ -283,10 +188,10 @@ export default function CMSPage() {
         <Card className="p-5 !flex-row items-center justify-between">
           <div className="space-y-1">
             <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
-              Storefront Routing
+              Storefront Route
             </p>
             <p className="text-2xl font-extrabold text-sky-400 font-heading">
-              Live
+              /info/[slug]
             </p>
           </div>
           <div className="h-11 w-11 rounded-xl bg-sky-500/15 text-sky-400 flex items-center justify-center shrink-0 border border-sky-500/20">
@@ -344,6 +249,14 @@ export default function CMSPage() {
                       ? "No pages matched your search."
                       : "Create your first CMS static content page!"}
                   </p>
+                  <Button
+                    onClick={() => router.push("/cms/create")}
+                    variant="outline"
+                    size="sm"
+                    className="mt-4 gap-2"
+                  >
+                    <Plus className="h-4 w-4" /> Create Page Now
+                  </Button>
                 </TableCell>
               </TableRow>
             ) : (
@@ -366,7 +279,7 @@ export default function CMSPage() {
                   {/* Slug */}
                   <TableCell className="py-4">
                     <span className="font-mono text-xs font-semibold text-primary bg-primary/10 px-2 py-0.5 rounded border border-primary/20">
-                      /{cmsPage.slug}
+                      /info/{cmsPage.slug}
                     </span>
                   </TableCell>
 
@@ -386,13 +299,25 @@ export default function CMSPage() {
                   <TableCell className="py-4 text-right pr-6">
                     <div className="flex items-center justify-end gap-1.5">
                       <Button
+                        variant="outline"
+                        size="xs"
+                        onClick={() => setPreviewTarget(cmsPage)}
+                        className="h-7 px-2.5 gap-1 text-sky-400 border-sky-500/30 hover:bg-sky-500/10"
+                        title="Live Preview Page"
+                      >
+                        <Eye className="h-3.5 w-3.5" />
+                        <span>Preview</span>
+                      </Button>
+
+                      <Button
                         variant="secondary"
                         size="xs"
-                        onClick={() => openEditModal(cmsPage)}
-                        className="h-7 px-2"
+                        onClick={() => router.push(`/cms/edit/${cmsPage.id}`)}
+                        className="h-7 px-2.5 gap-1"
                         title="Edit Page"
                       >
                         <Pencil className="h-3.5 w-3.5" />
+                        <span>Edit</span>
                       </Button>
 
                       <Button
@@ -412,159 +337,56 @@ export default function CMSPage() {
           </TableBody>
         </Table>
 
-        {/* Bottom Pagination Bar with Integrated Per-Page Selector */}
-        {pagination.total > 0 && (
-          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between px-6 py-4 border-t border-border bg-card/40">
-            <div className="flex items-center gap-4">
-              <div className="text-xs text-muted-foreground font-medium">
-                Showing <span className="font-bold text-foreground">{startItemIndex}</span> to{" "}
-                <span className="font-bold text-foreground">{endItemIndex}</span> of{" "}
-                <span className="font-bold text-foreground">{pagination.total}</span> pages
-              </div>
-
-              {/* Rows Per Page selector */}
-              <div className="flex items-center gap-2 border-l border-border pl-4">
-                <span className="text-xs text-muted-foreground font-semibold">Rows per page:</span>
-                <select
-                  value={limit}
-                  onChange={(e) => {
-                    setLimit(Number(e.target.value));
-                    setPage(1);
-                  }}
-                  className="h-8 rounded-md border border-border bg-card px-2.5 text-xs font-semibold text-foreground outline-none cursor-pointer focus:border-primary"
-                >
-                  <option value={5}>5</option>
-                  <option value={10}>10</option>
-                  <option value={25}>25</option>
-                  <option value={50}>50</option>
-                </select>
-              </div>
-            </div>
-
-            <div className="flex items-center gap-1.5">
-              <Button
-                variant="outline"
-                size="xs"
-                onClick={() => setPage(1)}
-                disabled={page <= 1}
-              >
-                <ChevronsLeft className="h-3.5 w-3.5" />
-              </Button>
-              <Button
-                variant="outline"
-                size="xs"
-                onClick={() => setPage((p) => Math.max(1, p - 1))}
-                disabled={page <= 1}
-              >
-                <ChevronLeft className="h-3.5 w-3.5 mr-1" /> Prev
-              </Button>
-
-              <span className="px-3 text-xs font-bold text-foreground">
-                {page} / {pagination.totalPages}
-              </span>
-
-              <Button
-                variant="outline"
-                size="xs"
-                onClick={() => setPage((p) => Math.min(pagination.totalPages, p + 1))}
-                disabled={page >= pagination.totalPages}
-              >
-                Next <ChevronRight className="h-3.5 w-3.5 ml-1" />
-              </Button>
-              <Button
-                variant="outline"
-                size="xs"
-                onClick={() => setPage(pagination.totalPages)}
-                disabled={page >= pagination.totalPages}
-              >
-                <ChevronsRight className="h-3.5 w-3.5" />
-              </Button>
-            </div>
-          </div>
-        )}
+        {/* Bottom Pagination Bar */}
+        <DataTablePagination
+          page={page}
+          limit={limit}
+          total={pagination.total}
+          totalPages={pagination.totalPages}
+          onPageChange={setPage}
+          onLimitChange={setLimit}
+          entityName="pages"
+        />
       </Card>
 
-      {/* Add / Edit CMS Page Modal */}
-      <Dialog open={isFormOpen} onOpenChange={(open) => !open && closeFormModal()}>
+      {/* Standalone Full Live Preview Dialog Modal */}
+      <Dialog open={Boolean(previewTarget)} onOpenChange={(open) => !open && setPreviewTarget(null)}>
         <DialogHeader>
-          <DialogTitle>{editingPage ? `Edit "${editingPage.title}"` : "Create CMS Static Page"}</DialogTitle>
-          <DialogDescription>
-            Configure title, URL route slug, and page body content.
-          </DialogDescription>
+          <div className="flex items-center justify-between pr-6">
+            <div>
+              <DialogTitle className="text-lg font-bold">
+                {previewTarget?.title}
+              </DialogTitle>
+              <DialogDescription className="font-mono text-xs text-primary">
+                Storefront Route: /info/{previewTarget?.slug}
+              </DialogDescription>
+            </div>
+            <Badge variant={previewTarget?.isPublished ? "success" : "secondary"}>
+              {previewTarget?.isPublished ? "PUBLISHED" : "DRAFT"}
+            </Badge>
+          </div>
         </DialogHeader>
 
-        <form onSubmit={handleFormSubmit} className="space-y-4 py-2">
-          <div className="grid grid-cols-2 gap-3">
-            <div>
-              <label className="text-xs font-semibold text-foreground mb-1.5 block">
-                Page Title *
-              </label>
-              <input
-                type="text"
-                value={formData.title}
-                onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-                placeholder="About Us"
-                className="h-10 w-full px-3.5 rounded-lg bg-secondary border border-border text-xs text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary"
-              />
-            </div>
+        <div className="p-6 max-h-[60vh] overflow-y-auto bg-background rounded-xl border border-border my-2 prose prose-invert max-w-none text-xs leading-relaxed">
+          <h1 className="text-2xl font-extrabold tracking-tight text-foreground mb-4 font-heading border-b border-border pb-3">
+            {previewTarget?.title}
+          </h1>
 
-            <div>
-              <label className="text-xs font-semibold text-foreground mb-1.5 block">
-                URL Route Slug (e.g. about-us)
-              </label>
-              <input
-                type="text"
-                value={formData.slug}
-                onChange={(e) => setFormData({ ...formData, slug: e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, "") })}
-                placeholder="about-us"
-                className="h-10 w-full px-3.5 rounded-lg bg-secondary border border-border text-xs font-mono text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary"
-              />
-            </div>
-          </div>
-
-          <div>
-            <label className="text-xs font-semibold text-foreground mb-1.5 block">
-              Page Content Body *
-            </label>
-            <textarea
-              rows={8}
-              value={formData.content}
-              onChange={(e) => setFormData({ ...formData, content: e.target.value })}
-              placeholder="Enter page text content or HTML markdown..."
-              className="w-full p-3.5 rounded-lg bg-secondary border border-border text-xs text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary font-mono"
+          {previewTarget?.content ? (
+            <div
+              dangerouslySetInnerHTML={{ __html: previewTarget.content }}
+              className="space-y-3 text-muted-foreground font-sans [&_h2]:text-base [&_h2]:font-bold [&_h2]:text-foreground [&_h2]:mt-5 [&_h2]:mb-2 [&_h3]:text-sm [&_h3]:font-bold [&_h3]:text-foreground [&_h3]:mt-4 [&_h3]:mb-1 [&_ul]:list-disc [&_ul]:pl-5 [&_ol]:list-decimal [&_ol]:pl-5 [&_li]:mb-1.5 [&_blockquote]:border-l-4 [&_blockquote]:border-primary [&_blockquote]:pl-4 [&_blockquote]:py-1 [&_blockquote]:italic [&_blockquote]:text-foreground/90 [&_a]:text-primary [&_a]:underline"
             />
-          </div>
+          ) : (
+            <p className="text-muted-foreground italic">No content available for preview.</p>
+          )}
+        </div>
 
-          <div>
-            <label className="text-xs font-semibold text-foreground mb-1.5 block">
-              Publish Status *
-            </label>
-            <select
-              value={formData.isPublished ? "true" : "false"}
-              onChange={(e) => setFormData({ ...formData, isPublished: e.target.value === "true" })}
-              className="h-10 w-full px-3.5 rounded-lg bg-secondary border border-border text-xs text-foreground outline-none focus:border-primary"
-            >
-              <option value="true">PUBLISHED (Visible on Storefront)</option>
-              <option value="false">DRAFT (Hidden / Work in Progress)</option>
-            </select>
-          </div>
-
-          <DialogFooter className="pt-2">
-            <Button type="button" variant="outline" onClick={closeFormModal}>
-              Cancel
-            </Button>
-            <Button
-              type="submit"
-              disabled={createMutation.isPending || editMutation.isPending}
-            >
-              {createMutation.isPending || editMutation.isPending
-                ? "Saving..."
-                : editingPage
-                ? "Save Changes"
-                : "Create Page"}
-            </Button>
-          </DialogFooter>
-        </form>
+        <DialogFooter>
+          <Button variant="outline" onClick={() => setPreviewTarget(null)}>
+            Close Preview
+          </Button>
+        </DialogFooter>
       </Dialog>
 
       {/* Delete Confirmation Modal */}
@@ -587,7 +409,7 @@ export default function CMSPage() {
         </DialogHeader>
 
         <div className="py-3 text-xs text-muted-foreground">
-          This action will permanently delete CMS page <span className="text-foreground font-bold font-heading">"{deleteTarget?.title}"</span> (/{deleteTarget?.slug}) from Neon PostgreSQL database.
+          This action will permanently delete CMS page <span className="text-foreground font-bold font-heading">"{deleteTarget?.title}"</span> (/info/{deleteTarget?.slug}) from Neon PostgreSQL database.
         </div>
 
         <DialogFooter>

@@ -786,8 +786,8 @@ export default function ProductForm({ productId }: ProductFormProps) {
 
   return (
     <div className="grid grid-cols-[220px_1fr] gap-6 items-start">
-      {/* ── Left Sidebar Quick Jump ── */}
-      <div className="sticky top-6">
+      {/* ── Left Sidebar Quick Jump (Sticky) ── */}
+      <div className="sticky top-20 z-20">
         <Card>
           <CardContent className="p-4">
             <p className="mb-3 text-[11px] font-bold uppercase tracking-wider text-muted-foreground">
@@ -832,8 +832,8 @@ export default function ProductForm({ productId }: ProductFormProps) {
 
       {/* ── Right Form ── */}
       <form onSubmit={handleSubmit} className="space-y-0">
-        {/* Top Action Bar */}
-        <Card className="mb-6">
+        {/* Sticky Top Action Bar */}
+        <Card className="sticky top-20 z-30 mb-6 border-border bg-card/95 backdrop-blur-md shadow-md">
           <CardContent className="flex items-center justify-between p-4 sm:px-6">
             <div>
               <h1 className="text-xl font-extrabold tracking-tight text-foreground">
@@ -864,15 +864,11 @@ export default function ProductForm({ productId }: ProductFormProps) {
               </Button>
               <Button type="submit" size="sm" className="gap-1.5" disabled={isPending}>
                 {isPending ? (
-                  <Loader2 size={14} className="animate-spin" />
+                  <Loader2 size={13} className="animate-spin" />
                 ) : (
-                  <Save size={14} />
+                  <Save size={13} />
                 )}
-                {isPending
-                  ? "Saving..."
-                  : isEdit
-                  ? "Update Product"
-                  : "Create Product"}
+                {isPending ? "Saving..." : isEdit ? "Update Product" : "Save Product"}
               </Button>
             </div>
           </CardContent>

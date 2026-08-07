@@ -34,7 +34,9 @@ export function useLogin() {
 
       toast.success(response.data.message);
 
-      const redirectTo = searchParams.get("redirectTo") || "/";
+      const roleSlug = response.data.user?.role?.slug;
+      const defaultPath = (roleSlug === "admin" || roleSlug === "super-admin") ? "/admin" : "/";
+      const redirectTo = searchParams.get("redirectTo") || defaultPath;
       router.push(redirectTo);
     },
     onError: (error: any) => {

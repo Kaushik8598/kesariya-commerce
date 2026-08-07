@@ -2,17 +2,17 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { ArrowUpRight } from "lucide-react";
+import { ArrowUpRight, Grid } from "lucide-react";
 
 import { useInView } from "@/hooks/use-in-view";
 import { useCategories } from "@/hooks/products/use-categories";
 import { Skeleton } from "@/components/ui/skeleton";
+import { EmptyState } from "@/components/ui/empty-state";
 
 export function CategoriesGrid() {
   const { ref, isInView } = useInView({ threshold: 0.15 });
   const { categories, loading } = useCategories();
 
-  // For the grid layout, we might just want to show the top 6 categories if there are many.
   const displayCategories = categories.slice(0, 6);
 
   return (
@@ -33,9 +33,10 @@ export function CategoriesGrid() {
       </div>
 
       {/* Categories Grid */}
-      <div className="mt-12 grid grid-cols-2 gap-4 sm:grid-cols-3 lg:gap-6">
-        {loading
-          ? Array.from({ length: 6 }).map((_, i) => (
+      <div className="mt-12">
+        {loading ? (
+          <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:gap-6">
+            {Array.from({ length: 6 }).map((_, i) => (
               <div
                 key={i}
                 className={`group relative overflow-hidden rounded-2xl ${
@@ -44,8 +45,19 @@ export function CategoriesGrid() {
               >
                 <Skeleton className="absolute inset-0" />
               </div>
-            ))
-          : displayCategories.map((category, index) => (
+            ))}
+          </div>
+        ) : displayCategories.length === 0 ? (
+          <EmptyState
+            icon={Grid}
+            title="No Categories Available"
+            description="Our store collections will be updated soon with handcrafted categories."
+            actionLabel="Explore All Products"
+            actionHref="/products"
+          />
+        ) : (
+          <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:gap-6">
+            {displayCategories.map((category, index) => (
               <Link
                 key={category.id}
                 href={`/category/${category.slug}`}
@@ -84,7 +96,7 @@ export function CategoriesGrid() {
                     </p>
                   </div>
 
-                  {/* Arrow Icon (visible on hover) */}
+                  {/* Arrow Icon */}
                   <div className="mt-3 flex items-center gap-1.5 text-white/0 transition-all duration-500 group-hover:text-white/80">
                     <span className="text-[10px] font-bold uppercase tracking-[0.2em]">
                       Shop Now
@@ -94,6 +106,8 @@ export function CategoriesGrid() {
                 </div>
               </Link>
             ))}
+          </div>
+        )}
       </div>
     </section>
   );

@@ -17,9 +17,12 @@ export default function AuthLayout({
 
       {/* ── Right Column: Form Container + Header Nav ── */}
       <section className="relative flex flex-col min-h-screen">
-        {/* Top Header Bar for Mobile & Desktop Landing Page Redirect */}
-        <header className="flex items-center justify-between p-6 sm:px-10 border-b border-border/40 lg:border-b-0">
-          <Logo size="md" showBadge />
+        {/* Top Header Bar */}
+        <header className="flex items-center justify-between p-6 sm:px-10 border-b border-border/40 lg:border-b-0 lg:justify-end">
+          {/* Logo displayed only on mobile screens where left carousel is hidden */}
+          <div className="lg:hidden">
+            <Logo size="md" showBadge />
+          </div>
 
           <Link
             href="/"

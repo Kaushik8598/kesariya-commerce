@@ -137,13 +137,13 @@ export function Header() {
                     onClick={() => setUserDropdownOpen(!userDropdownOpen)}
                     className="flex items-center gap-1.5 p-1 h-auto text-foreground/77 hover:text-primary rounded-full hover:bg-secondary cursor-pointer"
                   >
-                    {profile?.avatar ? (
-                      <div className="relative h-7 w-7 rounded-full overflow-hidden border border-primary/30">
+                    <div className="relative h-8 w-8 rounded-full overflow-hidden border border-border bg-secondary shrink-0 flex items-center justify-center transition-colors hover:border-primary/40">
+                      {profile?.avatar ? (
                         <Image src={profile.avatar} alt="User Avatar" fill className="object-cover" />
-                      </div>
-                    ) : (
-                      <User className="h-5 w-5" />
-                    )}
+                      ) : (
+                        <User className="h-4 w-4 text-muted-foreground" />
+                      )}
+                    </div>
                     <ChevronDown className="h-3 w-3 opacity-60" />
                   </Button>
 

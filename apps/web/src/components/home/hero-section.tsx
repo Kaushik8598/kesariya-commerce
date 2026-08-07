@@ -139,7 +139,7 @@ export function HeroSection() {
                 <p className="text-2xl font-extrabold text-white sm:text-3xl font-heading">
                   {stat.value}
                 </p>
-                <p className="mt-1 text-[10px] font-bold uppercase tracking-[0.2em] text-black">
+                <p className="mt-1 text-[10px] font-bold uppercase tracking-[0.2em] text-zinc-400">
                   {stat.label}
                 </p>
               </div>

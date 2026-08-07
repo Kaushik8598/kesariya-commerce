@@ -23,9 +23,22 @@ export function useProducts(
     const fetchProducts = async () => {
       try {
         setLoading(true);
-        const res = await productService.getProducts(params);
+        const res: any = await productService.getProducts(params);
         if (mounted) {
-          setData(res.data);
+          const rawData = res?.data?.products ? res.data : res?.products ? res : res?.data || res;
+          const productsList = Array.isArray(rawData?.products)
+            ? rawData.products
+            : Array.isArray(rawData)
+            ? rawData
+            : [];
+          const paginationObj = rawData?.pagination || { page: 1, limit: 12, total: productsList.length, totalPages: 1 };
+          const filtersObj = rawData?.filters || { categories: [], brands: [], priceRange: { min: 0, max: 0 } };
+
+          setData({
+            products: productsList,
+            pagination: paginationObj,
+            filters: filtersObj,
+          });
           setError(null);
         }
       } catch (err) {
@@ -56,8 +69,17 @@ export function useFeaturedProducts(limit = 8) {
   useEffect(() => {
     let mounted = true;
     productService.getFeaturedProducts(limit)
-      .then((res) => {
-        if (mounted) setProducts(res.data);
+      .then((res: any) => {
+        if (mounted) {
+          const list = Array.isArray(res)
+            ? res
+            : Array.isArray(res?.data)
+            ? res.data
+            : Array.isArray(res?.data?.data)
+            ? res.data.data
+            : [];
+          setProducts(list);
+        }
       })
       .finally(() => {
         if (mounted) setLoading(false);
@@ -75,8 +97,17 @@ export function useNewArrivals(limit = 8) {
   useEffect(() => {
     let mounted = true;
     productService.getNewArrivals(limit)
-      .then((res) => {
-        if (mounted) setProducts(res.data);
+      .then((res: any) => {
+        if (mounted) {
+          const list = Array.isArray(res)
+            ? res
+            : Array.isArray(res?.data)
+            ? res.data
+            : Array.isArray(res?.data?.data)
+            ? res.data.data
+            : [];
+          setProducts(list);
+        }
       })
       .finally(() => {
         if (mounted) setLoading(false);
@@ -95,9 +126,10 @@ export function useProduct(slug: string) {
   useEffect(() => {
     let mounted = true;
     productService.getProduct(slug)
-      .then((res) => {
+      .then((res: any) => {
         if (mounted) {
-          setProduct(res.data);
+          const prod = res?.data || res;
+          setProduct(prod);
           setError(null);
         }
       })

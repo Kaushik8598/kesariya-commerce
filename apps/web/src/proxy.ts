@@ -1,89 +1,117 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
+import { verifyAccessToken } from "@/lib/auth-server";
 
-const GUEST_ROUTES = [
-  "/login",
-  "/register",
-  "/forgot-password",
-  "/verify-otp",
-  "/reset-password",
+const PUBLIC_API_PATHS = [
+  "/api/auth/register",
+  "/api/auth/login",
+  "/api/auth/refresh",
+  "/api/auth/forgot-password",
+  "/api/auth/verify-forgot-password-otp",
+  "/api/auth/reset-password",
+  "/api/auth/verify-registration-otp",
+  "/api/auth/resend-registration-otp",
+  "/api/products",
+  "/api/categories",
+  "/api/brands",
+  "/api/testimonials",
+  "/api/newsletter",
+  "/api/cms",
+  "/api/locations",
+  "/api/public",
+  "/api/coupons",
+  "/api/reviews",
 ];
 
-const PROTECTED_ROUTES = [
-  "/profile",
-  "/checkout",
-  "/orders",
-  "/admin",
-];
+const ADMIN_API_PATHS = ["/api/admin"];
+const ADMIN_PAGE_PATHS = ["/admin"];
 
-const ROLE_ROUTE_GUARDS: { prefix: string; allowedRoles: string[] }[] = [
-  { prefix: "/admin", allowedRoles: ["super-admin"] },
-];
-
-function decodeJwt(token: string) {
-  try {
-    const base64Url = token.split(".")[1];
-    if (!base64Url) return null;
-    const base64 = base64Url.replace(/-/g, "+").replace(/_/g, "/");
-    const jsonPayload = decodeURIComponent(
-      atob(base64)
-        .split("")
-        .map((c) => "%" + ("00" + c.charCodeAt(0).toString(16)).slice(-2))
-        .join("")
-    );
-    return JSON.parse(jsonPayload);
-  } catch {
-    return null;
-  }
+function isPublicApiPath(pathname: string): boolean {
+  return PUBLIC_API_PATHS.some((path) => {
+    return pathname === path || pathname.startsWith(path + "/") || pathname.startsWith(path + "?");
+  });
 }
 
-export function proxy(request: NextRequest) {
+function isAdminPath(pathname: string): boolean {
+  return (
+    ADMIN_API_PATHS.some((path) => pathname.startsWith(path)) ||
+    ADMIN_PAGE_PATHS.some((path) => pathname.startsWith(path))
+  );
+}
+
+export async function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
-  const accessTokenCookie = request.cookies.get("access_token");
-  const hasAccessToken = !!accessTokenCookie;
-  const hasRefreshToken = request.cookies.has("refresh_token");
-  const isAuthenticated = hasAccessToken || hasRefreshToken;
-
-  // 1. If user is authenticated and tries to access guest routes, redirect to home
-  const isGuestRoute = GUEST_ROUTES.some((route) => pathname.startsWith(route));
-  if (isGuestRoute && isAuthenticated) {
-    return NextResponse.redirect(new URL("/", request.url));
+  // Skip non-API, non-admin paths and allow public /admin/login page
+  if ((!pathname.startsWith("/api") && !pathname.startsWith("/admin")) || pathname === "/admin/login") {
+    return NextResponse.next();
   }
 
-  // 2. If user is not authenticated and tries to access protected routes, redirect to login
-  const isProtectedRoute = PROTECTED_ROUTES.some((route) => pathname.startsWith(route));
-  if (isProtectedRoute && !isAuthenticated) {
-    const loginUrl = new URL("/login", request.url);
-    // Remember redirect url
-    loginUrl.searchParams.set("redirectTo", pathname);
-    return NextResponse.redirect(loginUrl);
+  // Allow public API paths without authentication
+  if (pathname.startsWith("/api") && isPublicApiPath(pathname)) {
+    return NextResponse.next();
   }
 
-  // 3. If user is authenticated and route is role-restricted, check access token role
-  const activeGuard = ROLE_ROUTE_GUARDS.find((guard) => pathname.startsWith(guard.prefix));
-  if (activeGuard && accessTokenCookie) {
-    const payload = decodeJwt(accessTokenCookie.value);
-    const userRole = payload?.role;
-    if (!userRole || !activeGuard.allowedRoles.includes(userRole)) {
-      // Redirect authenticated but unauthorized user to home page
+  // Get token from header or cookie
+  const authHeader = request.headers.get("Authorization");
+  const tokenFromHeader = authHeader?.startsWith("Bearer ")
+    ? authHeader.slice(7)
+    : null;
+  const tokenFromCookie = request.cookies.get("access_token")?.value;
+  const token = tokenFromHeader || tokenFromCookie;
+
+  if (!token) {
+    if (pathname.startsWith("/api")) {
+      return NextResponse.json(
+        { success: false, message: "Unauthorized" },
+        { status: 401 }
+      );
+    }
+    return NextResponse.redirect(new URL("/login?redirectTo=/admin", request.url));
+  }
+
+  // Verify token
+  const payload = await verifyAccessToken(token);
+
+  if (!payload) {
+    if (pathname.startsWith("/api")) {
+      return NextResponse.json(
+        { success: false, message: "Invalid or expired token" },
+        { status: 401 }
+      );
+    }
+    return NextResponse.redirect(new URL("/login?redirectTo=/admin", request.url));
+  }
+
+  // Admin-only paths require admin role
+  if (isAdminPath(pathname)) {
+    const adminRoles = ["super-admin", "admin"];
+    if (!adminRoles.includes(payload.role)) {
+      if (pathname.startsWith("/api")) {
+        return NextResponse.json(
+          { success: false, message: "Forbidden: Admin access required" },
+          { status: 403 }
+        );
+      }
       return NextResponse.redirect(new URL("/", request.url));
     }
   }
 
-  return NextResponse.next();
+  // Pass user info to route handlers via headers
+  const requestHeaders = new Headers(request.headers);
+  requestHeaders.set("x-user-id", payload.sub);
+  requestHeaders.set("x-user-role", payload.role);
+
+  return NextResponse.next({
+    request: {
+      headers: requestHeaders,
+    },
+  });
 }
 
 export const config = {
   matcher: [
-    /*
-     * Match all request paths except for the ones starting with:
-     * - api (API routes)
-     * - _next/static (static files)
-     * - _next/image (image optimization files)
-     * - favicon.ico (favicon file)
-     * - next.svg, vercel.svg (images/assets in public folder)
-     */
-    "/((?!api|_next/static|_next/image|favicon.ico|next.svg|vercel.svg).*)",
+    "/api/:path*",
+    "/admin/:path*",
   ],
 };

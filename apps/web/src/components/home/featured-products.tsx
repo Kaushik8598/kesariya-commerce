@@ -1,12 +1,13 @@
 "use client";
 
 import Link from "next/link";
-import { ArrowRight } from "lucide-react";
+import { ArrowRight, ShoppingBag } from "lucide-react";
 
 import { useInView } from "@/hooks/use-in-view";
 import { ProductCard } from "@/components/products/product-card";
 import { useFeaturedProducts } from "@/hooks/products/use-products";
 import { Skeleton } from "@/components/ui/skeleton";
+import { EmptyState } from "@/components/ui/empty-state";
 
 export function FeaturedProducts() {
   const { ref, isInView } = useInView({ threshold: 0.1 });
@@ -38,16 +39,28 @@ export function FeaturedProducts() {
       </div>
 
       {/* Product Grid */}
-      <div className="mt-10 grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4 lg:gap-6">
-        {loading
-          ? Array.from({ length: 4 }).map((_, i) => (
+      <div className="mt-10">
+        {loading ? (
+          <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4 lg:gap-6">
+            {Array.from({ length: 4 }).map((_, i) => (
               <div key={i} className="space-y-3">
                 <Skeleton className="aspect-[3/4] w-full rounded-xl" />
                 <Skeleton className="h-4 w-2/3" />
                 <Skeleton className="h-4 w-1/2" />
               </div>
-            ))
-          : products.map((product, index) => (
+            ))}
+          </div>
+        ) : products.length === 0 ? (
+          <EmptyState
+            icon={ShoppingBag}
+            title="No Featured Products"
+            description="Our featured collection is currently being updated with new handpicked arrivals."
+            actionLabel="View All Products"
+            actionHref="/products"
+          />
+        ) : (
+          <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4 lg:gap-6">
+            {products.map((product, index) => (
               <div
                 key={product.id}
                 className={`transition-all duration-700 ${
@@ -62,6 +75,8 @@ export function FeaturedProducts() {
                 <ProductCard product={product} />
               </div>
             ))}
+          </div>
+        )}
       </div>
     </section>
   );

@@ -10,9 +10,16 @@ export function useCategories(tree = false) {
   useEffect(() => {
     let mounted = true;
     categoryService.getCategories(tree)
-      .then((res) => {
+      .then((res: any) => {
         if (mounted) {
-          setCategories(res.data);
+          const list = Array.isArray(res)
+            ? res
+            : Array.isArray(res?.data)
+            ? res.data
+            : Array.isArray(res?.data?.data)
+            ? res.data.data
+            : [];
+          setCategories(list);
           setError(null);
         }
       })

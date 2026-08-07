@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { ChevronLeft, ChevronRight, ArrowLeft, Sparkles } from "lucide-react";
+import { ChevronLeft, ChevronRight, Sparkles } from "lucide-react";
 import { Logo } from "@/components/ui/logo";
 
 const slides = [
@@ -72,17 +72,9 @@ export function AuthCarousel() {
         </div>
       ))}
 
-      {/* Top Bar: Logo Component -> Home Landing Page Redirect */}
+      {/* Top Bar: Logo Component */}
       <div className="relative z-10 flex items-center justify-between">
         <Logo size="md" showBadge showSubtitle textClassName="text-white" />
-
-        {/* Back to Home Store Link */}
-        <Link
-          href="/"
-          className="inline-flex items-center gap-2 rounded-full border border-white/20 bg-black/40 backdrop-blur-md px-4 py-2 text-xs font-bold text-white transition-all hover:bg-white hover:text-black hover:border-white"
-        >
-          <ArrowLeft size={14} /> Back to Store
-        </Link>
       </div>
 
       {/* Bottom Content Overlay */}

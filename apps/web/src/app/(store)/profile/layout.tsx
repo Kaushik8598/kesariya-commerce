@@ -22,13 +22,24 @@ import { Button } from "@/components/ui/button";
 export default function ProfileLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const router = useRouter();
-  const { isAuthenticated, logout } = useAuth();
+  const { isAuthenticated, logout, isLoading: isAuthLoading } = useAuth();
   const { data: profile, isLoading } = useProfile();
 
   const handleLogout = () => {
     logout();
     router.push("/");
   };
+
+  if (isAuthLoading) {
+    return (
+      <div className="flex flex-col items-center justify-center py-32 text-center min-h-[50vh]">
+        <Loader2 className="h-10 w-10 text-primary animate-spin mb-4" />
+        <p className="text-xs font-bold uppercase tracking-widest text-muted-foreground">
+          Loading Account Profile...
+        </p>
+      </div>
+    );
+  }
 
   if (!isAuthenticated) {
     return (

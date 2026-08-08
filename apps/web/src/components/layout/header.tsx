@@ -4,7 +4,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { usePathname } from "next/navigation";
 import { useState, useEffect } from "react";
-import { Search, ShoppingBag, User, LogOut, Menu, X, ChevronDown, Heart, Package } from "lucide-react";
+import { Search, ShoppingBag, User, LogOut, Menu, X, ChevronDown, Heart, Package, Loader2 } from "lucide-react";
 import { useAuth } from "@/providers/auth-provider";
 import { Logo } from "@/components/ui/logo";
 import { ThemeToggle } from "@/components/ui/theme-toggle";
@@ -17,7 +17,7 @@ import { useProfile } from "@/hooks/profile/use-profile";
 
 export function Header() {
   const pathname = usePathname();
-  const { isAuthenticated, user, logout } = useAuth();
+  const { isAuthenticated, user, logout, isLoading: isAuthLoading } = useAuth();
   const { data: profile } = useProfile();
   const { data: cart } = useCart();
   const { coupons } = usePublicCoupons();
@@ -130,7 +130,11 @@ export function Header() {
 
               {/* User Dropdown / Authentication (Hidden on mobile) */}
               <div className="hidden md:block relative">
-                {isAuthenticated ? (
+                {isAuthLoading ? (
+                  <div className="flex h-8 w-8 items-center justify-center rounded-full bg-secondary/80 border border-border">
+                    <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
+                  </div>
+                ) : isAuthenticated ? (
                   <>
                     <Button
                     variant="ghost"

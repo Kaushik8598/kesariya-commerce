@@ -12,6 +12,7 @@ export interface GeneralStoreSettings {
   storeAddress: string;
   storeDescription: string;
   currency: string;
+  currencySymbol: string;
   maintenanceMode: boolean;
   socialLinks: {
     instagram?: string;
@@ -48,6 +49,7 @@ const defaultGeneralSettings: GeneralStoreSettings = {
   storeAddress: "",
   storeDescription: "",
   currency: "",
+  currencySymbol: "",
   maintenanceMode: false,
   socialLinks: {
     instagram: "",
@@ -97,14 +99,14 @@ export function StoreSettingsProvider({ children }: { children: React.ReactNode 
   const general = settingsData?.general || defaultGeneralSettings;
 
   // Extract currency symbol (e.g. "₹ (INR)" -> "₹")
-  const currencyStr = general.currency || "₹";
+  const currencyStr = general.currencySymbol || "₹";
   const currencySymbol = currencyStr.includes("(")
     ? currencyStr.split("(")[0].trim()
     : currencyStr.trim() || "₹";
 
   const formatPrice = (amount: number) => {
     const num = Number(amount) || 0;
-    return `${currencySymbol}${num.toLocaleString("en-IN", {
+    return `${currencySymbol} ${num.toLocaleString("en-IN", {
       minimumFractionDigits: 0,
       maximumFractionDigits: 2,
     })}`;

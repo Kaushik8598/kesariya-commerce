@@ -104,10 +104,9 @@ export function AddToCartButton({ product }: AddToCartButtonProps) {
 
     if (needsSize && !selectedSize) return false;
     if (needsColor && !selectedColor) return false;
-    if (product.isCustomizable && !selectedMeasurementId) return false;
 
     return selectedVariant ? selectedVariant.stock > 0 : false;
-  }, [hasVariants, product.stock, product.variants, selectedSize, selectedColor, selectedVariant, product.isCustomizable, selectedMeasurementId]);
+  }, [hasVariants, product.stock, product.variants, selectedSize, selectedColor, selectedVariant]);
 
   const handleAddToCart = () => {
     addToCart({
@@ -155,43 +154,45 @@ export function AddToCartButton({ product }: AddToCartButtonProps) {
         />
       )}
 
-      {/* Measurement Profile Selection */}
+      {/* Measurement Profile Selection (Optional) */}
       {product.isCustomizable && (
         <div className="space-y-4">
           <div className="flex items-center justify-between">
-            <h3 className="text-sm font-bold uppercase tracking-widest text-foreground">Select Fit Profile</h3>
+            <h3 className="text-sm font-bold uppercase tracking-widest text-foreground">
+              Select Fit Profile <span className="text-xs font-normal text-muted-foreground lowercase">(optional)</span>
+            </h3>
             <Link href="/profile/measurements" className="text-xs font-bold text-primary uppercase tracking-widest hover:underline">
               Manage Profiles
             </Link>
           </div>
 
           {!isAuthenticated ? (
-            <div className="text-sm text-muted-foreground p-4 border border-border rounded-lg bg-secondary/10">
-              Please <Link href="/login" className="text-primary hover:underline font-medium">login</Link> to select your measurement profile.
+            <div className="text-xs text-muted-foreground p-3 border border-border rounded-lg bg-secondary/10">
+              Standard size fit will be used. <Link href="/login" className="text-primary hover:underline font-bold">Login</Link> to select a custom measurement profile.
             </div>
           ) : !measurementProfiles || measurementProfiles.length === 0 ? (
-            <div className="text-sm text-muted-foreground p-4 border border-border rounded-lg bg-secondary/10">
-              You haven't added any measurement profiles yet. <br />
-              <Link href="/profile/measurements" className="text-primary hover:underline font-medium block mt-1">Create one now</Link>
+            <div className="text-xs text-muted-foreground p-3 border border-border rounded-lg bg-secondary/10">
+              Standard size fit will be used. You can optionally <Link href="/profile/measurements" className="text-primary hover:underline font-bold">create a custom measurement profile</Link> for tailored fitting.
             </div>
           ) : (
             <Select
-              value={selectedMeasurementId || ""}
-              onValueChange={(val) => setSelectedMeasurementId(val as string)}
+              value={selectedMeasurementId || "none"}
+              onValueChange={(val) => setSelectedMeasurementId(val === "none" ? null : (val as string))}
             >
               <SelectTrigger className="w-full h-12">
                 <span className="truncate">
                   {selectedMeasurementId
                     ? measurementProfiles?.find((p: any) => p.id === selectedMeasurementId)
-                      ? `${measurementProfiles.find((p: any) => p.id === selectedMeasurementId).name} ${measurementProfiles.find((p: any) => p.id === selectedMeasurementId).isDefault ? "(Default)" : ""}`
-                      : "Select a measurement profile"
-                    : "Select a measurement profile"}
+                      ? `${measurementProfiles.find((p: any) => p.id === selectedMeasurementId).name} ${measurementProfiles.find((p: any) => p.id === selectedMeasurementId).isDefault ? "(Default Fit)" : ""}`
+                      : "Standard Size Fit (No Custom Measurement)"
+                    : "Standard Size Fit (No Custom Measurement)"}
                 </span>
               </SelectTrigger>
               <SelectContent>
+                <SelectItem value="none">Standard Size Fit (No Custom Measurement)</SelectItem>
                 {measurementProfiles.map((p: any) => (
                   <SelectItem key={p.id} value={p.id}>
-                    {p.name} {p.isDefault ? "(Default)" : ""}
+                    {p.name} {p.isDefault ? "(Default Fit)" : ""}
                   </SelectItem>
                 ))}
               </SelectContent>

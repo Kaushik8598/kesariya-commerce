@@ -47,10 +47,7 @@ export async function proxy(request: NextRequest) {
     return NextResponse.next();
   }
 
-  // Allow public API paths without authentication
-  if (pathname.startsWith("/api") && isPublicApiPath(pathname)) {
-    return NextResponse.next();
-  }
+  const isPublic = pathname.startsWith("/api") && isPublicApiPath(pathname);
 
   // Get token from header or cookie
   const authHeader = request.headers.get("Authorization");
@@ -61,6 +58,9 @@ export async function proxy(request: NextRequest) {
   const token = tokenFromHeader || tokenFromCookie;
 
   if (!token) {
+    if (isPublic) {
+      return NextResponse.next();
+    }
     if (pathname.startsWith("/api")) {
       return NextResponse.json(
         { success: false, message: "Unauthorized" },
@@ -74,6 +74,9 @@ export async function proxy(request: NextRequest) {
   const payload = await verifyAccessToken(token);
 
   if (!payload) {
+    if (isPublic) {
+      return NextResponse.next();
+    }
     if (pathname.startsWith("/api")) {
       return NextResponse.json(
         { success: false, message: "Invalid or expired token" },

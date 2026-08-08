@@ -42,7 +42,7 @@ import api from "@/lib/api";
 import { toast } from "sonner";
 import dynamic from "next/dynamic";
 import {
-  uploadToCloudinary,
+  uploadToSupabase,
   isImageFile,
   isVideoFile,
   isVideoUrl,
@@ -50,7 +50,7 @@ import {
   ACCEPTED_VIDEO_TYPES,
   MAX_IMAGE_SIZE,
   MAX_VIDEO_SIZE,
-} from "@/lib/cloudinary";
+} from "@/lib/supabase-storage";
 
 // Dynamic import for TipTap (SSR safe)
 const RichTextEditor = dynamic(
@@ -518,9 +518,9 @@ export default function ProductForm({ productId }: ProductFormProps) {
       try {
         const isVid = isVideoFile(file);
         const resourceType = isVid ? "video" : "image";
-        const folder = isVid ? "kesariya/products/videos" : "kesariya/products";
+        const folder = isVid ? "products/videos" : "products";
 
-        const result = await uploadToCloudinary(file, {
+        const result = await uploadToSupabase(file, {
           resourceType,
           folder,
           onProgress: (pct) => setUploadProgress(pct),

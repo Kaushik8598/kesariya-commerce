@@ -23,7 +23,7 @@ import {
   Lock,
 } from "lucide-react";
 import api from "@/lib/api";
-import { uploadToCloudinary } from "@/lib/cloudinary";
+import { uploadToSupabase } from "@/lib/supabase-storage";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
@@ -151,8 +151,8 @@ export default function CategoriesPage() {
     setUploadProgress(0);
 
     try {
-      const result = await uploadToCloudinary(file, {
-        folder: "kesariya/categories",
+      const result = await uploadToSupabase(file, {
+        folder: "categories",
         onProgress: (pct) => setUploadProgress(pct),
       });
       setFormData((prev) => ({ ...prev, image: result.secureUrl || result.url }));

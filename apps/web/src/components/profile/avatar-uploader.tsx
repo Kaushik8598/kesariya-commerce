@@ -4,7 +4,7 @@ import { useState, useRef } from "react";
 import Image from "next/image";
 import { Camera, Trash2, Loader2, Upload, User, Crop } from "lucide-react";
 import { toast } from "sonner";
-import { uploadImageFile } from "@/lib/cloudinary";
+import { uploadImageFile } from "@/lib/supabase-storage";
 import { ImageCropModal } from "./image-crop-modal";
 
 interface ProfileAvatarUploaderProps {
@@ -52,13 +52,14 @@ export function ProfileAvatarUploader({
   const handleCroppedFileComplete = async (croppedFile: File) => {
     try {
       setIsUploading(true);
-      const uploadedUrl = await uploadImageFile(croppedFile);
+      const uploadedUrl = await uploadImageFile(croppedFile, "avatars");
       onChangeAvatar(uploadedUrl);
       setIsUploading(false);
       toast.info("Image cropped & uploaded! Click 'Save Changes' to update your profile.");
     } catch (err: any) {
       setIsUploading(false);
-      toast.error("Failed to upload avatar image");
+      console.error("Avatar upload error:", err);
+      toast.error(err?.message || "Failed to upload avatar image");
     }
   };
 

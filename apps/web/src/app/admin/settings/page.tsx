@@ -17,7 +17,7 @@ import {
   Globe,
 } from "lucide-react";
 import api from "@/lib/api";
-import { uploadToCloudinary } from "@/lib/cloudinary";
+import { uploadToSupabase } from "@/lib/supabase-storage";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -131,8 +131,8 @@ export default function SettingsPage() {
     setUploadProgress(0);
 
     try {
-      const result = await uploadToCloudinary(file, {
-        folder: "kesariya/store",
+      const result = await uploadToSupabase(file, {
+        folder: "store",
         onProgress: (pct) => setUploadProgress(pct),
       });
       setGeneralForm((prev) => ({
